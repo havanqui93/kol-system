@@ -1,0 +1,35 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+.next/
+out/
+
+# Environment — never commit secrets
+.env
+.env.local
+.env.*.local
+
+# Prisma generated (regenerated via pnpm db:generate)
+packages/database/node_modules/
+
+# Logs & tmp
+*.log
+/tmp/
+/temp/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/settings.json
+.idea/
+
+# Turbo cache
+.turbo/
+
+# Test coverage
+coverage/

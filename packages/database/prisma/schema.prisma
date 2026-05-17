@@ -1,0 +1,369 @@
+// KOL AI Video Generation System — Prisma Schema
+// PostgreSQL + Prisma ORM
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ───────────────────────────────────────────────────────────────────
+
+enum VideoProjectStatus {
+  draft
+  script_generating
+  script_ready
+  script_approved
+  audio_generating
+  audio_ready
+  video_generating
+  clips_ready
+  rendering
+  rendered
+  qa_checking
+  ready_to_publish
+  publishing
+  published
+  failed
+}
+
+enum VideoPlatform {
+  tiktok
+  facebook
+  instagram
+  youtube_shorts
+}
+
+enum VideoType {
+  product_review
+  affiliate
+  used_car
+  virtual_kol
+  b_roll
+}
+
+enum VoiceGender {
+  male
+  female
+}
+
+enum VoiceStyle {
+  energetic
+  professional
+  funny
+  calm
+  authoritative
+}
+
+enum AssetType {
+  audio
+  video_clip
+  image
+  subtitle
+  final_video
+}
+
+enum JobStatus {
+  pending
+  processing
+  completed
+  failed
+  retrying
+}
+
+enum PublishStatus {
+  scheduled
+  publishing
+  published
+  failed
+}
+
+enum ProviderType {
+  llm
+  tts
+  video
+  subtitle
+  storage
+  renderer
+  publisher
+}
+
+// ─── Tables ──────────────────────────────────────────────────────────────────
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  avatarUrl String?
+  credits   Int      @default(100)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  kolProfiles     KolProfile[]
+  products        Product[]
+  videoProjects   VideoProject[]
+  providerUsages  ProviderUsage[]
+  costTracking    CostTracking[]
+  socialAccounts  SocialAccount[]
+
+  @@index([email])
+  @@map("users")
+}
+
+// Reusable KOL avatar profiles
+model KolProfile {
+  id            String   @id @default(cuid())
+  userId        String
+  name          String
+  description   String?
+  avatarImageUrl String
+  voiceGender   VoiceGender @default(female)
+  voiceStyle    VoiceStyle  @default(energetic)
+  voiceId       String?     // ElevenLabs / TTS provider voice ID
+  language      String      @default("vi")
+  stylePrompt   String?     // Kling style seed prompt for this KOL
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  videoProjects VideoProject[]
+
+  @@index([userId])
+  @@map("kol_profiles")
+}
+
+// Product catalog
+model Product {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  description String?
+  price       Decimal? @db.Decimal(12, 0)
+  currency    String   @default("VND")
+  promotion   String?
+  targetCustomer String?
+  category    String?
+  imageUrls   String[] // S3/R2 URLs
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  videoProjects VideoProject[]
+
+  @@index([userId])
+  @@map("products")
+}
+
+// Core video project — one record per video being generated
+model VideoProject {
+  id              String             @id @default(cuid())
+  userId          String
+  kolProfileId    String?
+  productId       String?
+  title           String?
+  videoType       VideoType          @default(product_review)
+  platform        VideoPlatform      @default(tiktok)
+  language        String             @default("vi")
+  durationSeconds Int                @default(30)
+  brandTone       String?
+  status          VideoProjectStatus @default(draft)
+  errorMessage    String?
+  thumbnailUrl    String?
+  finalVideoUrl   String?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kolProfile KolProfile? @relation(fields: [kolProfileId], references: [id])
+  product    Product?    @relation(fields: [productId], references: [id])
+
+  scripts      VideoScript[]
+  scenes       VideoScene[]
+  assets       GeneratedAsset[]
+  renderJobs   RenderJob[]
+  publishJobs  PublishJob[]
+  costTracking CostTracking[]
+
+  @@index([userId])
+  @@index([status])
+  @@map("video_projects")
+}
+
+// Generated script versions (supports multiple regenerations)
+model VideoScript {
+  id           String   @id @default(cuid())
+  projectId    String
+  version      Int      @default(1)
+  isApproved   Boolean  @default(false)
+  hook         String
+  problem      String?
+  introduction String?
+  benefits     String?
+  proof        String?
+  offer        String?
+  cta          String
+  fullScript   String   // Assembled full script text
+  wordCount    Int?
+  estimatedDurationSeconds Int?
+  createdAt    DateTime @default(now())
+
+  project VideoProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@map("video_scripts")
+}
+
+// Scene plan — one row per visual scene in the video
+model VideoScene {
+  id            String   @id @default(cuid())
+  projectId     String
+  sceneIndex    Int
+  visualType    String   // talking_head | product_motion | b_roll | text_overlay | before_after | price_highlight | cta
+  durationSeconds Float
+  klingPrompt   String?
+  negativePrompt String?
+  audioSegment  String?  // text spoken during this scene
+  startTimeMs   Int?
+  endTimeMs     Int?
+  clipUrl       String?  // generated clip S3 URL
+  status        JobStatus @default(pending)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  project VideoProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, sceneIndex])
+  @@map("video_scenes")
+}
+
+// All binary assets (audio, clips, subtitles, final video)
+model GeneratedAsset {
+  id          String    @id @default(cuid())
+  projectId   String
+  assetType   AssetType
+  url         String    // S3/R2 URL
+  mimeType    String?
+  sizeBytes   BigInt?
+  durationMs  Int?
+  metadata    Json?     // provider-specific metadata (voice ID, model, etc.)
+  createdAt   DateTime  @default(now())
+
+  project VideoProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, assetType])
+  @@map("generated_assets")
+}
+
+// FFmpeg/Remotion render jobs
+model RenderJob {
+  id           String    @id @default(cuid())
+  projectId    String
+  status       JobStatus @default(pending)
+  attempts     Int       @default(0)
+  outputUrl    String?
+  errorMessage String?
+  startedAt    DateTime?
+  completedAt  DateTime?
+  createdAt    DateTime  @default(now())
+
+  project VideoProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([status])
+  @@map("render_jobs")
+}
+
+// Social publishing jobs
+model PublishJob {
+  id            String        @id @default(cuid())
+  projectId     String
+  platform      VideoPlatform
+  status        PublishStatus @default(scheduled)
+  scheduledAt   DateTime?
+  publishedAt   DateTime?
+  platformPostId String?      // returned post/video ID from platform
+  title         String?
+  description   String?
+  hashtags      String[]
+  errorMessage  String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  project VideoProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([platform, status])
+  @@map("publish_jobs")
+}
+
+// Per-call AI provider usage log
+model ProviderUsage {
+  id           String       @id @default(cuid())
+  userId       String
+  projectId    String?
+  provider     String       // openai | anthropic | elevenlabs | fal | whisper
+  providerType ProviderType
+  model        String?
+  operation    String       // generate_script | generate_audio | generate_clip | etc.
+  inputTokens  Int?
+  outputTokens Int?
+  durationMs   Int?         // for TTS/video
+  costUsd      Decimal      @db.Decimal(10, 6)
+  createdAt    DateTime     @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([projectId])
+  @@index([createdAt])
+  @@map("provider_usage")
+}
+
+// Connected social media accounts (OAuth tokens per user per platform)
+model SocialAccount {
+  id           String        @id @default(cuid())
+  userId       String
+  platform     VideoPlatform
+  accountName  String        // display name from the platform
+  accountId    String        // platform's user / page ID
+  accessToken  String        // store encrypted in production
+  refreshToken String?
+  tokenExpiresAt DateTime?
+  pageId       String?       // Facebook Page ID (separate from user ID)
+  pageName     String?
+  isActive     Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, platform, accountId])
+  @@index([userId])
+  @@index([platform])
+  @@map("social_accounts")
+}
+
+// Aggregated cost per project
+model CostTracking {
+  id             String   @id @default(cuid())
+  userId         String
+  projectId      String
+  llmCostUsd     Decimal  @default(0) @db.Decimal(10, 6)
+  ttsCostUsd     Decimal  @default(0) @db.Decimal(10, 6)
+  videoCostUsd   Decimal  @default(0) @db.Decimal(10, 6)
+  subtitleCostUsd Decimal @default(0) @db.Decimal(10, 6)
+  storageCostUsd Decimal  @default(0) @db.Decimal(10, 6)
+  totalCostUsd   Decimal  @default(0) @db.Decimal(10, 6)
+  budgetLimitUsd Decimal? @db.Decimal(10, 4)
+  updatedAt      DateTime @updatedAt
+
+  user    User         @relation(fields: [userId], references: [id])
+  project VideoProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId])
+  @@index([userId])
+  @@map("cost_tracking")
+}

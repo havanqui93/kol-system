@@ -1,0 +1,67 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "target": "ES2017",
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "ES2022"
+    ],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "preserve",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ],
+      "@kol/database": [
+        "../../packages/database/src/index.ts"
+      ],
+      "@kol/database/*": [
+        "../../packages/database/src/*"
+      ],
+      "@kol/agents": [
+        "../../packages/agents/src/index.ts"
+      ],
+      "@kol/agents/*": [
+        "../../packages/agents/src/*"
+      ],
+      "@kol/providers": [
+        "../../packages/providers/src/index.ts"
+      ],
+      "@kol/providers/*": [
+        "../../packages/providers/src/*"
+      ],
+      "@kol/queue": [
+        "../../packages/queue/src/index.ts"
+      ],
+      "@kol/queue/*": [
+        "../../packages/queue/src/*"
+      ],
+      "@kol/publisher": [
+        "../../packages/publisher/src/index.ts"
+      ],
+      "@kol/publisher/*": [
+        "../../packages/publisher/src/*"
+      ]
+    },
+    "allowJs": true,
+    "noEmit": true,
+    "isolatedModules": true
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}
