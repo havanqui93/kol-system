@@ -90,6 +90,9 @@ importers:
       '@kol/providers':
         specifier: workspace:*
         version: link:../../packages/providers
+      '@kol/publisher':
+        specifier: workspace:*
+        version: link:../../packages/publisher
       '@kol/queue':
         specifier: workspace:*
         version: link:../../packages/queue

@@ -32,6 +32,7 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [voiceStyle, setVoiceStyle] = useState("energetic");
+  const [musicFile, setMusicFile] = useState<File | null>(null);
 
   async function doAction(key: string, fn: () => Promise<unknown>) {
     setActionLoading(key);
@@ -59,6 +60,7 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
   const status = project.status;
   const approvedScript = project.scripts.find((s) => s.isApproved);
   const audioAsset = project.assets.find((a) => a.assetType === "audio");
+  const videoClipAssets = project.assets.filter((a) => a.assetType === "video_clip");
   const finalVideo = project.finalVideoUrl;
 
   // Derive per-step status
@@ -71,6 +73,10 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
 
   const audioStep: "pending" | "active" | "done" | "error" = approvedScript
     ? getStepStatus(status, [], ["audio_generating"], ["audio_ready", "video_generating", "clips_ready", "rendering", "rendered", "qa_checking", "ready_to_publish", "publishing", "published"])
+    : "pending";
+
+  const videoStep: "pending" | "active" | "done" | "error" = audioAsset
+    ? getStepStatus(status, [], ["video_generating"], ["clips_ready", "rendering", "rendered", "qa_checking", "ready_to_publish", "publishing", "published"])
     : "pending";
 
   const renderStep: "pending" | "active" | "done" | "error" = audioAsset
@@ -213,21 +219,78 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
           )}
         </PipelineStep>
 
-        {/* Step 3: Render */}
+        {/* Step 3: Kling clips */}
         <PipelineStep
           step={3}
+          title="Kling video clips"
+          description="Tạo talking-head/avatar clip và product motion bằng Kling"
+          status={videoStep}
+        >
+          {videoStep === "pending" && audioAsset && status === "audio_ready" && (
+            <Button
+              size="sm"
+              loading={actionLoading === "kling"}
+              onClick={() => doAction("kling", () => api.kling.generate(project.id))}
+            >
+              Tạo Kling clips
+            </Button>
+          )}
+
+          {status === "video_generating" && (
+            <p className="text-xs text-brand-700 animate-pulse">Đang tạo clip avatar/product bằng Kling...</p>
+          )}
+
+          {project.scenes.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-xs text-gray-500">
+                {videoClipAssets.length} clip đã tạo / {project.scenes.filter((s) => s.status !== "completed" || s.clipUrl).length || project.scenes.length} cảnh
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                {project.scenes.slice(0, 4).map((scene) => (
+                  <div key={scene.id} className="rounded-lg border border-gray-200 px-3 py-2 text-xs">
+                    <div className="font-medium text-gray-700">Scene {scene.sceneIndex}: {scene.visualType}</div>
+                    <div className={scene.status === "completed" ? "text-green-700" : "text-gray-500"}>{scene.status}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </PipelineStep>
+
+        {/* Step 4: Render */}
+        <PipelineStep
+          step={4}
           title="Render video cuối"
           description="FFmpeg ghép clips + audio + phụ đề thành MP4 9:16"
           status={renderStep}
         >
-          {renderStep === "pending" && audioAsset && (
-            <Button
-              size="sm"
-              loading={actionLoading === "render"}
-              onClick={() => doAction("render", () => api.render.start(project.id))}
-            >
-              Bắt đầu render
-            </Button>
+          {renderStep === "pending" && status === "clips_ready" && (
+            <div className="space-y-3">
+              <div>
+                <label htmlFor="musicFile" className="block text-xs font-medium text-gray-600 mb-1">
+                  Nhạc nền viral
+                </label>
+                <input
+                  id="musicFile"
+                  type="file"
+                  accept="audio/mpeg,audio/mp3,audio/wav,audio/x-wav,audio/mp4,audio/aac"
+                  onChange={(e) => setMusicFile(e.target.files?.[0] ?? null)}
+                  className="block w-full text-xs text-gray-600 file:mr-3 file:rounded-lg file:border file:border-gray-300 file:bg-white file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-gray-700 hover:file:bg-gray-50"
+                />
+              </div>
+              <Button
+                size="sm"
+                loading={actionLoading === "render"}
+                onClick={() =>
+                  doAction("render", async () => {
+                    const musicUpload = musicFile ? await api.uploads.music(musicFile) : null;
+                    await api.render.start(project.id, { backgroundMusicUrl: musicUpload?.url });
+                  })
+                }
+              >
+                Bắt đầu render
+              </Button>
+            </div>
           )}
 
           {status === "rendering" && (
@@ -257,6 +320,7 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
               ["Nền tảng", project.platform],
               ["Loại video", project.videoType],
               ["Thời lượng", `${project.durationSeconds}s`],
+              ["Preset", project.qualityPreset],
               ["Ngôn ngữ", project.language.toUpperCase()],
               ["ID", project.id.slice(-8)],
               ["Tạo lúc", new Date(project.createdAt).toLocaleDateString("vi-VN")],

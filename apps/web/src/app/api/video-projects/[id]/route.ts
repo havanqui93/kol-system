@@ -10,6 +10,7 @@ export async function GET(_request: Request, { params }: { params: { id: string 
       product: true,
       kolProfile: true,
       scripts: { orderBy: { version: "desc" } },
+      scenes: { orderBy: { sceneIndex: "asc" } },
       assets: { orderBy: { createdAt: "desc" } },
       costTracking: true,
     },

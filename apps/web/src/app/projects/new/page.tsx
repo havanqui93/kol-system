@@ -34,11 +34,18 @@ const LANGUAGE_OPTIONS = [
   { value: "en", label: "🇺🇸 English" },
 ];
 
+const QUALITY_OPTIONS = [
+  { value: "cheap", label: "Tiết kiệm - 1 Kling clip" },
+  { value: "balanced", label: "Cân bằng - 2 Kling clips" },
+  { value: "premium", label: "Premium - 3 Kling clips" },
+];
+
 interface FormState {
   title: string;
   videoType: string;
   platform: string;
   durationSeconds: string;
+  qualityPreset: string;
   language: string;
   brandTone: string;
   productName: string;
@@ -46,18 +53,23 @@ interface FormState {
   productPrice: string;
   productPromotion: string;
   targetCustomer: string;
+  kolName: string;
+  kolStylePrompt: string;
 }
 
 export default function NewProjectPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [productImage, setProductImage] = useState<File | null>(null);
+  const [avatarImage, setAvatarImage] = useState<File | null>(null);
 
   const [form, setForm] = useState<FormState>({
     title: "",
     videoType: "product_review",
     platform: "tiktok",
     durationSeconds: "30",
+    qualityPreset: "balanced",
     language: "vi",
     brandTone: "",
     productName: "",
@@ -65,6 +77,8 @@ export default function NewProjectPage() {
     productPrice: "",
     productPromotion: "",
     targetCustomer: "",
+    kolName: "AI Girl KOL",
+    kolStylePrompt: "young Vietnamese female KOL, friendly, confident, energetic, natural social commerce presenter",
   });
 
   function set(key: keyof FormState) {
@@ -83,14 +97,43 @@ export default function NewProjectPage() {
     setError(null);
 
     try {
-      // 1. Create the project
+      const [productImageUpload, avatarImageUpload] = await Promise.all([
+        productImage ? api.uploads.image(productImage, "product") : Promise.resolve(null),
+        avatarImage ? api.uploads.image(avatarImage, "avatar") : Promise.resolve(null),
+      ]);
+
+      const product = await api.products.create({
+        name: form.productName.trim(),
+        description: form.productDescription || undefined,
+        price: form.productPrice || undefined,
+        promotion: form.productPromotion || undefined,
+        targetCustomer: form.targetCustomer || undefined,
+        imageUrls: productImageUpload ? [productImageUpload.url] : [],
+      });
+
+      const kolProfile = avatarImageUpload
+        ? await api.kolProfiles.create({
+            name: form.kolName.trim() || "AI Girl KOL",
+            description: "Uploaded avatar for virtual KOL video generation",
+            avatarImageUrl: avatarImageUpload.url,
+            voiceGender: "female",
+            voiceStyle: "energetic",
+            language: form.language,
+            stylePrompt: form.kolStylePrompt || undefined,
+          })
+        : null;
+
+      // 1. Create the project with real product/avatar inputs
       const project = await api.projects.create({
         title: form.title || undefined,
         videoType: form.videoType,
         platform: form.platform,
         durationSeconds: Number(form.durationSeconds),
+        qualityPreset: form.qualityPreset as "cheap" | "balanced" | "premium",
         language: form.language,
         brandTone: form.brandTone || undefined,
+        productId: product.id,
+        kolProfileId: kolProfile?.id,
       });
 
       // 2. Kick off script generation immediately
@@ -164,6 +207,50 @@ export default function NewProjectPage() {
                 onChange={set("targetCustomer")}
               />
             </FormField>
+
+            <FormField label="Ảnh sản phẩm" htmlFor="productImage" hint="Dùng để tạo product motion/B-roll bằng Kling.">
+              <Input
+                id="productImage"
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                onChange={(e) => setProductImage(e.target.files?.[0] ?? null)}
+              />
+            </FormField>
+          </CardBody>
+        </Card>
+
+        {/* KOL avatar */}
+        <Card>
+          <CardHeader>
+            <h2 className="font-semibold text-gray-800">KOL avatar</h2>
+          </CardHeader>
+          <CardBody className="space-y-4">
+            <FormField label="Ảnh avatar cô gái" htmlFor="avatarImage" hint="Ảnh chân dung rõ mặt sẽ cho talking-head clip tốt hơn.">
+              <Input
+                id="avatarImage"
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                onChange={(e) => setAvatarImage(e.target.files?.[0] ?? null)}
+              />
+            </FormField>
+
+            <FormField label="Tên KOL" htmlFor="kolName">
+              <Input
+                id="kolName"
+                placeholder="Ví dụ: Linh AI"
+                value={form.kolName}
+                onChange={set("kolName")}
+              />
+            </FormField>
+
+            <FormField label="Phong cách avatar" htmlFor="kolStylePrompt">
+              <Textarea
+                id="kolStylePrompt"
+                rows={2}
+                value={form.kolStylePrompt}
+                onChange={set("kolStylePrompt")}
+              />
+            </FormField>
           </CardBody>
         </Card>
 
@@ -221,6 +308,19 @@ export default function NewProjectPage() {
                 />
               </FormField>
             </div>
+
+            <FormField
+              label="Chất lượng / chi phí"
+              htmlFor="qualityPreset"
+              hint="Điều khiển số clip Kling sinh ra để giữ chi phí dự đoán được."
+            >
+              <Select
+                id="qualityPreset"
+                options={QUALITY_OPTIONS}
+                value={form.qualityPreset}
+                onChange={set("qualityPreset")}
+              />
+            </FormField>
 
             <FormField
               label="Phong cách thương hiệu (tùy chọn)"

@@ -2,7 +2,7 @@ import { Worker } from "bullmq";
 import type { Redis } from "ioredis";
 import { prisma } from "@kol/database";
 import { AnthropicLLMProvider, KlingVideoProvider, R2StorageProvider } from "@kol/providers";
-import { KlingAgent } from "@kol/agents";
+import { KlingAgent, type VisualScene } from "@kol/agents";
 import type { GenerateKlingVideoJobPayload } from "@kol/queue";
 import { QUEUE_NAMES } from "@kol/queue";
 
@@ -31,10 +31,21 @@ export function createGenerateKlingWorker(connection: Redis) {
 
       await job.updateProgress(10);
 
+      const visualScene: VisualScene = {
+        sceneIndex,
+        label: `Scene ${sceneIndex}`,
+        durationSeconds: scene.durationSeconds,
+        visualType: scene.visualType as VisualScene["visualType"],
+        tool: "kling",
+        klingPrompt: scene.klingPrompt ?? klingPrompt,
+        negativePrompt: scene.negativePrompt ?? negativePrompt ?? undefined,
+        audioSegment: scene.audioSegment ?? "",
+      };
+
       let clipResult;
       if (scene.visualType === "talking_head" && project.kolProfile?.avatarImageUrl) {
         clipResult = await klingAgent.generateKolClip(
-          { ...scene, sceneIndex, klingPrompt: scene.klingPrompt ?? klingPrompt, audioSegment: scene.audioSegment ?? "" },
+          visualScene,
           project.kolProfile.avatarImageUrl,
           project.kolProfile.name,
           "energetic"
@@ -42,7 +53,7 @@ export function createGenerateKlingWorker(connection: Redis) {
       } else if (sourceImageUrl || project.product?.imageUrls[0]) {
         const imageUrl = sourceImageUrl ?? project.product!.imageUrls[0]!;
         clipResult = await klingAgent.generateProductClip(
-          { ...scene, sceneIndex, klingPrompt: scene.klingPrompt ?? klingPrompt, audioSegment: scene.audioSegment ?? "" },
+          visualScene,
           imageUrl,
           {
             name: project.product?.name ?? "product",

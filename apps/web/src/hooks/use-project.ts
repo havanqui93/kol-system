@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { api, type Project, type Script, type Asset } from "@/lib/api/client";
+import { api, type Project, type Script, type Scene, type Asset } from "@/lib/api/client";
 
-type FullProject = Project & { scripts: Script[]; assets: Asset[] };
+type FullProject = Project & { scripts: Script[]; scenes: Scene[]; assets: Asset[] };
 
 const POLLING_STATUSES = new Set([
   "script_generating",

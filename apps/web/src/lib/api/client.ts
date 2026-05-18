@@ -29,6 +29,7 @@ export interface Project {
   platform: string;
   language: string;
   durationSeconds: number;
+  qualityPreset: string;
   status: string;
   errorMessage: string | null;
   finalVideoUrl: string | null;
@@ -64,6 +65,31 @@ export interface Asset {
   createdAt: string;
 }
 
+export interface Scene {
+  id: string;
+  sceneIndex: number;
+  visualType: string;
+  durationSeconds: number;
+  status: string;
+  clipUrl: string | null;
+}
+
+export interface Product {
+  id: string;
+  name: string;
+  description: string | null;
+  imageUrls: string[];
+}
+
+export interface KolProfile {
+  id: string;
+  name: string;
+  avatarImageUrl: string;
+  voiceGender: string;
+  voiceStyle: string;
+  language: string;
+}
+
 // ─── Project APIs ─────────────────────────────────────────────────────────────
 
 export interface CreateProjectPayload {
@@ -72,15 +98,63 @@ export interface CreateProjectPayload {
   platform?: string;
   language?: string;
   durationSeconds?: number;
+  qualityPreset?: "cheap" | "balanced" | "premium";
   brandTone?: string;
   productId?: string;
   kolProfileId?: string;
 }
 
 export const api = {
+  uploads: {
+    file: async (file: File, purpose: "avatar" | "product" | "music" | "asset" = "asset") => {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("purpose", purpose);
+
+      const res = await fetch("/api/uploads", {
+        method: "POST",
+        headers: { "x-user-id": DEMO_USER_ID },
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error((body as any).error ?? `HTTP ${res.status}`);
+      }
+
+      return res.json() as Promise<{ url: string; key: string; contentType: string; sizeBytes: number }>;
+    },
+    image: (file: File, purpose: "avatar" | "product" | "asset" = "asset") => api.uploads.file(file, purpose),
+    music: (file: File) => api.uploads.file(file, "music"),
+  },
+
+  products: {
+    create: (data: {
+      name: string;
+      description?: string;
+      price?: string;
+      promotion?: string;
+      targetCustomer?: string;
+      category?: string;
+      imageUrls?: string[];
+    }) => apiFetch<Product>("/api/products", { method: "POST", body: JSON.stringify(data) }),
+  },
+
+  kolProfiles: {
+    create: (data: {
+      name: string;
+      description?: string;
+      avatarImageUrl: string;
+      voiceGender?: "male" | "female";
+      voiceStyle?: "energetic" | "professional" | "funny" | "calm" | "authoritative";
+      language?: string;
+      stylePrompt?: string;
+    }) => apiFetch<KolProfile>("/api/kol-profiles", { method: "POST", body: JSON.stringify(data) }),
+  },
+
   projects: {
     list: () => apiFetch<{ projects: Project[]; total: number }>("/api/video-projects"),
-    get: (id: string) => apiFetch<Project & { scripts: Script[]; assets: Asset[] }>(`/api/video-projects/${id}`),
+    get: (id: string) => apiFetch<Project & { scripts: Script[]; scenes: Scene[]; assets: Asset[] }>(`/api/video-projects/${id}`),
     create: (data: CreateProjectPayload) =>
       apiFetch<Project>("/api/video-projects", { method: "POST", body: JSON.stringify(data) }),
   },
@@ -103,11 +177,19 @@ export const api = {
       }),
   },
 
+  kling: {
+    generate: (projectId: string) =>
+      apiFetch<{ jobIds: string[]; sceneCount: number; klingJobCount: number }>(
+        `/api/video-projects/${projectId}/generate-kling-clips`,
+        { method: "POST", body: "{}" }
+      ),
+  },
+
   render: {
-    start: (projectId: string) =>
+    start: (projectId: string, opts?: { backgroundMusicUrl?: string }) =>
       apiFetch<{ jobId: string; renderJobId: string }>(`/api/video-projects/${projectId}/render`, {
         method: "POST",
-        body: "{}",
+        body: JSON.stringify(opts ?? {}),
       }),
     getJob: (renderJobId: string) =>
       apiFetch<{ status: string; outputUrl: string | null; errorMessage: string | null }>(`/api/render-jobs/${renderJobId}`),

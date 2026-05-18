@@ -221,7 +221,7 @@ export default function SettingsPage() {
                 <li>
                   Thêm Redirect URI:{" "}
                   <code className="bg-gray-100 px-1 rounded text-xs">
-                    {`http://localhost:3000/api/social/callback/${p.id}`}
+                    {`${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/api/social/callback/${p.id}`}
                   </code>
                 </li>
               </ol>

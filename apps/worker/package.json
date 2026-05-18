@@ -12,6 +12,7 @@
   "dependencies": {
     "@kol/agents": "workspace:*",
     "@kol/database": "workspace:*",
+    "@kol/publisher": "workspace:*",
     "@kol/providers": "workspace:*",
     "@kol/queue": "workspace:*",
     "bullmq": "^5.12.0",

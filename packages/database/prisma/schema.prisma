@@ -45,6 +45,12 @@ enum VideoType {
   b_roll
 }
 
+enum VideoQualityPreset {
+  cheap
+  balanced
+  premium
+}
+
 enum VoiceGender {
   male
   female
@@ -168,6 +174,7 @@ model VideoProject {
   platform        VideoPlatform      @default(tiktok)
   language        String             @default("vi")
   durationSeconds Int                @default(30)
+  qualityPreset   VideoQualityPreset @default(balanced)
   brandTone       String?
   status          VideoProjectStatus @default(draft)
   errorMessage    String?

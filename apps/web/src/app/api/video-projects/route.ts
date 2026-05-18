@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@kol/database";
+import { ensureUser, getRequestUserId } from "@/lib/user";
 
 const CreateProjectSchema = z.object({
   title: z.string().optional(),
@@ -8,6 +9,7 @@ const CreateProjectSchema = z.object({
   platform: z.enum(["tiktok", "facebook", "instagram", "youtube_shorts"]).default("tiktok"),
   language: z.string().default("vi"),
   durationSeconds: z.number().int().min(15).max(60).default(30),
+  qualityPreset: z.enum(["cheap", "balanced", "premium"]).default("balanced"),
   brandTone: z.string().optional(),
   kolProfileId: z.string().optional(),
   productId: z.string().optional(),
@@ -20,7 +22,8 @@ export async function POST(request: Request) {
     const validated = CreateProjectSchema.parse(body);
 
     // TODO: replace with real auth
-    const userId = request.headers.get("x-user-id") ?? "demo-user";
+    const userId = getRequestUserId(request);
+    await ensureUser(userId);
 
     const project = await prisma.videoProject.create({
       data: { userId, ...validated },
