@@ -7,13 +7,17 @@
     "packages/*"
   ],
   "scripts": {
+    "postinstall": "turbo run db:generate",
     "build": "turbo run build",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
     "db:generate": "turbo run db:generate",
+    "db:push": "cd packages/database && npx prisma db push",
     "db:migrate": "turbo run db:migrate",
-    "db:studio": "cd packages/database && npx prisma studio"
+    "db:studio": "cd packages/database && npx prisma studio",
+    "infra:up": "docker compose up -d",
+    "infra:down": "docker compose down"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
