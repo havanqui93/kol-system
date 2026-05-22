@@ -321,6 +321,15 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
                   >
                     🔗 Chia sẻ
                   </Button>
+                  <a
+                    href={`/share/${project.id}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center text-xs text-green-700 bg-green-50 hover:bg-green-100 px-3 py-1.5 rounded-lg transition-colors font-medium"
+                    title="Mở trang chia sẻ công khai"
+                  >
+                    ↗ Trang chia sẻ
+                  </a>
                 </div>
                 <p className="text-xs text-gray-400 mt-3">Nhấn Space để phát/dừng · Loop bật sẵn</p>
               </div>

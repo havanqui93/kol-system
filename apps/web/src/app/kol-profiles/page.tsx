@@ -202,7 +202,7 @@ export default function KolProfilesPage() {
         )}
       </div>
 
-      {search && profiles.filter((p) => p.name.toLowerCase().includes(search.toLowerCase())).length === 0 && (
+      {search && profiles.filter((p) => p.name.toLowerCase().includes(search.toLowerCase()) || (p.description ?? "").toLowerCase().includes(search.toLowerCase())).length === 0 && (
         <div className="py-12 text-center text-gray-400">
           <p className="text-sm">Không tìm thấy KOL profile nào cho "<span className="font-medium text-gray-600">{search}</span>"</p>
           <button onClick={() => setSearch("")} className="mt-2 text-xs text-brand-600 hover:underline">Xóa bộ lọc</button>
@@ -212,7 +212,7 @@ export default function KolProfilesPage() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {(() => {
           const sorted = [...profiles]
-            .filter((p) => !search || p.name.toLowerCase().includes(search.toLowerCase()))
+            .filter((p) => !search || p.name.toLowerCase().includes(search.toLowerCase()) || (p.description ?? "").toLowerCase().includes(search.toLowerCase()))
             .sort((a, b) => {
               if (sort === "most_videos") return (b._count?.videoProjects ?? 0) - (a._count?.videoProjects ?? 0);
               if (sort === "alpha") return a.name.localeCompare(b.name, "vi");

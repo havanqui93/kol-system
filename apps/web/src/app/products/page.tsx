@@ -224,17 +224,26 @@ export default function ProductsPage() {
       })()}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {[...products].filter((p) => {
-          if (search && !p.name.toLowerCase().includes(search.toLowerCase())) return false;
-          if (categoryFilter && p.category !== categoryFilter) return false;
-          return true;
-        }).sort((a, b) => {
-          if (sort === "most_videos") return (b._count?.videoProjects ?? 0) - (a._count?.videoProjects ?? 0);
-          if (sort === "alpha") return a.name.localeCompare(b.name, "vi");
-          if (sort === "oldest") return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-        }).map((product) => (
-          <Card key={product.id} className="group relative">
+        {(() => {
+          const filtered = [...products].filter((p) => {
+            const q = search.toLowerCase();
+            if (search && !p.name.toLowerCase().includes(q) && !(p.description ?? "").toLowerCase().includes(q)) return false;
+            if (categoryFilter && p.category !== categoryFilter) return false;
+            return true;
+          });
+          const maxVideos = Math.max(0, ...filtered.map((p) => p._count?.videoProjects ?? 0));
+          return filtered.sort((a, b) => {
+            if (sort === "most_videos") return (b._count?.videoProjects ?? 0) - (a._count?.videoProjects ?? 0);
+            if (sort === "alpha") return a.name.localeCompare(b.name, "vi");
+            if (sort === "oldest") return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+          }).map((product) => {
+            const isMostUsed = maxVideos > 1 && (product._count?.videoProjects ?? 0) === maxVideos;
+            return (
+          <Card key={product.id} className={`group relative ${isMostUsed ? "ring-2 ring-brand-300" : ""}`}>
+            {isMostUsed && (
+              <div className="absolute -top-2 -right-2 z-10 text-base" title="Sản phẩm được dùng nhiều nhất">👑</div>
+            )}
             <CardBody className="flex gap-4">
               {/* Product image */}
               <div className="w-16 h-16 rounded-lg bg-gray-100 flex-shrink-0 overflow-hidden">
@@ -302,7 +311,9 @@ export default function ProductsPage() {
               </button>
             </div>
           </Card>
-        ))}
+            );
+          })
+        })()}
       </div>
     </div>
   );

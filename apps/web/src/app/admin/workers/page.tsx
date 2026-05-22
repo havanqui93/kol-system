@@ -159,6 +159,17 @@ export default function WorkersPage() {
             </Card>
           )}
 
+          {/* All clear */}
+          {health.errors.length === 0 && health.status === "ok" && Object.values(health.queues).every((c) => c === 0) && (
+            <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3">
+              <span className="text-2xl">✅</span>
+              <div>
+                <p className="text-sm font-semibold text-green-700">Hệ thống hoạt động tốt</p>
+                <p className="text-xs text-green-600 mt-0.5">Không có lỗi · Tất cả hàng đợi trống · Tất cả dịch vụ online</p>
+              </div>
+            </div>
+          )}
+
           {/* Errors */}
           {health.errors.length > 0 && (
             <div className="bg-red-50 border border-red-200 rounded-xl p-4">

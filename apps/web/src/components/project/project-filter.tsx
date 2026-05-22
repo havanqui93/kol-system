@@ -83,6 +83,7 @@ export function ProjectFilter({ initialProjects, initialStatus = "" }: { initial
     return "";
   });
   const [videoTypeFilter, setVideoTypeFilter] = useState("");
+  const [hasVideoOnly, setHasVideoOnly] = useState(false);
   const [sort, setSort] = useState(() => {
     if (typeof window !== "undefined") return localStorage.getItem("kol-project-sort") ?? "newest";
     return "newest";
@@ -114,10 +115,16 @@ export function ProjectFilter({ initialProjects, initialStatus = "" }: { initial
 
   const filtered = useMemo(
     () => sortProjects(
-      projects.filter((p) => matchesStatus(p, statusFilter) && matchesSearch(p, search) && matchesPlatform(p, platformFilter) && matchesVideoType(p, videoTypeFilter)),
+      projects.filter((p) =>
+        matchesStatus(p, statusFilter) &&
+        matchesSearch(p, search) &&
+        matchesPlatform(p, platformFilter) &&
+        matchesVideoType(p, videoTypeFilter) &&
+        (!hasVideoOnly || !!p.finalVideoUrl)
+      ),
       sort
     ),
-    [projects, search, statusFilter, platformFilter, videoTypeFilter, sort]
+    [projects, search, statusFilter, platformFilter, videoTypeFilter, hasVideoOnly, sort]
   );
 
   const platformCounts = useMemo(() => {
@@ -227,13 +234,23 @@ export function ProjectFilter({ initialProjects, initialStatus = "" }: { initial
             </span>
           )}
           <button
-            onClick={() => { setSearchInput(""); setStatusFilter(""); setPlatformFilter(""); setVideoTypeFilter(""); setSort("newest"); }}
+            onClick={() => { setSearchInput(""); setStatusFilter(""); setPlatformFilter(""); setVideoTypeFilter(""); setHasVideoOnly(false); setSort("newest"); }}
             className="text-xs text-gray-400 hover:text-red-500 transition-colors"
           >
             Xóa tất cả
           </button>
         </div>
       )}
+
+      {/* Has video toggle */}
+      <div className="flex items-center gap-2 mb-3">
+        <button
+          onClick={() => setHasVideoOnly((v) => !v)}
+          className={`text-xs px-3 py-1 rounded-full border transition-colors ${hasVideoOnly ? "bg-green-600 text-white border-green-600" : "bg-white text-gray-600 border-gray-300 hover:border-green-400"}`}
+        >
+          ✓ Có video cuối
+        </button>
+      </div>
 
       {/* Result count + reset + CSV export */}
       <div className="flex items-center justify-between mb-2 text-xs text-gray-400">

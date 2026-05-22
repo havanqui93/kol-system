@@ -98,12 +98,21 @@ export default async function SharePage({ params }: { params: { id: string } }) 
 
       {/* Product info */}
       {project.product && (
-        <div className="bg-gray-50 rounded-xl p-4 mb-6">
-          <h2 className="text-sm font-semibold text-gray-700 mb-2">Sản phẩm</h2>
-          <p className="font-medium text-gray-900">{project.product.name}</p>
-          {project.product.description && (
-            <p className="text-sm text-gray-500 mt-1">{project.product.description}</p>
+        <div className="bg-gray-50 rounded-xl p-4 mb-6 flex items-start gap-4">
+          {project.product.imageUrls?.[0] && (
+            <img
+              src={project.product.imageUrls[0]}
+              alt={project.product.name}
+              className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
+            />
           )}
+          <div className="flex-1 min-w-0">
+            <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Sản phẩm</h2>
+            <p className="font-medium text-gray-900">{project.product.name}</p>
+            {project.product.description && (
+              <p className="text-sm text-gray-500 mt-1 line-clamp-2">{project.product.description}</p>
+            )}
+          </div>
         </div>
       )}
 
