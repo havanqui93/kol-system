@@ -53,9 +53,9 @@ export function CommandPalette() {
     .map((p) => ({
       id: p.id,
       label: p.title ?? `Video #${p.id.slice(-6)}`,
-      sub: p.product?.name,
+      sub: (p.product?.name ? `${p.product.name} · ` : "") + p.status.replace(/_/g, " "),
       href: `/projects/${p.id}`,
-      icon: "🎬",
+      icon: p.status === "published" ? "✅" : p.status === "failed" ? "❌" : p.status === "script_ready" ? "⏳" : "🎬",
     }));
 
   const items: Item[] = query

@@ -23,6 +23,15 @@ const PLATFORM_FILTER_OPTIONS = [
   { value: "youtube_shorts", label: "▶️ YouTube" },
 ];
 
+const VIDEO_TYPE_FILTER_OPTIONS = [
+  { value: "", label: "Tất cả loại" },
+  { value: "product_review", label: "Review sản phẩm" },
+  { value: "affiliate", label: "Affiliate" },
+  { value: "used_car", label: "Ô tô cũ" },
+  { value: "virtual_kol", label: "KOL ảo" },
+  { value: "b_roll", label: "B-roll" },
+];
+
 const PROCESSING_STATUSES = new Set(["script_generating", "audio_generating", "video_generating", "rendering", "qa_checking", "publishing"]);
 
 function matchesStatus(project: Project, filter: string) {
@@ -34,6 +43,11 @@ function matchesStatus(project: Project, filter: string) {
 function matchesPlatform(project: Project, filter: string) {
   if (!filter) return true;
   return project.platform === filter;
+}
+
+function matchesVideoType(project: Project, filter: string) {
+  if (!filter) return true;
+  return project.videoType === filter;
 }
 
 function matchesSearch(project: Project, query: string) {
@@ -68,6 +82,7 @@ export function ProjectFilter({ initialProjects, initialStatus = "" }: { initial
     if (typeof window !== "undefined") return localStorage.getItem("kol-platform-filter") ?? "";
     return "";
   });
+  const [videoTypeFilter, setVideoTypeFilter] = useState("");
   const [sort, setSort] = useState("newest");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -95,10 +110,10 @@ export function ProjectFilter({ initialProjects, initialStatus = "" }: { initial
 
   const filtered = useMemo(
     () => sortProjects(
-      projects.filter((p) => matchesStatus(p, statusFilter) && matchesSearch(p, search) && matchesPlatform(p, platformFilter)),
+      projects.filter((p) => matchesStatus(p, statusFilter) && matchesSearch(p, search) && matchesPlatform(p, platformFilter) && matchesVideoType(p, videoTypeFilter)),
       sort
     ),
-    [projects, search, statusFilter, platformFilter, sort]
+    [projects, search, statusFilter, platformFilter, videoTypeFilter, sort]
   );
 
   const platformCounts = useMemo(() => {
@@ -155,6 +170,15 @@ export function ProjectFilter({ initialProjects, initialStatus = "" }: { initial
           ))}
         </select>
         <select
+          value={videoTypeFilter}
+          onChange={(e) => setVideoTypeFilter(e.target.value)}
+          className="text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-400"
+        >
+          {VIDEO_TYPE_FILTER_OPTIONS.map((o) => (
+            <option key={o.value} value={o.value}>{o.label}</option>
+          ))}
+        </select>
+        <select
           value={sort}
           onChange={(e) => setSort(e.target.value)}
           className="text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-400"
@@ -166,7 +190,7 @@ export function ProjectFilter({ initialProjects, initialStatus = "" }: { initial
       </div>
 
       {/* Active filter chips */}
-      {(searchInput || statusFilter || platformFilter) && (
+      {(searchInput || statusFilter || platformFilter || videoTypeFilter) && (
         <div className="flex items-center gap-2 mb-3 flex-wrap">
           <span className="text-xs text-gray-400">Đang lọc:</span>
           {searchInput && (
@@ -187,8 +211,14 @@ export function ProjectFilter({ initialProjects, initialStatus = "" }: { initial
               <button onClick={() => setPlatformFilter("")} className="hover:text-gray-900 leading-none">×</button>
             </span>
           )}
+          {videoTypeFilter && (
+            <span className="inline-flex items-center gap-1 text-xs bg-gray-100 text-gray-700 border border-gray-200 rounded-full px-2.5 py-0.5">
+              {VIDEO_TYPE_FILTER_OPTIONS.find((o) => o.value === videoTypeFilter)?.label ?? videoTypeFilter}
+              <button onClick={() => setVideoTypeFilter("")} className="hover:text-gray-900 leading-none">×</button>
+            </span>
+          )}
           <button
-            onClick={() => { setSearchInput(""); setStatusFilter(""); setPlatformFilter(""); setSort("newest"); }}
+            onClick={() => { setSearchInput(""); setStatusFilter(""); setPlatformFilter(""); setVideoTypeFilter(""); setSort("newest"); }}
             className="text-xs text-gray-400 hover:text-red-500 transition-colors"
           >
             Xóa tất cả
@@ -215,7 +245,7 @@ export function ProjectFilter({ initialProjects, initialStatus = "" }: { initial
 
       {filtered.length === 0 ? (
         <p className="text-center text-sm text-gray-400 py-12">
-          {searchInput || statusFilter || platformFilter ? "Không tìm thấy dự án phù hợp" : "Chưa có video nào"}
+          {searchInput || statusFilter || platformFilter || videoTypeFilter ? "Không tìm thấy dự án phù hợp" : "Chưa có video nào"}
         </p>
       ) : (
         <div className="grid gap-3">

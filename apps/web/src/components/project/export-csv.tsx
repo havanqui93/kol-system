@@ -47,9 +47,9 @@ export function ExportCSVButton({ projects }: { projects: Project[] }) {
     <button
       onClick={handleExport}
       className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
-      title="Xuất danh sách CSV"
+      title={`Xuất ${projects.length} dự án ra CSV`}
     >
-      ⬇ Xuất CSV
+      ⬇ Xuất CSV ({projects.length})
     </button>
   );
 }

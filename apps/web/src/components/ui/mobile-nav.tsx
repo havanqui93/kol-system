@@ -70,10 +70,26 @@ export function MobileNav({ links }: { links: NavLink[] }) {
             >
               Trạng thái Worker
             </Link>
+            <div className="mt-1 pt-2 border-t border-gray-100 grid grid-cols-2 gap-1.5">
+              <Link
+                href="/products/new"
+                role="menuitem"
+                className="px-3 py-2 rounded-lg text-sm font-medium text-center bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
+              >
+                + Sản phẩm
+              </Link>
+              <Link
+                href="/kol-profiles/new"
+                role="menuitem"
+                className="px-3 py-2 rounded-lg text-sm font-medium text-center bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
+              >
+                + KOL Profile
+              </Link>
+            </div>
             <Link
               href="/projects/new"
               role="menuitem"
-              className="mt-1 px-3 py-2.5 rounded-lg text-sm font-medium text-center bg-brand-600 text-white hover:bg-brand-700 transition-colors"
+              className="px-3 py-2.5 rounded-lg text-sm font-medium text-center bg-brand-600 text-white hover:bg-brand-700 transition-colors"
             >
               + Tạo video mới
             </Link>

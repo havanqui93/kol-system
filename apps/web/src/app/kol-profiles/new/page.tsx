@@ -49,6 +49,13 @@ export default function NewKolProfilePage() {
     const file = e.target.files?.[0] ?? null;
     setAvatarFile(file);
     if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        setError("Ảnh quá lớn (tối đa 5MB). Vui lòng chọn ảnh nhỏ hơn.");
+        setAvatarFile(null);
+        setAvatarPreview(null);
+        return;
+      }
+      setError(null);
       const url = URL.createObjectURL(file);
       setAvatarPreview(url);
     } else {

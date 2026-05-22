@@ -12,6 +12,7 @@ export default function NewProductPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [form, setForm] = useState({
     name: "",
     description: "",
@@ -83,7 +84,22 @@ export default function NewProductPage() {
               <Input id="targetCustomer" placeholder="Phụ nữ 25-40 tuổi..." value={form.targetCustomer} onChange={set("targetCustomer")} />
             </FormField>
             <FormField label="Ảnh sản phẩm" htmlFor="productImage" hint="PNG, JPG, WebP — dùng để tạo B-roll video">
-              <Input id="productImage" type="file" accept="image/png,image/jpeg,image/webp" onChange={(e) => setImageFile(e.target.files?.[0] ?? null)} />
+              <div className="flex items-start gap-3">
+                {imagePreview && (
+                  <img src={imagePreview} alt="Preview" className="w-16 h-16 rounded-lg object-cover border border-gray-200 flex-shrink-0" />
+                )}
+                <Input
+                  id="productImage"
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] ?? null;
+                    setImageFile(file);
+                    if (file) setImagePreview(URL.createObjectURL(file));
+                    else setImagePreview(null);
+                  }}
+                />
+              </div>
             </FormField>
           </CardBody>
         </Card>

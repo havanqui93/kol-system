@@ -207,9 +207,23 @@ export function PublishPanel({ projectId, disabled }: PublishPanelProps) {
                     <span>{meta.icon}</span>
                     <span className="flex-1 text-gray-700">{meta.name}</span>
                     <Badge variant={badge.variant}>{badge.label}</Badge>
+                    {job.platformPostId && (
+                      <button
+                        onClick={() => { navigator.clipboard.writeText(job.platformPostId!); }}
+                        title="Sao chép Post ID"
+                        className="text-xs text-gray-400 hover:text-brand-600 font-mono"
+                      >
+                        #{job.platformPostId.slice(-8)}
+                      </button>
+                    )}
                     {job.publishedAt && (
                       <span className="text-xs text-gray-400">
                         {new Date(job.publishedAt).toLocaleDateString("vi-VN")}
+                      </span>
+                    )}
+                    {job.scheduledAt && job.status === "scheduled" && (
+                      <span className="text-xs text-yellow-600">
+                        🕐 {new Date(job.scheduledAt).toLocaleString("vi-VN", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })}
                       </span>
                     )}
                   </div>

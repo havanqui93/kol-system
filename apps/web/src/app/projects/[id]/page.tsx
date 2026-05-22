@@ -17,6 +17,7 @@ import { ScriptViewer } from "@/components/project/script-viewer";
 import { PipelineStep } from "@/components/project/pipeline-step";
 import { PublishPanel } from "@/components/project/publish-panel";
 import { ProjectNotes } from "@/components/project/project-notes";
+import { trackVisited } from "@/components/project/last-visited-banner";
 
 // Helper: which pipeline step is each status on
 function getStepStatus(projectStatus: string, stepStatuses: string[], activeStatuses: string[], doneStatuses: string[]) {
@@ -50,13 +51,7 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
   // Track last visited project in localStorage
   useEffect(() => {
     if (!project) return;
-    const data = {
-      id: project.id,
-      title: project.title ?? `Video #${project.id.slice(-6)}`,
-      status: project.status,
-      visitedAt: Date.now(),
-    };
-    try { localStorage.setItem("kol-last-visited", JSON.stringify(data)); } catch {}
+    trackVisited({ id: project.id, title: project.title ?? `Video #${project.id.slice(-6)}`, status: project.status });
   }, [project?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Keyboard shortcut: r = refresh

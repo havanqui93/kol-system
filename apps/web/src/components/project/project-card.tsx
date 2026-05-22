@@ -117,19 +117,27 @@ export function ProjectCard({ project, onDeleted }: { project: Project; onDelete
         <Card className={`hover:border-brand-300 hover:shadow-md transition-all cursor-pointer ${cardBorderClass}`}>
           <CardBody className="flex items-start gap-4">
             {/* Thumbnail / product image */}
-            <div className="w-14 h-20 rounded-lg overflow-hidden flex-shrink-0">
-              {(project.thumbnailUrl ?? project.product?.imageUrl ?? project.product?.imageUrls?.[0]) ? (
-                <img
-                  src={(project.thumbnailUrl ?? project.product?.imageUrl ?? project.product?.imageUrls?.[0])!}
-                  alt={project.product?.name ?? ""}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full bg-gradient-to-br from-brand-100 to-purple-100 flex items-center justify-center text-2xl">
-                  {PLATFORM_ICONS[project.platform] ?? "🎬"}
+            {(() => {
+              const thumb = project.thumbnailUrl ?? project.product?.imageUrl ?? project.product?.imageUrls?.[0];
+              return (
+                <div className="w-14 h-20 flex-shrink-0 relative">
+                  <div className="w-full h-full rounded-lg overflow-hidden">
+                    {thumb ? (
+                      <img src={thumb} alt={project.product?.name ?? ""} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-brand-100 to-purple-100 flex items-center justify-center text-2xl">
+                        {PLATFORM_ICONS[project.platform] ?? "🎬"}
+                      </div>
+                    )}
+                  </div>
+                  {thumb && (
+                    <span className="absolute -bottom-1 -right-1 text-sm leading-none bg-white rounded-full shadow-sm p-0.5" title={project.platform}>
+                      {PLATFORM_ICONS[project.platform] ?? "🎬"}
+                    </span>
+                  )}
                 </div>
-              )}
-            </div>
+              );
+            })()}
 
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-2">

@@ -3,7 +3,10 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
-interface LastVisited {
+const RECENT_KEY = "kol-recent-projects";
+const MAX_RECENT = 3;
+
+interface RecentProject {
   id: string;
   title: string;
   status: string;
@@ -20,43 +23,67 @@ function timeAgo(ts: number): string {
   return `${Math.floor(hours / 24)} ngày trước`;
 }
 
+function statusColor(status: string) {
+  if (status === "failed") return "bg-red-100 text-red-600";
+  if (status === "published" || status === "ready_to_publish") return "bg-green-100 text-green-700";
+  if (status === "script_ready") return "bg-orange-100 text-orange-700";
+  return "bg-gray-100 text-gray-500";
+}
+
+export function trackVisited(project: { id: string; title: string; status: string }) {
+  try {
+    const saved = localStorage.getItem(RECENT_KEY);
+    const prev: RecentProject[] = saved ? JSON.parse(saved) : [];
+    const entry: RecentProject = { id: project.id, title: project.title, status: project.status, visitedAt: Date.now() };
+    const next = [entry, ...prev.filter((p) => p.id !== project.id)].slice(0, MAX_RECENT);
+    localStorage.setItem(RECENT_KEY, JSON.stringify(next));
+    // Keep old key in sync for backwards compat
+    localStorage.setItem("kol-last-visited", JSON.stringify(entry));
+  } catch {}
+}
+
 export function LastVisitedBanner() {
-  const [last, setLast] = useState<LastVisited | null>(null);
+  const [recent, setRecent] = useState<RecentProject[]>([]);
 
   useEffect(() => {
     try {
-      const saved = localStorage.getItem("kol-last-visited");
-      if (saved) setLast(JSON.parse(saved));
+      const saved = localStorage.getItem(RECENT_KEY);
+      if (saved) { setRecent(JSON.parse(saved)); return; }
+      // Migrate from old single-item key
+      const old = localStorage.getItem("kol-last-visited");
+      if (old) setRecent([JSON.parse(old)]);
     } catch {}
   }, []);
 
-  if (!last) return null;
+  if (recent.length === 0) return null;
 
   return (
-    <div className="mb-6 flex items-center gap-3 bg-brand-50 border border-brand-100 rounded-xl px-5 py-3 text-sm">
-      <span className="text-brand-400 text-base flex-shrink-0">↩</span>
-      <div className="flex-1 min-w-0 flex items-center gap-2 flex-wrap">
-        <span className="text-brand-700 font-medium">Tiếp tục: </span>
-        <Link href={`/projects/${last.id}`} className="text-brand-600 hover:underline font-medium">
-          {last.title}
-        </Link>
-        <span className={`text-xs px-2 py-0.5 rounded-full ${
-          last.status === "failed" ? "bg-red-100 text-red-600" :
-          last.status === "published" || last.status === "ready_to_publish" ? "bg-green-100 text-green-700" :
-          last.status === "script_ready" ? "bg-orange-100 text-orange-700" :
-          "bg-gray-100 text-gray-500"
-        }`}>
-          {last.status.replace(/_/g, " ")}
-        </span>
-        <span className="text-brand-400 text-xs">{timeAgo(last.visitedAt)}</span>
+    <div className="mb-6 bg-brand-50 border border-brand-100 rounded-xl px-5 py-3 text-sm">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-xs font-semibold text-brand-600 uppercase tracking-wide">↩ Gần đây</span>
+        <button
+          onClick={() => { localStorage.removeItem(RECENT_KEY); localStorage.removeItem("kol-last-visited"); setRecent([]); }}
+          aria-label="Xóa lịch sử"
+          className="text-brand-300 hover:text-brand-500 transition-colors text-sm leading-none"
+        >
+          ×
+        </button>
       </div>
-      <button
-        onClick={() => { localStorage.removeItem("kol-last-visited"); setLast(null); }}
-        aria-label="Ẩn banner"
-        className="text-brand-300 hover:text-brand-500 transition-colors text-lg leading-none flex-shrink-0"
-      >
-        ×
-      </button>
+      <div className="flex flex-wrap gap-2">
+        {recent.map((p) => (
+          <Link
+            key={p.id}
+            href={`/projects/${p.id}`}
+            className="flex items-center gap-1.5 bg-white border border-brand-100 hover:border-brand-300 rounded-lg px-3 py-1.5 transition-colors min-w-0"
+          >
+            <span className="text-brand-700 font-medium truncate max-w-[12rem]">{p.title}</span>
+            <span className={`text-xs px-1.5 py-0.5 rounded-full flex-shrink-0 ${statusColor(p.status)}`}>
+              {p.status.replace(/_/g, " ")}
+            </span>
+            <span className="text-[10px] text-brand-300 flex-shrink-0">{timeAgo(p.visitedAt)}</span>
+          </Link>
+        ))}
+      </div>
     </div>
   );
 }
