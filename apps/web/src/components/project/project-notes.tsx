@@ -3,16 +3,20 @@
 import { useState, useEffect, useRef } from "react";
 
 const STORAGE_KEY = (id: string) => `kol-notes-${id}`;
+const TS_KEY = (id: string) => `kol-notes-ts-${id}`;
 const MAX_CHARS = 2000;
 
 export function ProjectNotes({ projectId }: { projectId: string }) {
   const [notes, setNotes] = useState("");
   const [saved, setSaved] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY(projectId)) ?? "";
     setNotes(stored);
+    const ts = localStorage.getItem(TS_KEY(projectId));
+    if (ts) setLastUpdated(new Date(Number(ts)));
   }, [projectId]);
 
   useEffect(() => {
@@ -26,7 +30,10 @@ export function ProjectNotes({ projectId }: { projectId: string }) {
     const val = e.target.value.slice(0, MAX_CHARS);
     setNotes(val);
     setSaved(false);
+    const now = Date.now();
     localStorage.setItem(STORAGE_KEY(projectId), val);
+    localStorage.setItem(TS_KEY(projectId), String(now));
+    setLastUpdated(new Date(now));
     setSaved(true);
   }
 
@@ -51,7 +58,11 @@ export function ProjectNotes({ projectId }: { projectId: string }) {
           Ghi chú cá nhân
         </label>
         <div className="flex items-center gap-2">
-          {saved && notes && <span className="text-xs text-gray-400">Lưu tự động ✓</span>}
+          {saved && notes && (
+            <span className="text-xs text-gray-400">
+              Lưu tự động ✓{lastUpdated ? ` · ${lastUpdated.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}` : ""}
+            </span>
+          )}
           {notes && (
             <button
               onClick={handleDownload}

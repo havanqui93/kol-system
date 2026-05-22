@@ -111,6 +111,7 @@ export function ScriptViewer({ scripts, onApprove, onRegenerate, disabled, targe
               ~{script.wordCount ?? SECTION_LABELS.reduce((sum, { key }) => sum + wordCount((script[key] as string | null) ?? ""), 0)} từ
               {" · "}~{script.estimatedDurationSeconds ?? "?"}s
               {" · "}{script.fullScript.length.toLocaleString()} ký tự
+              {" · "}đọc ~{Math.ceil((script.wordCount ?? SECTION_LABELS.reduce((sum, { key }) => sum + wordCount((script[key] as string | null) ?? ""), 0)) / 150)} phút
             </p>
             {targetDurationSeconds && script.estimatedDurationSeconds && (
               <div className="flex items-center gap-2 mt-1.5">

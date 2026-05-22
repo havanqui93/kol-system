@@ -7,6 +7,7 @@ const SHORTCUTS = [
   { keys: ["n"], description: "Tạo video mới" },
   { keys: ["p"], description: "Mở thư viện sản phẩm" },
   { keys: ["k"], description: "Mở KOL Profiles" },
+  { keys: ["h"], description: "Về trang chủ (Dashboard)" },
   { keys: ["s"], description: "Mở trang cài đặt" },
   { keys: ["r"], description: "Làm mới dự án (trang chi tiết)" },
   { keys: ["/"], description: "Tìm kiếm trong danh sách" },
@@ -34,6 +35,9 @@ export function ShortcutsHelp() {
       }
       if (e.key === "k" && !isInput && !e.ctrlKey && !e.metaKey) {
         router.push("/kol-profiles");
+      }
+      if (e.key === "h" && !isInput && !e.ctrlKey && !e.metaKey) {
+        router.push("/");
       }
       if (e.key === "s" && !isInput && !e.ctrlKey && !e.metaKey) {
         router.push("/settings");

@@ -310,6 +310,12 @@ export default function SettingsPage() {
           ))}
         </CardBody>
       </Card>
+
+      {/* Version footer */}
+      <div className="mt-8 pt-4 border-t border-gray-100 text-center text-xs text-gray-400 space-y-1">
+        <p>KOL System · Next.js 14 · Prisma · BullMQ · Redis</p>
+        <p>Nền tảng hỗ trợ: TikTok · Facebook · Instagram · YouTube Shorts</p>
+      </div>
     </div>
   );
 }

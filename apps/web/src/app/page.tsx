@@ -56,9 +56,15 @@ export default async function DashboardPage({
     _sum: { totalCostUsd: true },
   });
 
-  const [productCount, kolProfileCount] = await Promise.all([
+  const [productCount, kolProfileCount, todayCount] = await Promise.all([
     prisma.product.count({ where: { userId: "demo-user" } }),
     prisma.kolProfile.count({ where: { userId: "demo-user" } }),
+    prisma.videoProject.count({
+      where: {
+        userId: "demo-user",
+        createdAt: { gte: new Date(new Date().setHours(0, 0, 0, 0)) },
+      },
+    }),
   ]);
 
   return (
@@ -69,7 +75,10 @@ export default async function DashboardPage({
       <div className="mb-8 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Dashboard <DashboardGreeting /></h1>
-          <p className="mt-1 text-sm text-gray-500">{total} dự án video</p>
+          <p className="mt-1 text-sm text-gray-500">
+            {total} dự án video
+            {todayCount > 0 && <span className="ml-2 text-xs bg-brand-100 text-brand-700 px-2 py-0.5 rounded-full">+{todayCount} hôm nay</span>}
+          </p>
         </div>
         <Link href="/projects/new">
           <Button size="lg">+ Tạo video mới</Button>

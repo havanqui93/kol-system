@@ -46,7 +46,7 @@ const LANGUAGE_FLAGS: Record<string, string> = {
   th: "🇹🇭",
 };
 
-type SortKey = "newest" | "most_videos" | "alpha";
+type SortKey = "newest" | "most_videos" | "alpha" | "oldest";
 
 export default function KolProfilesPage() {
   const { success, error: toastError } = useToast();
@@ -133,6 +133,7 @@ export default function KolProfilesPage() {
             <option value="newest">Mới nhất</option>
             <option value="most_videos">Nhiều video nhất</option>
             <option value="alpha">A → Z</option>
+            <option value="oldest">Cũ nhất</option>
           </select>
           <Link href="/kol-profiles/new">
             <Button size="sm" variant="secondary">+ Tạo KOL Profile</Button>
@@ -199,6 +200,7 @@ export default function KolProfilesPage() {
           .sort((a, b) => {
             if (sort === "most_videos") return (b._count?.videoProjects ?? 0) - (a._count?.videoProjects ?? 0);
             if (sort === "alpha") return a.name.localeCompare(b.name, "vi");
+            if (sort === "oldest") return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
             return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
           })
           .map((profile) => (

@@ -8,7 +8,11 @@ const PLATFORM_LABELS: Record<string, string> = {
 };
 
 function toCSV(projects: Project[]): string {
-  const headers = ["ID", "Tiêu đề", "Nền tảng", "Loại video", "Chất lượng", "Ngôn ngữ", "Trạng thái", "Sản phẩm", "KOL Profile", "Thời lượng (s)", "Ngày tạo", "URL video"];
+  const headers = [
+    "ID", "Tiêu đề", "Nền tảng", "Loại video", "Chất lượng", "Ngôn ngữ",
+    "Trạng thái", "Sản phẩm", "KOL Profile", "Thời lượng (s)",
+    "Ngày tạo", "Cập nhật", "URL video",
+  ];
   const rows = projects.map((p) => [
     p.id,
     p.title ?? "",
@@ -21,6 +25,7 @@ function toCSV(projects: Project[]): string {
     p.kolProfile?.name ?? "",
     p.durationSeconds,
     new Date(p.createdAt).toLocaleDateString("vi-VN"),
+    new Date(p.updatedAt).toLocaleDateString("vi-VN"),
     p.finalVideoUrl ?? "",
   ]);
   return [headers, ...rows].map((row) => row.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");

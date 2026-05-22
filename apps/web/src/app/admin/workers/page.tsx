@@ -60,9 +60,16 @@ export default function WorkersPage() {
             {refreshing ? "…" : "↻ Làm mới"}
           </button>
           {health && (
-            <span className={`text-xs font-medium px-3 py-1.5 rounded-full ${health.status === "ok" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
-              {health.status === "ok" ? "● Hoạt động tốt" : "● Sự cố"}
-            </span>
+            <>
+              {Object.values(health.queues).reduce((a, b) => a + b, 0) > 0 && (
+                <span className="text-xs font-medium px-3 py-1.5 rounded-full bg-yellow-100 text-yellow-700">
+                  {Object.values(health.queues).reduce((a, b) => a + b, 0)} job đang chờ
+                </span>
+              )}
+              <span className={`text-xs font-medium px-3 py-1.5 rounded-full ${health.status === "ok" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+                {health.status === "ok" ? "● Hoạt động tốt" : "● Sự cố"}
+              </span>
+            </>
           )}
         </div>
       </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 
 interface InlineEditProps {
   value: string;
@@ -13,13 +13,15 @@ export function InlineEdit({ value, placeholder = "Nhập tiêu đề...", onSav
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
   const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const savedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (editing) inputRef.current?.select();
   }, [editing]);
 
-  async function handleSave() {
+  const handleSave = useCallback(async () => {
     if (draft.trim() === value || !draft.trim()) {
       setEditing(false);
       setDraft(value);
@@ -28,11 +30,14 @@ export function InlineEdit({ value, placeholder = "Nhập tiêu đề...", onSav
     setSaving(true);
     try {
       await onSave(draft.trim());
+      setSaved(true);
+      if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
+      savedTimerRef.current = setTimeout(() => setSaved(false), 2000);
     } finally {
       setSaving(false);
       setEditing(false);
     }
-  }
+  }, [draft, value, onSave]);
 
   function handleKeyDown(e: React.KeyboardEvent) {
     if (e.key === "Enter") handleSave();
@@ -62,7 +67,10 @@ export function InlineEdit({ value, placeholder = "Nhập tiêu đề...", onSav
       className={`text-left hover:text-brand-700 group ${className}`}
     >
       {value || <span className="text-gray-400">{placeholder}</span>}
-      <span className="ml-1 text-xs text-gray-300 group-hover:text-brand-400 opacity-0 group-hover:opacity-100 transition-opacity">✏</span>
+      {saved
+        ? <span className="ml-1 text-xs text-green-500">✓</span>
+        : <span className="ml-1 text-xs text-gray-300 group-hover:text-brand-400 opacity-0 group-hover:opacity-100 transition-opacity">✏</span>
+      }
     </button>
   );
 }
