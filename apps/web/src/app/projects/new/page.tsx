@@ -1,11 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Input, Textarea, Select, FormField } from "@/components/ui/input";
 import { api } from "@/lib/api/client";
+
+interface ExistingProduct {
+  id: string;
+  name: string;
+  description: string | null;
+  price: string | null;
+}
 
 const PLATFORM_OPTIONS = [
   { value: "tiktok", label: "🎵 TikTok" },
@@ -72,6 +79,8 @@ export default function NewProjectPage() {
   const [error, setError] = useState<string | null>(null);
   const [productImage, setProductImage] = useState<File | null>(null);
   const [avatarImage, setAvatarImage] = useState<File | null>(null);
+  const [existingProducts, setExistingProducts] = useState<ExistingProduct[]>([]);
+  const [selectedProductId, setSelectedProductId] = useState<string>("");
 
   const [form, setForm] = useState<FormState>({
     title: "",
@@ -90,6 +99,13 @@ export default function NewProjectPage() {
     kolStylePrompt: "young Vietnamese female KOL, friendly, confident, energetic, natural social commerce presenter",
   });
 
+  useEffect(() => {
+    fetch("/api/products", { headers: { "x-user-id": "demo-user" } })
+      .then((r) => r.json())
+      .then((d) => setExistingProducts(d.products ?? []))
+      .catch(() => {});
+  }, []);
+
   function set(key: keyof FormState) {
     return (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
       setForm((prev) => ({ ...prev, [key]: e.target.value }));
@@ -97,8 +113,8 @@ export default function NewProjectPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.productName.trim()) {
-      setError("Vui lòng nhập tên sản phẩm");
+    if (!selectedProductId && !form.productName.trim()) {
+      setError("Vui lòng nhập tên sản phẩm hoặc chọn sản phẩm có sẵn");
       return;
     }
 
@@ -111,14 +127,17 @@ export default function NewProjectPage() {
         avatarImage ? api.uploads.image(avatarImage, "avatar") : Promise.resolve(null),
       ]);
 
-      const product = await api.products.create({
-        name: form.productName.trim(),
-        description: form.productDescription || undefined,
-        price: form.productPrice || undefined,
-        promotion: form.productPromotion || undefined,
-        targetCustomer: form.targetCustomer || undefined,
-        imageUrls: productImageUpload ? [productImageUpload.url] : [],
-      });
+      // Either reuse an existing product or create a new one
+      const product = selectedProductId
+        ? { id: selectedProductId }
+        : await api.products.create({
+            name: form.productName.trim(),
+            description: form.productDescription || undefined,
+            price: form.productPrice || undefined,
+            promotion: form.productPromotion || undefined,
+            targetCustomer: form.targetCustomer || undefined,
+            imageUrls: productImageUpload ? [productImageUpload.url] : [],
+          });
 
       const kolProfile = avatarImageUpload
         ? await api.kolProfiles.create({
@@ -169,62 +188,85 @@ export default function NewProjectPage() {
             <h2 className="font-semibold text-gray-800">Thông tin sản phẩm</h2>
           </CardHeader>
           <CardBody className="space-y-4">
-            <FormField label="Tên sản phẩm" htmlFor="productName" required>
-              <Input
-                id="productName"
-                placeholder="Ví dụ: Serum dưỡng da Vitamin C"
-                value={form.productName}
-                onChange={set("productName")}
-              />
-            </FormField>
+            {existingProducts.length > 0 && (
+              <div className="rounded-lg bg-brand-50 border border-brand-100 p-3">
+                <label className="block text-xs font-semibold text-brand-700 mb-1.5">Dùng lại sản phẩm có sẵn</label>
+                <select
+                  value={selectedProductId}
+                  onChange={(e) => setSelectedProductId(e.target.value)}
+                  className="w-full text-sm border border-brand-200 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-brand-400"
+                >
+                  <option value="">— Tạo sản phẩm mới —</option>
+                  {existingProducts.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name}{p.price ? ` · ${p.price}` : ""}
+                    </option>
+                  ))}
+                </select>
+                {selectedProductId && (
+                  <p className="text-xs text-brand-600 mt-1">✓ Dùng sản phẩm đã có — không cần nhập lại thông tin</p>
+                )}
+              </div>
+            )}
 
-            <FormField label="Mô tả sản phẩm" htmlFor="productDescription">
-              <Textarea
-                id="productDescription"
-                placeholder="Mô tả tính năng, thành phần, lợi ích chính..."
-                rows={3}
-                value={form.productDescription}
-                onChange={set("productDescription")}
-              />
-            </FormField>
-
-            <div className="grid grid-cols-2 gap-4">
-              <FormField label="Giá bán" htmlFor="productPrice">
+            {!selectedProductId && (<>
+              <FormField label="Tên sản phẩm" htmlFor="productName" required>
                 <Input
-                  id="productPrice"
-                  placeholder="Ví dụ: 299.000đ"
-                  value={form.productPrice}
-                  onChange={set("productPrice")}
+                  id="productName"
+                  placeholder="Ví dụ: Serum dưỡng da Vitamin C"
+                  value={form.productName}
+                  onChange={set("productName")}
                 />
               </FormField>
 
-              <FormField label="Khuyến mãi" htmlFor="productPromotion">
-                <Input
-                  id="productPromotion"
-                  placeholder="Ví dụ: Giảm 30% hôm nay"
-                  value={form.productPromotion}
-                  onChange={set("productPromotion")}
+              <FormField label="Mô tả sản phẩm" htmlFor="productDescription">
+                <Textarea
+                  id="productDescription"
+                  placeholder="Mô tả tính năng, thành phần, lợi ích chính..."
+                  rows={3}
+                  value={form.productDescription}
+                  onChange={set("productDescription")}
                 />
               </FormField>
-            </div>
 
-            <FormField label="Khách hàng mục tiêu" htmlFor="targetCustomer">
-              <Input
-                id="targetCustomer"
-                placeholder="Ví dụ: Phụ nữ 25-40 tuổi, quan tâm đến dưỡng da"
-                value={form.targetCustomer}
-                onChange={set("targetCustomer")}
-              />
-            </FormField>
+              <div className="grid grid-cols-2 gap-4">
+                <FormField label="Giá bán" htmlFor="productPrice">
+                  <Input
+                    id="productPrice"
+                    placeholder="Ví dụ: 299.000đ"
+                    value={form.productPrice}
+                    onChange={set("productPrice")}
+                  />
+                </FormField>
 
-            <FormField label="Ảnh sản phẩm" htmlFor="productImage" hint="Dùng để tạo product motion/B-roll bằng Kling.">
-              <Input
-                id="productImage"
-                type="file"
-                accept="image/png,image/jpeg,image/webp"
-                onChange={(e) => setProductImage(e.target.files?.[0] ?? null)}
-              />
-            </FormField>
+                <FormField label="Khuyến mãi" htmlFor="productPromotion">
+                  <Input
+                    id="productPromotion"
+                    placeholder="Ví dụ: Giảm 30% hôm nay"
+                    value={form.productPromotion}
+                    onChange={set("productPromotion")}
+                  />
+                </FormField>
+              </div>
+
+              <FormField label="Khách hàng mục tiêu" htmlFor="targetCustomer">
+                <Input
+                  id="targetCustomer"
+                  placeholder="Ví dụ: Phụ nữ 25-40 tuổi, quan tâm đến dưỡng da"
+                  value={form.targetCustomer}
+                  onChange={set("targetCustomer")}
+                />
+              </FormField>
+
+              <FormField label="Ảnh sản phẩm" htmlFor="productImage" hint="Dùng để tạo product motion/B-roll bằng Kling.">
+                <Input
+                  id="productImage"
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  onChange={(e) => setProductImage(e.target.files?.[0] ?? null)}
+                />
+              </FormField>
+            </>)}
           </CardBody>
         </Card>
 

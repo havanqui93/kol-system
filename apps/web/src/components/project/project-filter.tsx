@@ -31,11 +31,25 @@ function matchesSearch(project: Project, query: string) {
   );
 }
 
+const SORT_OPTIONS = [
+  { value: "newest", label: "Mới nhất" },
+  { value: "oldest", label: "Cũ nhất" },
+  { value: "status", label: "Theo trạng thái" },
+];
+
+function sortProjects(projects: Project[], sort: string) {
+  const copy = [...projects];
+  if (sort === "oldest") return copy.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+  if (sort === "status") return copy.sort((a, b) => a.status.localeCompare(b.status));
+  return copy.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+}
+
 export function ProjectFilter({ initialProjects }: { initialProjects: Project[] }) {
   const [projects, setProjects] = useState(initialProjects);
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [sort, setSort] = useState("newest");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -45,8 +59,11 @@ export function ProjectFilter({ initialProjects }: { initialProjects: Project[] 
   }, [searchInput]);
 
   const filtered = useMemo(
-    () => projects.filter((p) => matchesStatus(p, statusFilter) && matchesSearch(p, search)),
-    [projects, search, statusFilter]
+    () => sortProjects(
+      projects.filter((p) => matchesStatus(p, statusFilter) && matchesSearch(p, search)),
+      sort
+    ),
+    [projects, search, statusFilter, sort]
   );
 
   function handleDeleted(id: string) {
@@ -56,13 +73,13 @@ export function ProjectFilter({ initialProjects }: { initialProjects: Project[] 
   return (
     <div>
       {/* Search + filter bar */}
-      <div className="flex gap-3 mb-5">
+      <div className="flex gap-3 mb-5 flex-wrap">
         <input
           type="search"
           placeholder="Tìm theo tên, sản phẩm, nền tảng..."
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
-          className="flex-1 text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-400"
+          className="flex-1 min-w-40 text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-400"
         />
         <select
           value={statusFilter}
@@ -70,6 +87,15 @@ export function ProjectFilter({ initialProjects }: { initialProjects: Project[] 
           className="text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-400"
         >
           {STATUS_FILTER_OPTIONS.map((o) => (
+            <option key={o.value} value={o.value}>{o.label}</option>
+          ))}
+        </select>
+        <select
+          value={sort}
+          onChange={(e) => setSort(e.target.value)}
+          className="text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-400"
+        >
+          {SORT_OPTIONS.map((o) => (
             <option key={o.value} value={o.value}>{o.label}</option>
           ))}
         </select>

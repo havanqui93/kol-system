@@ -45,6 +45,13 @@ export default async function DashboardPage({
   const completed = Object.entries(statMap).filter(([s]) => s === "published" || s === "ready_to_publish").reduce((a, [, v]) => a + v, 0);
   const processing = Object.entries(statMap).filter(([s]) => ["script_generating", "audio_generating", "video_generating", "rendering"].includes(s)).reduce((a, [, v]) => a + v, 0);
   const failed = statMap["failed"] ?? 0;
+  const scriptReady = statMap["script_ready"] ?? 0;
+
+  // Total cost across all projects
+  const costAgg = await prisma.costTracking.aggregate({
+    where: { project: { userId: "demo-user" } },
+    _sum: { totalCostUsd: true },
+  });
 
   return (
     <div>
@@ -65,14 +72,22 @@ export default async function DashboardPage({
           {[
             { label: "Tổng video", value: total },
             { label: "Hoàn thành", value: completed },
+            { label: "Chờ duyệt", value: scriptReady },
             { label: "Đang xử lý", value: processing },
-            { label: "Thất bại", value: failed },
           ].map((stat) => (
             <div key={stat.label} className="bg-white rounded-xl border border-gray-200 px-5 py-4">
               <div className="text-2xl font-bold text-gray-900">{stat.value}</div>
               <div className="text-xs text-gray-500 mt-0.5">{stat.label}</div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Cost summary */}
+      {costAgg._sum.totalCostUsd && Number(costAgg._sum.totalCostUsd) > 0 && (
+        <div className="flex items-center justify-between bg-blue-50 border border-blue-100 rounded-xl px-5 py-3 mb-6 text-sm">
+          <span className="text-blue-700 font-medium">Tổng chi phí AI</span>
+          <span className="text-blue-900 font-bold">${Number(costAgg._sum.totalCostUsd).toFixed(4)}</span>
         </div>
       )}
 

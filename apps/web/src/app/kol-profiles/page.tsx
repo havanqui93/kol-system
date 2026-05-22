@@ -7,6 +7,7 @@ import { Card, CardBody } from "@/components/ui/card";
 import { useToast } from "@/components/ui/toast";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { ProjectCardSkeleton } from "@/components/ui/skeleton";
+import { InlineEdit } from "@/components/project/inline-edit";
 
 interface KolProfile {
   id: string;
@@ -118,7 +119,19 @@ export default function KolProfilesPage() {
                 />
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-gray-900 truncate">{profile.name}</h3>
+                <h3 className="font-semibold text-gray-900 truncate">
+                  <InlineEdit
+                    value={profile.name}
+                    onSave={async (name) => {
+                      await fetch(`/api/kol-profiles/${profile.id}/rename`, {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json", "x-user-id": "demo-user" },
+                        body: JSON.stringify({ name }),
+                      });
+                      setProfiles((prev) => prev.map((p) => p.id === profile.id ? { ...p, name } : p));
+                    }}
+                  />
+                </h3>
                 {profile.description && (
                   <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{profile.description}</p>
                 )}

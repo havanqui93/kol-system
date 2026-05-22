@@ -5,6 +5,24 @@ import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import type { Script } from "@/lib/api/client";
 
+function CopyScriptButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+  async function handleCopy() {
+    await navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+  return (
+    <button
+      onClick={handleCopy}
+      title="Sao chép full script"
+      className="text-xs text-gray-400 hover:text-brand-600 transition-colors px-1"
+    >
+      {copied ? "✓ Đã sao chép" : "⎘ Sao chép"}
+    </button>
+  );
+}
+
 interface ScriptViewerProps {
   scripts: Script[];
   onApprove: (scriptId: string) => Promise<void>;
@@ -128,7 +146,8 @@ export function ScriptViewer({ scripts, onApprove, onRegenerate, disabled }: Scr
             </div>
           )}
 
-          <div className="ml-auto">
+          <div className="ml-auto flex items-center gap-2">
+            <CopyScriptButton text={script.fullScript} />
             <details>
               <summary className="text-xs text-gray-400 cursor-pointer hover:text-gray-600">Xem full script</summary>
               <div className="mt-2 p-3 bg-gray-50 rounded-lg text-sm text-gray-700 whitespace-pre-wrap leading-relaxed max-h-48 overflow-y-auto scrollbar-thin">
