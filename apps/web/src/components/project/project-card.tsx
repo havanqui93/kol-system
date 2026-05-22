@@ -167,7 +167,14 @@ export function ProjectCard({ project, onDeleted }: { project: Project; onDelete
                 {project.kolProfile && (
                   <>
                     <span>·</span>
-                    <span className="text-gray-500">🎭 {project.kolProfile.name}</span>
+                    <span className="flex items-center gap-1 text-gray-500">
+                      {project.kolProfile.avatarImageUrl ? (
+                        <img src={project.kolProfile.avatarImageUrl} alt="" className="w-4 h-4 rounded-full object-cover inline-block flex-shrink-0" />
+                      ) : (
+                        <span>🎭</span>
+                      )}
+                      {project.kolProfile.name}
+                    </span>
                   </>
                 )}
               </div>

@@ -198,6 +198,24 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
           >
             🔗 Sao chép link
           </button>
+          <button
+            onClick={() => {
+              const summary = [
+                `Tên: ${project.title ?? "Video " + project.id.slice(-6)}`,
+                `Trạng thái: ${project.status}`,
+                `Nền tảng: ${project.platform}`,
+                `Thời lượng: ${project.durationSeconds}s`,
+                `ID: ${project.id}`,
+                `URL: ${window.location.href}`,
+              ].join("\n");
+              navigator.clipboard.writeText(summary);
+              success("Đã sao chép tóm tắt dự án");
+            }}
+            title="Sao chép tóm tắt dự án"
+            className="text-xs text-gray-500 hover:text-gray-700 px-2 py-1 rounded hover:bg-gray-100 transition-colors"
+          >
+            📋 Tóm tắt
+          </button>
           <Button variant="ghost" size="sm" onClick={() => refresh()} aria-label="Làm mới">
             ↻ Làm mới
           </Button>

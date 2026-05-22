@@ -103,7 +103,7 @@ export default function NewKolProfilePage() {
               </div>
             </div>
             <FormField label="Tên KOL" htmlFor="name" required>
-              <Input id="name" placeholder="Ví dụ: Linh AI, Mai Beauty KOL" value={form.name} onChange={set("name")} />
+              <Input id="name" autoFocus placeholder="Ví dụ: Linh AI, Mai Beauty KOL" value={form.name} onChange={set("name")} />
             </FormField>
             <FormField label="Mô tả" htmlFor="description">
               <Input id="description" placeholder="Ghi chú về phong cách / chuyên môn" value={form.description} onChange={set("description")} />
@@ -126,6 +126,9 @@ export default function NewKolProfilePage() {
             </FormField>
             <FormField label="Mô tả phong cách Kling (prompt)" htmlFor="stylePrompt" hint="Dùng để hướng dẫn Kling tạo talking-head video">
               <Textarea id="stylePrompt" rows={2} value={form.stylePrompt} onChange={set("stylePrompt")} />
+              {form.stylePrompt && (
+                <span className="text-xs text-gray-400 mt-0.5 block text-right">{form.stylePrompt.length} ký tự</span>
+              )}
             </FormField>
           </CardBody>
         </Card>

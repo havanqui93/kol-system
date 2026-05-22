@@ -66,7 +66,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </main>
 
           <footer className="border-t border-gray-200 text-center text-xs text-gray-400 py-4 space-y-1">
-            <p>KOL System · Powered by Claude + Kling + ElevenLabs</p>
+            <p>KOL System © {new Date().getFullYear()} · Powered by Claude + Kling + ElevenLabs</p>
             <p className="flex items-center justify-center gap-2 flex-wrap">
               <HealthDot />
               <a href="/admin/workers" className="hover:text-gray-600 underline transition-colors">Workers</a>

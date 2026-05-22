@@ -101,6 +101,12 @@ export function ProjectFilter({ initialProjects, initialStatus = "" }: { initial
     [projects, search, statusFilter, platformFilter, sort]
   );
 
+  const platformCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    projects.forEach((p) => { counts[p.platform] = (counts[p.platform] ?? 0) + 1; });
+    return counts;
+  }, [projects]);
+
   function handleDeleted(id: string) {
     setProjects((prev) => prev.filter((p) => p.id !== id));
   }
@@ -143,7 +149,9 @@ export function ProjectFilter({ initialProjects, initialStatus = "" }: { initial
           className="text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-400"
         >
           {PLATFORM_FILTER_OPTIONS.map((o) => (
-            <option key={o.value} value={o.value}>{o.label}</option>
+            <option key={o.value} value={o.value}>
+              {o.label}{o.value && platformCounts[o.value] ? ` (${platformCounts[o.value]})` : ""}
+            </option>
           ))}
         </select>
         <select

@@ -56,6 +56,12 @@ export default async function DashboardPage({
     _sum: { totalCostUsd: true },
   });
 
+  const durationAgg = await prisma.videoProject.aggregate({
+    where: { userId: "demo-user" },
+    _sum: { durationSeconds: true },
+  });
+  const totalDurationSecs = Number(durationAgg._sum.durationSeconds ?? 0);
+
   const weekAgo = new Date(Date.now() - 7 * 24 * 3600 * 1000);
   const [productCount, kolProfileCount, todayCount, weekCount] = await Promise.all([
     prisma.product.count({ where: { userId: "demo-user" } }),
@@ -81,6 +87,7 @@ export default async function DashboardPage({
           <h1 className="text-2xl font-bold text-gray-900">Dashboard <DashboardGreeting /></h1>
           <p className="mt-1 text-sm text-gray-500 flex items-center gap-2 flex-wrap">
             <span>{total} dự án video</span>
+            {totalDurationSecs > 0 && <span className="text-gray-400">· {Math.floor(totalDurationSecs / 60)}p{totalDurationSecs % 60}s tổng</span>}
             {todayCount > 0 && <span className="text-xs bg-brand-100 text-brand-700 px-2 py-0.5 rounded-full">+{todayCount} hôm nay</span>}
             {weekCount > 0 && <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">{weekCount} tuần này</span>}
           </p>

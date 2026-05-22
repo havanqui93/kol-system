@@ -107,7 +107,7 @@ export default function EditKolProfilePage({ params }: { params: { id: string } 
           <CardHeader><h2 className="font-semibold text-gray-800">Thông tin KOL</h2></CardHeader>
           <CardBody className="space-y-4">
             <FormField label="Tên KOL" htmlFor="name" required>
-              <Input id="name" value={form.name} onChange={set("name")} />
+              <Input id="name" autoFocus value={form.name} onChange={set("name")} />
             </FormField>
             <FormField label="Mô tả" htmlFor="description">
               <Textarea id="description" rows={2} value={form.description} onChange={set("description")} />
@@ -140,6 +140,9 @@ export default function EditKolProfilePage({ params }: { params: { id: string } 
             </FormField>
             <FormField label="Style prompt (tùy chọn)" htmlFor="stylePrompt" hint="Mô tả phong cách avatar cho AI">
               <Textarea id="stylePrompt" rows={2} value={form.stylePrompt} onChange={set("stylePrompt")} />
+              {form.stylePrompt && (
+                <span className="text-xs text-gray-400 mt-0.5 block text-right">{form.stylePrompt.length} ký tự</span>
+              )}
             </FormField>
           </CardBody>
         </Card>

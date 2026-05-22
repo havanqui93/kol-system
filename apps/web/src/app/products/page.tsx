@@ -272,6 +272,9 @@ export default function ProductsPage() {
                   {product._count !== undefined && (
                     <span className="text-gray-400">{product._count.videoProjects} video</span>
                   )}
+                  <span className="text-gray-300" title={`Thêm lúc: ${new Date(product.createdAt).toLocaleDateString("vi-VN")}`}>
+                    {(() => { const d = new Date(product.createdAt); const days = Math.floor((Date.now() - d.getTime()) / 86400000); return days < 1 ? "hôm nay" : days < 7 ? `${days}n trước` : d.toLocaleDateString("vi-VN"); })()}
+                  </span>
                 </div>
               </div>
             </CardBody>

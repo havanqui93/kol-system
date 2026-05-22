@@ -60,10 +60,13 @@ export default function NewProductPage() {
           <CardHeader><h2 className="font-semibold text-gray-800">Thông tin sản phẩm</h2></CardHeader>
           <CardBody className="space-y-4">
             <FormField label="Tên sản phẩm" htmlFor="name" required>
-              <Input id="name" placeholder="Ví dụ: Serum Vitamin C" value={form.name} onChange={set("name")} />
+              <Input id="name" autoFocus placeholder="Ví dụ: Serum Vitamin C" value={form.name} onChange={set("name")} />
             </FormField>
             <FormField label="Mô tả" htmlFor="description">
               <Textarea id="description" rows={3} placeholder="Tính năng, thành phần, lợi ích..." value={form.description} onChange={set("description")} />
+              {form.description && (
+                <span className="text-xs text-gray-400 mt-0.5 block text-right">{form.description.length} ký tự</span>
+              )}
             </FormField>
             <div className="grid grid-cols-2 gap-4">
               <FormField label="Giá bán" htmlFor="price">
