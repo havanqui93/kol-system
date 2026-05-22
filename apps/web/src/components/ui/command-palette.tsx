@@ -106,7 +106,11 @@ export function CommandPalette() {
 
         <ul className="py-2 max-h-72 overflow-y-auto">
           {query && items.length === 0 && (
-            <li className="px-4 py-8 text-center text-sm text-gray-400">Không tìm thấy kết quả cho "{query}"</li>
+            <li className="px-4 py-8 text-center">
+              <div className="text-3xl mb-2">🔍</div>
+              <p className="text-sm text-gray-500 font-medium">Không tìm thấy kết quả</p>
+              <p className="text-xs text-gray-400 mt-1">Thử tìm tên dự án hoặc sản phẩm</p>
+            </li>
           )}
           {!query && (
             <li className="px-4 pt-1 pb-1 text-[11px] text-gray-400 font-semibold uppercase tracking-wider">

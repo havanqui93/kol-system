@@ -27,6 +27,7 @@ interface PublishJob {
 const PLATFORM_META: Record<string, { icon: string; name: string }> = {
   tiktok:        { icon: "🎵", name: "TikTok" },
   facebook:      { icon: "📘", name: "Facebook Reels" },
+  instagram:     { icon: "📸", name: "Instagram Reels" },
   youtube_shorts:{ icon: "▶️", name: "YouTube Shorts" },
 };
 

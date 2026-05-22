@@ -22,7 +22,7 @@ interface Product {
   _count?: { videoProjects: number };
 }
 
-type SortKey = "newest" | "most_videos" | "alpha";
+type SortKey = "newest" | "most_videos" | "alpha" | "oldest";
 
 export default function ProductsPage() {
   const { success, error: toastError } = useToast();
@@ -110,6 +110,7 @@ export default function ProductsPage() {
             <option value="newest">Mới nhất</option>
             <option value="most_videos">Nhiều video nhất</option>
             <option value="alpha">A → Z</option>
+            <option value="oldest">Cũ nhất</option>
           </select>
           <Link href="/products/new">
             <Button size="sm" variant="secondary">+ Thêm sản phẩm</Button>
@@ -174,6 +175,7 @@ export default function ProductsPage() {
         {[...products].filter((p) => !search || p.name.toLowerCase().includes(search.toLowerCase())).sort((a, b) => {
           if (sort === "most_videos") return (b._count?.videoProjects ?? 0) - (a._count?.videoProjects ?? 0);
           if (sort === "alpha") return a.name.localeCompare(b.name, "vi");
+          if (sort === "oldest") return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
           return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
         }).map((product) => (
           <Card key={product.id} className="group relative">

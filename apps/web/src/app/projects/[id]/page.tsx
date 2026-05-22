@@ -192,11 +192,11 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
             ⬇ JSON
           </a>
           <button
-            onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/share/${project.id}`); success("Đã sao chép link chia sẻ"); }}
-            title="Sao chép link chia sẻ"
+            onClick={() => { navigator.clipboard.writeText(window.location.href); success("Đã sao chép link dự án"); }}
+            title="Sao chép link dự án này"
             className="text-xs text-gray-500 hover:text-gray-700 px-2 py-1 rounded hover:bg-gray-100 transition-colors"
           >
-            🔗 Chia sẻ
+            🔗 Sao chép link
           </button>
           <Button variant="ghost" size="sm" onClick={() => refresh()} aria-label="Làm mới">
             ↻ Làm mới

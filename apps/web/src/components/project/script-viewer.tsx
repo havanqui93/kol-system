@@ -76,6 +76,7 @@ export function ScriptViewer({ scripts, onApprove, onRegenerate, disabled, targe
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [approving, setApproving] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
+  const [sectionsExpanded, setSectionsExpanded] = useState(true);
 
   const script = scripts[selectedIndex];
   if (!script) return null;
@@ -131,6 +132,13 @@ export function ScriptViewer({ scripts, onApprove, onRegenerate, disabled, targe
               </div>
             )}
           </div>
+          <button
+            onClick={() => setSectionsExpanded((v) => !v)}
+            className="text-xs text-gray-400 hover:text-gray-600 transition-colors mt-1"
+            title={sectionsExpanded ? "Thu gọn các phần" : "Mở rộng các phần"}
+          >
+            {sectionsExpanded ? "▲ Thu gọn" : "▼ Mở rộng"}
+          </button>
           {scripts.length > 1 && (
             <div className="flex gap-1 flex-wrap">
               {scripts.map((s, i) => (
@@ -152,16 +160,18 @@ export function ScriptViewer({ scripts, onApprove, onRegenerate, disabled, targe
         </div>
       </CardHeader>
 
-      <CardBody className="space-y-4">
-        {SECTION_LABELS.map(({ key, label, emoji }) => (
-          <ScriptSection
-            key={key}
-            emoji={emoji}
-            label={label}
-            text={script[key] as string | null}
-          />
-        ))}
-      </CardBody>
+      {sectionsExpanded && (
+        <CardBody className="space-y-4">
+          {SECTION_LABELS.map(({ key, label, emoji }) => (
+            <ScriptSection
+              key={key}
+              emoji={emoji}
+              label={label}
+              text={script[key] as string | null}
+            />
+          ))}
+        </CardBody>
+      )}
 
       <div className="px-6 pb-4 border-t border-gray-100 pt-4">
         <div className="flex items-center gap-3">

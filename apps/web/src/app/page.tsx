@@ -99,21 +99,27 @@ export default async function DashboardPage({
 
       {/* Resource counts */}
       <div className="grid grid-cols-2 gap-4 mb-8">
-        <Link href="/products" className="bg-white rounded-xl border border-gray-200 px-5 py-4 hover:border-brand-300 hover:shadow-sm transition-colors block">
+        <Link
+          href="/products"
+          className={`bg-white rounded-xl border px-5 py-4 hover:border-brand-300 hover:shadow-sm transition-colors block ${productCount === 0 ? "border-dashed border-orange-300 bg-orange-50/40" : "border-gray-200"}`}
+        >
           <div className="flex items-center gap-3">
             <span className="text-2xl">📦</span>
             <div>
               <div className="text-2xl font-bold text-gray-900">{productCount}</div>
-              <div className="text-xs text-gray-500">Sản phẩm</div>
+              <div className="text-xs text-gray-500">Sản phẩm{productCount === 0 ? " · Thêm ngay →" : ""}</div>
             </div>
           </div>
         </Link>
-        <Link href="/kol-profiles" className="bg-white rounded-xl border border-gray-200 px-5 py-4 hover:border-brand-300 hover:shadow-sm transition-colors block">
+        <Link
+          href="/kol-profiles"
+          className={`bg-white rounded-xl border px-5 py-4 hover:border-brand-300 hover:shadow-sm transition-colors block ${kolProfileCount === 0 ? "border-dashed border-purple-300 bg-purple-50/40" : "border-gray-200"}`}
+        >
           <div className="flex items-center gap-3">
             <span className="text-2xl">🎭</span>
             <div>
               <div className="text-2xl font-bold text-gray-900">{kolProfileCount}</div>
-              <div className="text-xs text-gray-500">KOL Profiles</div>
+              <div className="text-xs text-gray-500">KOL Profiles{kolProfileCount === 0 ? " · Tạo ngay →" : ""}</div>
             </div>
           </div>
         </Link>

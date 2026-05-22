@@ -17,6 +17,24 @@ const PLATFORM_ICONS: Record<string, string> = {
   youtube_shorts: "▶️",
 };
 
+const STATUS_PROGRESS: Record<string, number> = {
+  draft: 5,
+  script_generating: 15,
+  script_ready: 25,
+  script_approved: 30,
+  audio_generating: 40,
+  audio_ready: 50,
+  video_generating: 60,
+  clips_ready: 70,
+  rendering: 80,
+  rendered: 85,
+  qa_checking: 90,
+  ready_to_publish: 95,
+  publishing: 97,
+  published: 100,
+  failed: 0,
+};
+
 const VIDEO_TYPE_LABELS: Record<string, string> = {
   product_review: "Review sản phẩm",
   affiliate: "Affiliate",
@@ -141,6 +159,20 @@ export function ProjectCard({ project, onDeleted }: { project: Project; onDelete
                   </>
                 )}
               </div>
+
+              {/* Pipeline progress bar */}
+              {project.status !== "draft" && project.status !== "failed" && (
+                <div className="mt-2">
+                  <div className="h-1 bg-gray-100 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all duration-500 ${
+                        project.status === "published" ? "bg-green-400" : isProcessing ? "bg-yellow-400 animate-pulse" : "bg-brand-400"
+                      }`}
+                      style={{ width: `${STATUS_PROGRESS[project.status] ?? 50}%` }}
+                    />
+                  </div>
+                </div>
+              )}
 
               <div className="mt-2 flex items-center justify-between">
                 <span className="text-xs text-gray-400">{timeAgo(project.createdAt)}</span>

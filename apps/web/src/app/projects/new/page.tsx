@@ -540,7 +540,13 @@ function NewProjectContent() {
         )}
 
         <div className="text-xs text-gray-400 text-center">
-          💡 Video thường hoàn thành trong ~5–15 phút · Bạn có thể theo dõi tiến độ sau khi tạo
+          💡 Ước tính hoàn thành:{" "}
+          {{
+            cheap: "~5–8 phút (1 Kling clip)",
+            balanced: "~8–12 phút (2 Kling clips)",
+            premium: "~12–18 phút (3 Kling clips)",
+          }[form.qualityPreset] ?? "~5–15 phút"}{" "}
+          · Theo dõi tiến độ ngay sau khi tạo
         </div>
 
         <div className="flex gap-3">
