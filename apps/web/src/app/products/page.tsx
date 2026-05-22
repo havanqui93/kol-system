@@ -191,12 +191,21 @@ export default function ProductsPage() {
         )}
       </div>
 
-      {search && products.filter((p) => p.name.toLowerCase().includes(search.toLowerCase())).length === 0 && (
-        <div className="py-12 text-center text-gray-400">
-          <p className="text-sm">Không tìm thấy sản phẩm nào cho "<span className="font-medium text-gray-600">{search}</span>"</p>
-          <button onClick={() => setSearch("")} className="mt-2 text-xs text-brand-600 hover:underline">Xóa bộ lọc</button>
-        </div>
-      )}
+      {/* Filtered count indicator */}
+      {(search || categoryFilter) && (() => {
+        const count = products.filter((p) => {
+          if (search && !p.name.toLowerCase().includes(search.toLowerCase())) return false;
+          if (categoryFilter && p.category !== categoryFilter) return false;
+          return true;
+        }).length;
+        if (count === 0) return (
+          <div className="py-12 text-center text-gray-400">
+            <p className="text-sm">Không tìm thấy sản phẩm phù hợp</p>
+            <button onClick={() => { setSearch(""); setCategoryFilter(""); }} className="mt-2 text-xs text-brand-600 hover:underline">Xóa bộ lọc</button>
+          </div>
+        );
+        return <p className="text-xs text-gray-400 mb-3">{count} / {products.length} sản phẩm</p>;
+      })()}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {[...products].filter((p) => {

@@ -246,6 +246,9 @@ export default function KolProfilesPage() {
                   {profile._count !== undefined && (
                     <span className="text-xs text-gray-400 px-2 py-0.5">{profile._count.videoProjects} video</span>
                   )}
+                  <span className="text-xs text-gray-300 px-1" title={`Tạo lúc: ${new Date(profile.createdAt).toLocaleDateString("vi-VN")}`}>
+                    {(() => { const d = new Date(profile.createdAt); const diff = Date.now() - d.getTime(); const days = Math.floor(diff / 86400000); return days < 1 ? "hôm nay" : days < 7 ? `${days}n trước` : d.toLocaleDateString("vi-VN"); })()}
+                  </span>
                 </div>
               </div>
             </CardBody>

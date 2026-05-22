@@ -6,6 +6,7 @@ import { ShortcutsHelp } from "@/components/ui/shortcuts-help";
 import { NavLinks } from "@/components/ui/nav-links";
 import { CommandPalette } from "@/components/ui/command-palette";
 import { SearchTrigger } from "@/components/ui/search-trigger";
+import { HealthDot } from "@/components/ui/health-dot";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -66,7 +67,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
           <footer className="border-t border-gray-200 text-center text-xs text-gray-400 py-4 space-y-1">
             <p>KOL System · Powered by Claude + Kling + ElevenLabs</p>
-            <p>
+            <p className="flex items-center justify-center gap-2">
+              <HealthDot />
               <a href="/admin/workers" className="hover:text-gray-600 underline transition-colors">Workers</a>
               {" · "}
               <a href="https://github.com/havanqui93/kol-system/issues" target="_blank" rel="noreferrer" className="hover:text-gray-600 underline transition-colors">Báo lỗi</a>

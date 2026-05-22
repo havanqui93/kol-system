@@ -92,19 +92,20 @@ export default async function DashboardPage({
 
       {/* Stats row — click to filter */}
       {total > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-4">
           {[
-            { label: "Tổng video", value: total, filter: "" },
-            { label: "Hoàn thành", value: completed, filter: "ready_to_publish" },
-            { label: "Chờ duyệt", value: scriptReady, filter: "script_ready" },
-            { label: "Đang xử lý", value: processing, filter: "processing" },
+            { label: "Tổng video", value: total, filter: "", colorClass: "" },
+            { label: "Hoàn thành", value: completed, filter: "ready_to_publish", colorClass: "" },
+            { label: "Chờ duyệt", value: scriptReady, filter: "script_ready", colorClass: scriptReady > 0 ? "border-orange-200 bg-orange-50/30 hover:border-orange-400" : "" },
+            { label: "Đang xử lý", value: processing, filter: "processing", colorClass: "" },
+            { label: "Thất bại", value: failed, filter: "failed", colorClass: failed > 0 ? "border-red-200 bg-red-50/30 hover:border-red-400" : "" },
           ].map((stat) => (
             <Link
               key={stat.label}
               href={stat.filter ? `/?status=${stat.filter}` : "/"}
-              className={`bg-white rounded-xl border px-5 py-4 transition-colors hover:border-brand-300 hover:shadow-sm block ${initialStatus === stat.filter ? "border-brand-400 bg-brand-50" : "border-gray-200"}`}
+              className={`bg-white rounded-xl border px-5 py-4 transition-colors hover:shadow-sm block ${initialStatus === stat.filter ? "border-brand-400 bg-brand-50" : stat.colorClass || "border-gray-200 hover:border-brand-300"}`}
             >
-              <div className="text-2xl font-bold text-gray-900">{stat.value}</div>
+              <div className={`text-2xl font-bold ${stat.label === "Thất bại" && stat.value > 0 ? "text-red-600" : "text-gray-900"}`}>{stat.value}</div>
               <div className="text-xs text-gray-500 mt-0.5">{stat.label}</div>
             </Link>
           ))}

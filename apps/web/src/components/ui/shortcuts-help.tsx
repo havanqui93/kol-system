@@ -8,6 +8,7 @@ const SHORTCUTS = [
   { keys: ["p"], description: "Mở thư viện sản phẩm" },
   { keys: ["k"], description: "Mở KOL Profiles" },
   { keys: ["h"], description: "Về trang chủ (Dashboard)" },
+  { keys: ["w"], description: "Mở trang Workers/Admin" },
   { keys: ["s"], description: "Mở trang cài đặt" },
   { keys: ["r"], description: "Làm mới dự án (trang chi tiết)" },
   { keys: ["/"], description: "Tìm kiếm trong danh sách" },
@@ -38,6 +39,9 @@ export function ShortcutsHelp() {
       }
       if (e.key === "h" && !isInput && !e.ctrlKey && !e.metaKey) {
         router.push("/");
+      }
+      if (e.key === "w" && !isInput && !e.ctrlKey && !e.metaKey) {
+        router.push("/admin/workers");
       }
       if (e.key === "s" && !isInput && !e.ctrlKey && !e.metaKey) {
         router.push("/settings");
