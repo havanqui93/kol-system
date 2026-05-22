@@ -176,13 +176,29 @@ export default function ProductsPage() {
                 </div>
               </div>
             </CardBody>
-            <button
-              onClick={() => setDeleteTarget(product)}
-              aria-label={`Xóa sản phẩm ${product.name}`}
-              className="absolute top-2 right-2 w-7 h-7 rounded-full bg-white border border-gray-200 text-gray-400 hover:text-red-600 hover:border-red-300 items-center justify-center text-sm opacity-0 group-hover:opacity-100 transition-opacity shadow-sm flex"
-            >
-              ×
-            </button>
+            <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <Link
+                href={`/projects/new?productId=${product.id}`}
+                title="Tạo video từ sản phẩm này"
+                className="w-7 h-7 rounded-full bg-white border border-gray-200 text-gray-400 hover:text-brand-600 hover:border-brand-300 items-center justify-center text-xs shadow-sm flex"
+              >
+                +
+              </Link>
+              <Link
+                href={`/products/${product.id}/edit`}
+                title="Chỉnh sửa sản phẩm"
+                className="w-7 h-7 rounded-full bg-white border border-gray-200 text-gray-400 hover:text-gray-700 hover:border-gray-300 items-center justify-center text-xs shadow-sm flex"
+              >
+                ✎
+              </Link>
+              <button
+                onClick={() => setDeleteTarget(product)}
+                aria-label={`Xóa sản phẩm ${product.name}`}
+                className="w-7 h-7 rounded-full bg-white border border-gray-200 text-gray-400 hover:text-red-600 hover:border-red-300 items-center justify-center text-sm shadow-sm flex"
+              >
+                ×
+              </button>
+            </div>
           </Card>
         ))}
       </div>

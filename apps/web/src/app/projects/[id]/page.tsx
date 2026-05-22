@@ -205,11 +205,11 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
       {(project.product || project.kolProfile) && (
         <div className="mb-4 flex flex-wrap gap-3">
           {project.product && (
-            <div className="flex items-center gap-3 flex-1 min-w-0 bg-gray-50 rounded-xl px-4 py-3">
+            <div className="flex items-center gap-3 flex-1 min-w-0 bg-gray-50 rounded-xl px-4 py-3 relative">
               {project.product.imageUrls?.[0] && (
                 <img src={project.product.imageUrls[0]} alt="" className="w-10 h-10 rounded-lg object-cover flex-shrink-0" />
               )}
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <div className="text-xs text-gray-400 mb-0.5">Sản phẩm</div>
                 <div className="font-medium text-gray-900 truncate text-sm">{project.product.name}</div>
                 {project.product.price && (
@@ -219,6 +219,7 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
                   <div className="text-xs text-green-600">{project.product.promotion}</div>
                 )}
               </div>
+              <Link href="/products" className="text-xs text-gray-400 hover:text-gray-600 flex-shrink-0" title="Xem tất cả sản phẩm">→</Link>
             </div>
           )}
           {project.kolProfile && (
@@ -226,13 +227,14 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
               {project.kolProfile.avatarImageUrl && (
                 <img src={project.kolProfile.avatarImageUrl} alt="" className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
               )}
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <div className="text-xs text-gray-400 mb-0.5">KOL Profile</div>
                 <div className="font-medium text-gray-900 truncate text-sm">{project.kolProfile.name}</div>
                 {project.kolProfile.voiceStyle && (
                   <div className="text-xs text-gray-500">{project.kolProfile.voiceStyle}{project.kolProfile.language ? ` · ${project.kolProfile.language.toUpperCase()}` : ""}</div>
                 )}
               </div>
+              <Link href="/kol-profiles" className="text-xs text-gray-400 hover:text-gray-600 flex-shrink-0" title="Xem tất cả KOL profiles">→</Link>
             </div>
           )}
         </div>

@@ -120,12 +120,14 @@ function NewProjectContent() {
     };
   });
 
-  // Apply clone settings from URL params (e.g. navigating from project detail "⎘ Clone")
+  // Apply clone settings and pre-select product/KOL from URL params
   useEffect(() => {
     const platform = searchParams.get("platform");
     const videoType = searchParams.get("videoType");
     const durationSeconds = searchParams.get("durationSeconds");
     const qualityPreset = searchParams.get("qualityPreset");
+    const productId = searchParams.get("productId");
+    const kolProfileId = searchParams.get("kolProfileId");
     if (platform || videoType || durationSeconds || qualityPreset) {
       setForm((prev) => ({
         ...prev,
@@ -135,6 +137,8 @@ function NewProjectContent() {
         ...(qualityPreset ? { qualityPreset } : {}),
       }));
     }
+    if (productId) setSelectedProductId(productId);
+    if (kolProfileId) setSelectedKolId(kolProfileId);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
