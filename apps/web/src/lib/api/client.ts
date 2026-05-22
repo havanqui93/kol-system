@@ -181,6 +181,9 @@ export const api = {
       }),
     duplicate: (id: string) =>
       apiFetch<Project>(`/api/video-projects/${id}/duplicate`, { method: "POST", body: "{}" }),
+    rename: (id: string, title: string) =>
+      apiFetch<Project>(`/api/video-projects/${id}`, { method: "PATCH", body: JSON.stringify({ title }) }),
+    exportUrl: (id: string) => `/api/video-projects/${id}/export`,
   },
 
   script: {

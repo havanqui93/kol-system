@@ -11,6 +11,7 @@ import { Card, CardBody } from "@/components/ui/card";
 import { ProjectDetailSkeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/toast";
 import { ProgressBar } from "@/components/ui/progress-bar";
+import { InlineEdit } from "@/components/project/inline-edit";
 import { ScriptViewer } from "@/components/project/script-viewer";
 import { PipelineStep } from "@/components/project/pipeline-step";
 import { PublishPanel } from "@/components/project/publish-panel";
@@ -137,14 +138,25 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
             <span className="text-gray-700 truncate max-w-xs">{project.title ?? `Video ${params.id.slice(-6)}`}</span>
           </div>
           <div className="flex items-center gap-3">
-            <h1 className="text-xl font-bold text-gray-900">
-              {project.title ?? `Video ${params.id.slice(-6)}`}
+            <h1 className="text-xl font-bold text-gray-900 min-w-0">
+              <InlineEdit
+                value={project.title ?? `Video ${params.id.slice(-6)}`}
+                onSave={(title) => doAction("rename", () => api.projects.rename(project.id, title), "Đã đổi tên")}
+              />
             </h1>
             <StatusBadge status={status} />
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={() => refresh()}>
+          <a
+            href={api.projects.exportUrl(project.id)}
+            download
+            className="text-xs text-gray-500 hover:text-gray-700 px-2 py-1 rounded hover:bg-gray-100 transition-colors"
+            title="Xuất dữ liệu JSON"
+          >
+            ⬇ JSON
+          </a>
+          <Button variant="ghost" size="sm" onClick={() => refresh()} aria-label="Làm mới">
             ↻ Làm mới
           </Button>
           <Button
@@ -248,6 +260,13 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
 
           {status === "script_generating" && (
             <p className="text-xs text-brand-700 animate-pulse">Đang phân tích sản phẩm và viết kịch bản...</p>
+          )}
+
+          {/* Version history pill */}
+          {project.scripts.length > 1 && (
+            <p className="text-xs text-gray-400 mb-2">
+              {project.scripts.length} phiên bản · {project.scripts.filter(s => s.isApproved).length > 0 ? "v" + project.scripts.find(s => s.isApproved)?.version + " đã duyệt" : "chưa có phiên bản được duyệt"}
+            </p>
           )}
 
           {project.scripts.length > 0 && status !== "script_generating" && (
