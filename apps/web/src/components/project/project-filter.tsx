@@ -44,11 +44,11 @@ function sortProjects(projects: Project[], sort: string) {
   return copy.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }
 
-export function ProjectFilter({ initialProjects }: { initialProjects: Project[] }) {
+export function ProjectFilter({ initialProjects, initialStatus = "" }: { initialProjects: Project[]; initialStatus?: string }) {
   const [projects, setProjects] = useState(initialProjects);
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState(initialStatus);
   const [sort, setSort] = useState("newest");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 

@@ -15,6 +15,7 @@ const NAV_LINKS = [
   { href: "/kol-profiles", label: "KOL Profiles" },
   { href: "/products", label: "Sản phẩm" },
   { href: "/settings", label: "Cài đặt" },
+  { href: "/admin/workers", label: "Workers" },
 ];
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

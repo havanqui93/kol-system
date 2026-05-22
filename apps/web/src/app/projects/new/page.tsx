@@ -82,21 +82,31 @@ export default function NewProjectPage() {
   const [existingProducts, setExistingProducts] = useState<ExistingProduct[]>([]);
   const [selectedProductId, setSelectedProductId] = useState<string>("");
 
-  const [form, setForm] = useState<FormState>({
-    title: "",
-    videoType: "product_review",
-    platform: "tiktok",
-    durationSeconds: "30",
-    qualityPreset: "balanced",
-    language: "vi",
-    brandTone: "",
-    productName: "",
-    productDescription: "",
-    productPrice: "",
-    productPromotion: "",
-    targetCustomer: "",
-    kolName: "AI Girl KOL",
-    kolStylePrompt: "young Vietnamese female KOL, friendly, confident, energetic, natural social commerce presenter",
+  const DRAFT_KEY = "kol-new-project-draft";
+
+  const [form, setForm] = useState<FormState>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem(DRAFT_KEY);
+        if (saved) return { ...JSON.parse(saved) };
+      } catch {}
+    }
+    return {
+      title: "",
+      videoType: "product_review",
+      platform: "tiktok",
+      durationSeconds: "30",
+      qualityPreset: "balanced",
+      language: "vi",
+      brandTone: "",
+      productName: "",
+      productDescription: "",
+      productPrice: "",
+      productPromotion: "",
+      targetCustomer: "",
+      kolName: "AI Girl KOL",
+      kolStylePrompt: "young Vietnamese female KOL, friendly, confident, energetic, natural social commerce presenter",
+    };
   });
 
   useEffect(() => {
@@ -105,6 +115,11 @@ export default function NewProjectPage() {
       .then((d) => setExistingProducts(d.products ?? []))
       .catch(() => {});
   }, []);
+
+  // Auto-save draft to localStorage on every change
+  useEffect(() => {
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(form));
+  }, [form]);
 
   function set(key: keyof FormState) {
     return (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
@@ -167,6 +182,7 @@ export default function NewProjectPage() {
       // 2. Kick off script generation immediately
       await api.script.generate(project.id);
 
+      localStorage.removeItem(DRAFT_KEY);
       router.push(`/projects/${project.id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Đã xảy ra lỗi");
@@ -176,9 +192,29 @@ export default function NewProjectPage() {
 
   return (
     <div className="max-w-2xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Tạo video mới</h1>
-        <p className="text-sm text-gray-500 mt-1">Nhập thông tin sản phẩm để AI tạo kịch bản và video</p>
+      <div className="mb-6 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Tạo video mới</h1>
+          <p className="text-sm text-gray-500 mt-1">Nhập thông tin sản phẩm để AI tạo kịch bản và video</p>
+        </div>
+        {form.productName && (
+          <button
+            type="button"
+            onClick={() => {
+              localStorage.removeItem(DRAFT_KEY);
+              setForm({
+                title: "", videoType: "product_review", platform: "tiktok", durationSeconds: "30",
+                qualityPreset: "balanced", language: "vi", brandTone: "", productName: "",
+                productDescription: "", productPrice: "", productPromotion: "", targetCustomer: "",
+                kolName: "AI Girl KOL", kolStylePrompt: "young Vietnamese female KOL, friendly, confident, energetic, natural social commerce presenter",
+              });
+              setSelectedProductId("");
+            }}
+            className="text-xs text-gray-400 hover:text-red-500 transition-colors whitespace-nowrap mt-1"
+          >
+            ✕ Xóa bản nháp
+          </button>
+        )}
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">

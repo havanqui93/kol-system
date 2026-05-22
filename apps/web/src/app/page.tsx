@@ -29,9 +29,10 @@ async function getProjects(page: number): Promise<{ projects: Project[]; total: 
 export default async function DashboardPage({
   searchParams,
 }: {
-  searchParams: { page?: string };
+  searchParams: { page?: string; status?: string };
 }) {
   const page = Math.max(1, Number(searchParams?.page ?? "1"));
+  const initialStatus = searchParams?.status ?? "";
   const { projects, total } = await getProjects(page);
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
@@ -66,19 +67,23 @@ export default async function DashboardPage({
         </Link>
       </div>
 
-      {/* Stats row */}
+      {/* Stats row — click to filter */}
       {total > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
           {[
-            { label: "Tổng video", value: total },
-            { label: "Hoàn thành", value: completed },
-            { label: "Chờ duyệt", value: scriptReady },
-            { label: "Đang xử lý", value: processing },
+            { label: "Tổng video", value: total, filter: "" },
+            { label: "Hoàn thành", value: completed, filter: "ready_to_publish" },
+            { label: "Chờ duyệt", value: scriptReady, filter: "script_ready" },
+            { label: "Đang xử lý", value: processing, filter: "processing" },
           ].map((stat) => (
-            <div key={stat.label} className="bg-white rounded-xl border border-gray-200 px-5 py-4">
+            <Link
+              key={stat.label}
+              href={stat.filter ? `/?status=${stat.filter}` : "/"}
+              className={`bg-white rounded-xl border px-5 py-4 transition-colors hover:border-brand-300 hover:shadow-sm block ${initialStatus === stat.filter ? "border-brand-400 bg-brand-50" : "border-gray-200"}`}
+            >
               <div className="text-2xl font-bold text-gray-900">{stat.value}</div>
               <div className="text-xs text-gray-500 mt-0.5">{stat.label}</div>
-            </div>
+            </Link>
           ))}
         </div>
       )}
@@ -109,7 +114,7 @@ export default async function DashboardPage({
           </Link>
         </div>
       ) : (
-        <ProjectFilter initialProjects={projects} />
+        <ProjectFilter initialProjects={projects} initialStatus={initialStatus} />
       )}
 
       {/* Pagination */}

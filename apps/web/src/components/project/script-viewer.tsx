@@ -88,7 +88,7 @@ export function ScriptViewer({ scripts, onApprove, onRegenerate, disabled }: Scr
           <div>
             <h3 className="font-semibold text-gray-800">Kịch bản</h3>
             <p className="text-xs text-gray-500 mt-0.5">
-              ~{script.wordCount ?? "?"} từ · ~{script.estimatedDurationSeconds ?? "?"}s
+              ~{script.wordCount ?? "?"} từ · ~{script.estimatedDurationSeconds ?? "?"}s · {script.fullScript.length.toLocaleString()} ký tự
             </p>
           </div>
           {scripts.length > 1 && (
