@@ -36,7 +36,7 @@ export interface Project {
   thumbnailUrl: string | null;
   createdAt: string;
   updatedAt: string;
-  product?: { name: string; imageUrl?: string | null } | null;
+  product?: { name: string; imageUrls?: string[]; imageUrl?: string | null } | null;
   kolProfile?: { name: string } | null;
 }
 

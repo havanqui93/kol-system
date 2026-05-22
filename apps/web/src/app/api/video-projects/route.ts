@@ -58,7 +58,10 @@ export async function GET(request: Request) {
       orderBy: { createdAt: "desc" },
       skip: (page - 1) * limit,
       take: limit,
-      include: { product: { select: { name: true } }, kolProfile: { select: { name: true } } },
+      include: {
+        product: { select: { name: true, imageUrls: true } },
+        kolProfile: { select: { name: true } },
+      },
     }),
     prisma.videoProject.count({ where: { userId } }),
   ]);

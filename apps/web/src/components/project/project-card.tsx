@@ -81,10 +81,10 @@ export function ProjectCard({ project, onDeleted }: { project: Project; onDelete
           <CardBody className="flex items-start gap-4">
             {/* Thumbnail / product image */}
             <div className="w-14 h-20 rounded-lg overflow-hidden flex-shrink-0">
-              {project.product?.imageUrl ? (
+              {(project.product?.imageUrl ?? project.product?.imageUrls?.[0]) ? (
                 <img
-                  src={project.product.imageUrl}
-                  alt={project.product.name ?? ""}
+                  src={(project.product?.imageUrl ?? project.product?.imageUrls?.[0])!}
+                  alt={project.product?.name ?? ""}
                   className="w-full h-full object-cover"
                 />
               ) : (

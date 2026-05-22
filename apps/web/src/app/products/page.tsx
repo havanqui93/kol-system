@@ -22,11 +22,14 @@ interface Product {
   _count?: { videoProjects: number };
 }
 
+type SortKey = "newest" | "most_videos" | "alpha";
+
 export default function ProductsPage() {
   const { success, error: toastError } = useToast();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
+  const [sort, setSort] = useState<SortKey>("newest");
 
   async function load() {
     const res = await fetch("/api/products", { headers: { "x-user-id": "demo-user" } });
@@ -71,7 +74,16 @@ export default function ProductsPage() {
           <h1 className="text-2xl font-bold text-gray-900">Thư viện sản phẩm</h1>
           <p className="text-sm text-gray-500 mt-1">Tất cả sản phẩm đã tạo để dùng trong video</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
+          <select
+            value={sort}
+            onChange={(e) => setSort(e.target.value as SortKey)}
+            className="text-xs border border-gray-300 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand-400"
+          >
+            <option value="newest">Mới nhất</option>
+            <option value="most_videos">Nhiều video nhất</option>
+            <option value="alpha">A → Z</option>
+          </select>
           <Link href="/products/new">
             <Button size="sm" variant="secondary">+ Thêm sản phẩm</Button>
           </Link>
@@ -104,7 +116,11 @@ export default function ProductsPage() {
       )}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {products.map((product) => (
+        {[...products].sort((a, b) => {
+          if (sort === "most_videos") return (b._count?.videoProjects ?? 0) - (a._count?.videoProjects ?? 0);
+          if (sort === "alpha") return a.name.localeCompare(b.name, "vi");
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        }).map((product) => (
           <Card key={product.id} className="group relative">
             <CardBody className="flex gap-4">
               {/* Product image */}

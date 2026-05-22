@@ -1,9 +1,45 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { prisma } from "@kol/database";
 import { StatusBadge } from "@/components/ui/badge";
 import { ShareButtons } from "@/components/share/share-buttons";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+  const project = await prisma.videoProject.findUnique({
+    where: { id: params.id },
+    include: { product: { select: { name: true, imageUrls: true } } },
+  });
+
+  if (!project) return {};
+
+  const title = project.title ?? `KOL Video — ${project.product?.name ?? "Dự án"}`;
+  const description = project.product?.name
+    ? `Video KOL cho sản phẩm ${project.product.name} · ${project.durationSeconds}s · ${project.platform}`
+    : `Xem video KOL được tạo bởi AI`;
+  const image = project.thumbnailUrl ?? project.product?.imageUrls?.[0];
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: "video.other",
+      url: `${baseUrl}/share/${params.id}`,
+      ...(image ? { images: [{ url: image, width: 1200, height: 630 }] } : {}),
+      ...(project.finalVideoUrl ? { videos: [{ url: project.finalVideoUrl }] } : {}),
+    },
+    twitter: {
+      card: image ? "summary_large_image" : "summary",
+      title,
+      description,
+      ...(image ? { images: [image] } : {}),
+    },
+  };
+}
 
 export default async function SharePage({ params }: { params: { id: string } }) {
   const project = await prisma.videoProject.findUnique({

@@ -17,7 +17,7 @@ async function getProjects(page: number): Promise<{ projects: Project[]; total: 
       skip: (page - 1) * PAGE_SIZE,
       take: PAGE_SIZE,
       include: {
-        product: { select: { name: true } },
+        product: { select: { name: true, imageUrls: true } },
         kolProfile: { select: { name: true } },
       },
     }),
@@ -116,10 +116,27 @@ export default async function DashboardPage({
 
       {/* Project list with search + filter */}
       {projects.length === 0 && page === 1 ? (
-        <div className="text-center py-24">
+        <div className="text-center py-16">
           <div className="text-5xl mb-4">🎬</div>
           <h2 className="text-xl font-semibold text-gray-700">Chưa có video nào</h2>
-          <p className="text-gray-500 mt-2 mb-6">Tạo video KOL đầu tiên của bạn chỉ trong vài bước</p>
+          <p className="text-gray-500 mt-2 mb-8">Tạo video KOL đầu tiên của bạn chỉ trong vài bước</p>
+
+          {/* Getting started checklist */}
+          <div className="max-w-sm mx-auto text-left bg-white rounded-xl border border-gray-200 divide-y divide-gray-100 mb-8">
+            {[
+              { icon: "⚙️", text: "Kiểm tra API keys", href: "/settings", done: false },
+              { icon: "📦", text: "Thêm thông tin sản phẩm", href: "/products/new", done: false },
+              { icon: "🎭", text: "Tạo KOL profile (avatar)", href: "/kol-profiles/new", done: false },
+              { icon: "🎬", text: "Tạo video đầu tiên", href: "/projects/new", done: false },
+            ].map((item) => (
+              <Link key={item.text} href={item.href} className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors group">
+                <span className="text-xl">{item.icon}</span>
+                <span className="flex-1 text-sm text-gray-700 group-hover:text-brand-700">{item.text}</span>
+                <span className="text-gray-300 group-hover:text-brand-400">→</span>
+              </Link>
+            ))}
+          </div>
+
           <Link href="/projects/new">
             <Button size="lg">Tạo video đầu tiên</Button>
           </Link>
