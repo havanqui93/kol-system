@@ -96,6 +96,17 @@ export default async function DashboardPage({
         </div>
       )}
 
+      {/* Script-ready alert */}
+      {scriptReady > 0 && (
+        <Link href="/?status=script_ready" className="flex items-center gap-3 bg-orange-50 border border-orange-200 rounded-xl px-5 py-3 mb-4 hover:border-orange-300 transition-colors">
+          <span className="text-orange-500 text-lg">⏳</span>
+          <div className="flex-1">
+            <span className="text-sm font-semibold text-orange-800">{scriptReady} kịch bản đang chờ duyệt</span>
+            <span className="text-xs text-orange-600 ml-2">Nhấp để xem →</span>
+          </div>
+        </Link>
+      )}
+
       {/* Bulk actions row */}
       {failed > 0 && (
         <div className="flex justify-end mb-3">

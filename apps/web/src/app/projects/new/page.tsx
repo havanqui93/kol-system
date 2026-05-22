@@ -14,6 +14,13 @@ interface ExistingProduct {
   price: string | null;
 }
 
+interface ExistingKolProfile {
+  id: string;
+  name: string;
+  voiceStyle: string;
+  language: string;
+}
+
 const PLATFORM_OPTIONS = [
   { value: "tiktok", label: "🎵 TikTok" },
   { value: "facebook", label: "📘 Facebook Reels" },
@@ -81,6 +88,8 @@ export default function NewProjectPage() {
   const [avatarImage, setAvatarImage] = useState<File | null>(null);
   const [existingProducts, setExistingProducts] = useState<ExistingProduct[]>([]);
   const [selectedProductId, setSelectedProductId] = useState<string>("");
+  const [existingKols, setExistingKols] = useState<ExistingKolProfile[]>([]);
+  const [selectedKolId, setSelectedKolId] = useState<string>("");
 
   const DRAFT_KEY = "kol-new-project-draft";
 
@@ -113,6 +122,10 @@ export default function NewProjectPage() {
     fetch("/api/products", { headers: { "x-user-id": "demo-user" } })
       .then((r) => r.json())
       .then((d) => setExistingProducts(d.products ?? []))
+      .catch(() => {});
+    fetch("/api/kol-profiles", { headers: { "x-user-id": "demo-user" } })
+      .then((r) => r.json())
+      .then((d) => setExistingKols(d.kolProfiles ?? []))
       .catch(() => {});
   }, []);
 
@@ -154,7 +167,9 @@ export default function NewProjectPage() {
             imageUrls: productImageUpload ? [productImageUpload.url] : [],
           });
 
-      const kolProfile = avatarImageUpload
+      const kolProfile = selectedKolId
+        ? { id: selectedKolId }
+        : avatarImageUpload
         ? await api.kolProfiles.create({
             name: form.kolName.trim() || "AI Girl KOL",
             description: "Uploaded avatar for virtual KOL video generation",
@@ -312,32 +327,53 @@ export default function NewProjectPage() {
             <h2 className="font-semibold text-gray-800">KOL avatar</h2>
           </CardHeader>
           <CardBody className="space-y-4">
-            <FormField label="Ảnh avatar cô gái" htmlFor="avatarImage" hint="Ảnh chân dung rõ mặt sẽ cho talking-head clip tốt hơn.">
-              <Input
-                id="avatarImage"
-                type="file"
-                accept="image/png,image/jpeg,image/webp"
-                onChange={(e) => setAvatarImage(e.target.files?.[0] ?? null)}
-              />
-            </FormField>
+            {existingKols.length > 0 && (
+              <div className="rounded-lg bg-purple-50 border border-purple-100 p-3">
+                <label className="block text-xs font-semibold text-purple-700 mb-1.5">Dùng lại KOL profile có sẵn</label>
+                <select
+                  value={selectedKolId}
+                  onChange={(e) => setSelectedKolId(e.target.value)}
+                  className="w-full text-sm border border-purple-200 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-purple-400"
+                >
+                  <option value="">— Tạo KOL profile mới —</option>
+                  {existingKols.map((k) => (
+                    <option key={k.id} value={k.id}>{k.name} · {k.voiceStyle} · {k.language.toUpperCase()}</option>
+                  ))}
+                </select>
+                {selectedKolId && (
+                  <p className="text-xs text-purple-600 mt-1">✓ Dùng KOL đã có — không cần upload avatar mới</p>
+                )}
+              </div>
+            )}
 
-            <FormField label="Tên KOL" htmlFor="kolName">
-              <Input
-                id="kolName"
-                placeholder="Ví dụ: Linh AI"
-                value={form.kolName}
-                onChange={set("kolName")}
-              />
-            </FormField>
+            {!selectedKolId && (<>
+              <FormField label="Ảnh avatar cô gái" htmlFor="avatarImage" hint="Ảnh chân dung rõ mặt sẽ cho talking-head clip tốt hơn.">
+                <Input
+                  id="avatarImage"
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  onChange={(e) => setAvatarImage(e.target.files?.[0] ?? null)}
+                />
+              </FormField>
 
-            <FormField label="Phong cách avatar" htmlFor="kolStylePrompt">
-              <Textarea
-                id="kolStylePrompt"
-                rows={2}
-                value={form.kolStylePrompt}
-                onChange={set("kolStylePrompt")}
-              />
-            </FormField>
+              <FormField label="Tên KOL" htmlFor="kolName">
+                <Input
+                  id="kolName"
+                  placeholder="Ví dụ: Linh AI"
+                  value={form.kolName}
+                  onChange={set("kolName")}
+                />
+              </FormField>
+
+              <FormField label="Phong cách avatar" htmlFor="kolStylePrompt">
+                <Textarea
+                  id="kolStylePrompt"
+                  rows={2}
+                  value={form.kolStylePrompt}
+                  onChange={set("kolStylePrompt")}
+                />
+              </FormField>
+            </>)}
           </CardBody>
         </Card>
 

@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect, useRef } from "react";
 import { ProjectCard } from "@/components/project/project-card";
+import { ExportCSVButton } from "@/components/project/export-csv";
 import type { Project } from "@/lib/api/client";
 
 const STATUS_FILTER_OPTIONS = [
@@ -100,6 +101,14 @@ export function ProjectFilter({ initialProjects, initialStatus = "" }: { initial
           ))}
         </select>
       </div>
+
+      {/* Result count + CSV export */}
+      {filtered.length > 0 && (
+        <div className="flex items-center justify-between mb-2 text-xs text-gray-400">
+          <span>{filtered.length} dự án</span>
+          <ExportCSVButton projects={filtered} />
+        </div>
+      )}
 
       {filtered.length === 0 ? (
         <p className="text-center text-sm text-gray-400 py-12">

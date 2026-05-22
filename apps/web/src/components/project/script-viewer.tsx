@@ -82,7 +82,7 @@ export function ScriptViewer({ scripts, onApprove, onRegenerate, disabled }: Scr
   }
 
   return (
-    <Card>
+    <Card className={script.isApproved ? "border-green-300 bg-green-50/20" : ""}>
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
