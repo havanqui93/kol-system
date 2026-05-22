@@ -41,15 +41,23 @@ const SECTION_LABELS: { key: keyof Script; label: string; emoji: string }[] = [
   { key: "cta", label: "Kêu gọi hành động", emoji: "📣" },
 ];
 
+function wordCount(text: string) {
+  return text.trim().split(/\s+/).filter(Boolean).length;
+}
+
 function ScriptSection({ emoji, label, text }: { emoji: string; label: string; text: string | null }) {
   const [copied, setCopied] = useState(false);
   if (!text) return null;
+  const wc = wordCount(text);
   return (
     <div className="flex gap-3 group">
       <span className="text-xl flex-shrink-0 mt-0.5">{emoji}</span>
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between mb-0.5">
-          <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{label}</div>
+          <div className="flex items-center gap-2">
+            <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{label}</div>
+            <span className="text-[10px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded-full">{wc} từ</span>
+          </div>
           <button
             onClick={() => { navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
             className="opacity-0 group-hover:opacity-100 text-xs text-gray-400 hover:text-brand-600 transition-all px-1 flex-shrink-0"

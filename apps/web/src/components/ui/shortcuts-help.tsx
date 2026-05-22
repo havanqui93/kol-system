@@ -5,9 +5,12 @@ import { useRouter } from "next/navigation";
 
 const SHORTCUTS = [
   { keys: ["n"], description: "Tạo video mới" },
+  { keys: ["p"], description: "Mở thư viện sản phẩm" },
+  { keys: ["k"], description: "Mở KOL Profiles" },
   { keys: ["s"], description: "Mở trang cài đặt" },
   { keys: ["r"], description: "Làm mới dự án (trang chi tiết)" },
-  { keys: ["Ctrl", "K"], description: "Tìm kiếm nhanh" },
+  { keys: ["/"], description: "Tìm kiếm trong danh sách" },
+  { keys: ["Ctrl", "K"], description: "Tìm kiếm nhanh toàn bộ" },
   { keys: ["?"], description: "Hiện/ẩn danh sách phím tắt" },
   { keys: ["Esc"], description: "Đóng hộp thoại / menu" },
 ];
@@ -25,6 +28,12 @@ export function ShortcutsHelp() {
       if (e.key === "Escape") setOpen(false);
       if (e.key === "n" && !isInput && !e.ctrlKey && !e.metaKey) {
         router.push("/projects/new");
+      }
+      if (e.key === "p" && !isInput && !e.ctrlKey && !e.metaKey) {
+        router.push("/products");
+      }
+      if (e.key === "k" && !isInput && !e.ctrlKey && !e.metaKey) {
+        router.push("/kol-profiles");
       }
       if (e.key === "s" && !isInput && !e.ctrlKey && !e.metaKey) {
         router.push("/settings");

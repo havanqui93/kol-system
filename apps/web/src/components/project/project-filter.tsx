@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { ProjectCard } from "@/components/project/project-card";
 import { ExportCSVButton } from "@/components/project/export-csv";
 import type { Project } from "@/lib/api/client";
@@ -53,12 +53,26 @@ export function ProjectFilter({ initialProjects, initialStatus = "" }: { initial
   const [statusFilter, setStatusFilter] = useState(initialStatus);
   const [sort, setSort] = useState("newest");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => setSearch(searchInput), 300);
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
   }, [searchInput]);
+
+  const focusSearch = useCallback(() => { searchInputRef.current?.focus(); }, []);
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "/" && !(e.target instanceof HTMLInputElement) && !(e.target instanceof HTMLTextAreaElement)) {
+        e.preventDefault();
+        focusSearch();
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [focusSearch]);
 
   const filtered = useMemo(
     () => sortProjects(
@@ -76,13 +90,25 @@ export function ProjectFilter({ initialProjects, initialStatus = "" }: { initial
     <div>
       {/* Search + filter bar */}
       <div className="flex gap-3 mb-5 flex-wrap">
-        <input
-          type="search"
-          placeholder="Tìm theo tên, sản phẩm, nền tảng..."
-          value={searchInput}
-          onChange={(e) => setSearchInput(e.target.value)}
-          className="flex-1 min-w-40 text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-400"
-        />
+        <div className="flex-1 min-w-40 relative">
+          <input
+            ref={searchInputRef}
+            type="search"
+            placeholder="Tìm theo tên, sản phẩm, nền tảng... (nhấn / để tìm)"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 pr-8 focus:outline-none focus:ring-2 focus:ring-brand-400"
+          />
+          {searchInput && (
+            <button
+              onClick={() => setSearchInput("")}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-lg leading-none"
+              aria-label="Xóa tìm kiếm"
+            >
+              ×
+            </button>
+          )}
+        </div>
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}

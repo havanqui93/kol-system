@@ -55,6 +55,11 @@ export default async function DashboardPage({
     _sum: { totalCostUsd: true },
   });
 
+  const [productCount, kolProfileCount] = await Promise.all([
+    prisma.product.count({ where: { userId: "demo-user" } }),
+    prisma.kolProfile.count({ where: { userId: "demo-user" } }),
+  ]);
+
   return (
     <div>
       <LastVisitedBanner />
@@ -72,7 +77,7 @@ export default async function DashboardPage({
 
       {/* Stats row — click to filter */}
       {total > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
           {[
             { label: "Tổng video", value: total, filter: "" },
             { label: "Hoàn thành", value: completed, filter: "ready_to_publish" },
@@ -90,6 +95,28 @@ export default async function DashboardPage({
           ))}
         </div>
       )}
+
+      {/* Resource counts */}
+      <div className="grid grid-cols-2 gap-4 mb-8">
+        <Link href="/products" className="bg-white rounded-xl border border-gray-200 px-5 py-4 hover:border-brand-300 hover:shadow-sm transition-colors block">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">📦</span>
+            <div>
+              <div className="text-2xl font-bold text-gray-900">{productCount}</div>
+              <div className="text-xs text-gray-500">Sản phẩm</div>
+            </div>
+          </div>
+        </Link>
+        <Link href="/kol-profiles" className="bg-white rounded-xl border border-gray-200 px-5 py-4 hover:border-brand-300 hover:shadow-sm transition-colors block">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">🎭</span>
+            <div>
+              <div className="text-2xl font-bold text-gray-900">{kolProfileCount}</div>
+              <div className="text-xs text-gray-500">KOL Profiles</div>
+            </div>
+          </div>
+        </Link>
+      </div>
 
       {/* Cost summary */}
       {costAgg._sum.totalCostUsd && Number(costAgg._sum.totalCostUsd) > 0 && (

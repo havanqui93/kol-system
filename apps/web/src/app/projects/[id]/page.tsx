@@ -631,7 +631,7 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
               ["Ngôn ngữ", project.language.toUpperCase()],
               ["ID", project.id.slice(-8)],
               ["Tạo lúc", (() => { const d = new Date(project.createdAt); const diff = Date.now() - d.getTime(); const h = Math.floor(diff / 3600000); return h < 24 ? `${h} giờ trước` : d.toLocaleDateString("vi-VN"); })()],
-              ["Cập nhật", new Date(project.updatedAt).toLocaleDateString("vi-VN")],
+              ["Cập nhật", (() => { const d = new Date(project.updatedAt); const diff = Date.now() - d.getTime(); const h = Math.floor(diff / 3600000); return h < 24 ? `${h} giờ trước` : d.toLocaleDateString("vi-VN"); })()],
             ].map(([label, value]) => (
               <div key={label}>
                 <dt className="text-gray-500 text-xs">{label}</dt>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody } from "@/components/ui/card";
@@ -46,7 +46,11 @@ export default function KolProfilesPage() {
   const [deleteTarget, setDeleteTarget] = useState<KolProfile | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [search, setSearch] = useState("");
-  const [sort, setSort] = useState<SortKey>("newest");
+  const [sort, setSort] = useState<SortKey>(() => {
+    if (typeof window !== "undefined") return (localStorage.getItem("kol-profiles-sort") as SortKey) ?? "newest";
+    return "newest";
+  });
+  const searchRef = useRef<HTMLInputElement>(null);
 
   async function load() {
     const res = await fetch("/api/kol-profiles", { headers: { "x-user-id": "demo-user" } });
@@ -56,6 +60,19 @@ export default function KolProfilesPage() {
   }
 
   useEffect(() => { load(); }, []);
+
+  useEffect(() => { localStorage.setItem("kol-profiles-sort", sort); }, [sort]);
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "/" && !(e.target instanceof HTMLInputElement) && !(e.target instanceof HTMLTextAreaElement)) {
+        e.preventDefault();
+        searchRef.current?.focus();
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   async function handleDelete() {
     if (!deleteTarget) return;
@@ -140,14 +157,24 @@ export default function KolProfilesPage() {
       )}
 
       {/* Search */}
-      <div className="mb-5">
+      <div className="mb-5 relative">
         <input
+          ref={searchRef}
           type="search"
-          placeholder="Tìm theo tên KOL..."
+          placeholder="Tìm theo tên KOL... (nhấn / để tìm)"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-400"
+          className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 pr-8 focus:outline-none focus:ring-2 focus:ring-brand-400"
         />
+        {search && (
+          <button
+            onClick={() => setSearch("")}
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-lg leading-none"
+            aria-label="Xóa tìm kiếm"
+          >
+            ×
+          </button>
+        )}
       </div>
 
       {search && profiles.filter((p) => p.name.toLowerCase().includes(search.toLowerCase())).length === 0 && (
