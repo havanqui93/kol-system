@@ -1,12 +1,20 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ToastProvider } from "@/components/ui/toast";
+import { MobileNav } from "@/components/ui/mobile-nav";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: "KOL System — AI Video Generator",
   description: "Tạo video KOL tự động bằng AI cho TikTok, Facebook Reels, YouTube Shorts",
 };
+
+const NAV_LINKS = [
+  { href: "/", label: "Dashboard" },
+  { href: "/kol-profiles", label: "KOL Profiles" },
+  { href: "/products", label: "Sản phẩm" },
+  { href: "/settings", label: "Cài đặt" },
+];
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -19,19 +27,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <span className="text-2xl">🎬</span>
                 KOL System
               </Link>
-              <nav className="flex items-center gap-6 text-sm">
-                <Link href="/" className="text-gray-600 hover:text-gray-900 transition-colors">
-                  Dashboard
-                </Link>
-                <Link href="/kol-profiles" className="text-gray-600 hover:text-gray-900 transition-colors">
-                  KOL Profiles
-                </Link>
-                <Link href="/products" className="text-gray-600 hover:text-gray-900 transition-colors">
-                  Sản phẩm
-                </Link>
-                <Link href="/settings" className="text-gray-600 hover:text-gray-900 transition-colors">
-                  Cài đặt
-                </Link>
+
+              {/* Desktop nav */}
+              <nav className="hidden sm:flex items-center gap-6 text-sm">
+                {NAV_LINKS.map((link) => (
+                  <Link key={link.href} href={link.href} className="text-gray-600 hover:text-gray-900 transition-colors">
+                    {link.label}
+                  </Link>
+                ))}
                 <Link
                   href="/projects/new"
                   className="bg-brand-600 text-white px-4 py-1.5 rounded-full hover:bg-brand-700 transition-colors font-medium"
@@ -39,6 +42,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   + Tạo video mới
                 </Link>
               </nav>
+
+              {/* Mobile nav */}
+              <MobileNav links={NAV_LINKS} />
             </div>
           </header>
 

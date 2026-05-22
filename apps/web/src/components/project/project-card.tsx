@@ -77,9 +77,19 @@ export function ProjectCard({ project, onDeleted }: { project: Project; onDelete
       <Link href={`/projects/${project.id}`}>
         <Card className="hover:border-brand-300 hover:shadow-md transition-all cursor-pointer">
           <CardBody className="flex items-start gap-4">
-            {/* Thumbnail / placeholder */}
-            <div className="w-14 h-20 rounded-lg bg-gradient-to-br from-brand-100 to-purple-100 flex items-center justify-center text-2xl flex-shrink-0">
-              {PLATFORM_ICONS[project.platform] ?? "🎬"}
+            {/* Thumbnail / product image */}
+            <div className="w-14 h-20 rounded-lg overflow-hidden flex-shrink-0">
+              {project.product?.imageUrl ? (
+                <img
+                  src={project.product.imageUrl}
+                  alt={project.product.name ?? ""}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-brand-100 to-purple-100 flex items-center justify-center text-2xl">
+                  {PLATFORM_ICONS[project.platform] ?? "🎬"}
+                </div>
+              )}
             </div>
 
             <div className="flex-1 min-w-0">
@@ -111,6 +121,12 @@ export function ProjectCard({ project, onDeleted }: { project: Project; onDelete
                     <span className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse" />
                     Đang xử lý
                   </span>
+                )}
+                {project.status === "draft" && (
+                  <span className="text-xs text-brand-600 font-medium">▶ Tiếp tục →</span>
+                )}
+                {project.status === "script_ready" && (
+                  <span className="text-xs text-orange-600 font-medium">⏳ Chờ duyệt kịch bản</span>
                 )}
                 {project.finalVideoUrl && (
                   <span className="text-xs text-green-700 font-medium">✓ Video sẵn sàng</span>

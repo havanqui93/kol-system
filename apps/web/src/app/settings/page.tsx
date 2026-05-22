@@ -8,6 +8,76 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PageSpinner } from "@/components/ui/spinner";
 
+interface EnvStatus {
+  checks: Record<string, boolean>;
+  missingRequired: string[];
+  ready: boolean;
+}
+
+const ENV_KEY_LABELS: Record<string, { label: string; description: string; required: boolean }> = {
+  ANTHROPIC_API_KEY:     { label: "Anthropic (Claude)", description: "Tạo kịch bản & hashtags", required: true },
+  OPENAI_API_KEY:        { label: "OpenAI (Whisper)", description: "Phụ đề tự động", required: false },
+  ELEVENLABS_API_KEY:    { label: "ElevenLabs", description: "Tổng hợp giọng nói", required: false },
+  FAL_API_KEY:           { label: "Fal.ai", description: "Tạo video AI", required: false },
+  DATABASE_URL:          { label: "PostgreSQL", description: "Cơ sở dữ liệu", required: true },
+  REDIS_URL:             { label: "Redis", description: "Hàng đợi job (BullMQ)", required: true },
+  AWS_ACCESS_KEY_ID:     { label: "AWS / R2 Key ID", description: "Lưu trữ media", required: true },
+  AWS_SECRET_ACCESS_KEY: { label: "AWS / R2 Secret", description: "Lưu trữ media", required: false },
+  S3_BUCKET:             { label: "S3 / R2 Bucket", description: "Tên bucket", required: true },
+  TIKTOK_CLIENT_KEY:     { label: "TikTok Client Key", description: "Đăng video TikTok", required: false },
+  FACEBOOK_APP_ID:       { label: "Facebook App ID", description: "Đăng video Facebook", required: false },
+  GOOGLE_CLIENT_ID:      { label: "Google Client ID", description: "Đăng video YouTube", required: false },
+};
+
+function EnvStatusSection() {
+  const [envStatus, setEnvStatus] = useState<EnvStatus | null>(null);
+  const [envLoading, setEnvLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/settings/env-status")
+      .then((r) => r.json())
+      .then((d) => { setEnvStatus(d); setEnvLoading(false); })
+      .catch(() => setEnvLoading(false));
+  }, []);
+
+  if (envLoading) return <div className="h-16 bg-gray-100 animate-pulse rounded-xl mb-6" />;
+  if (!envStatus) return null;
+
+  return (
+    <div className="mb-8">
+      <div className={`rounded-xl border px-5 py-4 flex items-center gap-4 mb-4 ${envStatus.ready ? "bg-green-50 border-green-200" : "bg-yellow-50 border-yellow-200"}`}>
+        <div className="text-2xl">{envStatus.ready ? "✅" : "⚠️"}</div>
+        <div>
+          <div className={`font-semibold text-sm ${envStatus.ready ? "text-green-800" : "text-yellow-800"}`}>
+            {envStatus.ready ? "Tất cả dịch vụ bắt buộc đã cấu hình" : `Thiếu cấu hình: ${envStatus.missingRequired.join(", ")}`}
+          </div>
+        </div>
+      </div>
+      <Card>
+        <CardHeader>
+          <h2 className="font-semibold text-gray-800">Trạng thái API Keys</h2>
+        </CardHeader>
+        <CardBody className="divide-y divide-gray-100">
+          {Object.entries(ENV_KEY_LABELS).map(([key, info]) => (
+            <div key={key} className="flex items-center justify-between py-2.5 gap-4">
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-sm font-medium text-gray-800">{info.label}</span>
+                  {info.required && <span className="text-xs bg-gray-100 text-gray-500 px-1.5 rounded">bắt buộc</span>}
+                </div>
+                <p className="text-xs text-gray-400">{info.description} · <code className="font-mono">{key}</code></p>
+              </div>
+              <span className={`flex-shrink-0 text-xs font-medium px-2.5 py-1 rounded-full ${envStatus.checks[key] ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-400"}`}>
+                {envStatus.checks[key] ? "✓ Đã cấu hình" : "✗ Chưa có"}
+              </span>
+            </div>
+          ))}
+        </CardBody>
+      </Card>
+    </div>
+  );
+}
+
 interface SocialAccount {
   id: string;
   platform: string;
@@ -174,6 +244,8 @@ export default function SettingsPage() {
       <Suspense fallback={null}>
         <StatusMessages />
       </Suspense>
+
+      <EnvStatusSection />
 
       <div className="mb-8">
         <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">

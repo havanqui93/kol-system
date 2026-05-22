@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { ProjectCard } from "@/components/project/project-card";
 import type { Project } from "@/lib/api/client";
 
@@ -33,8 +33,16 @@ function matchesSearch(project: Project, query: string) {
 
 export function ProjectFilter({ initialProjects }: { initialProjects: Project[] }) {
   const [projects, setProjects] = useState(initialProjects);
+  const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => setSearch(searchInput), 300);
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+  }, [searchInput]);
 
   const filtered = useMemo(
     () => projects.filter((p) => matchesStatus(p, statusFilter) && matchesSearch(p, search)),
@@ -52,8 +60,8 @@ export function ProjectFilter({ initialProjects }: { initialProjects: Project[] 
         <input
           type="search"
           placeholder="Tìm theo tên, sản phẩm, nền tảng..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
           className="flex-1 text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-400"
         />
         <select
@@ -69,7 +77,7 @@ export function ProjectFilter({ initialProjects }: { initialProjects: Project[] 
 
       {filtered.length === 0 ? (
         <p className="text-center text-sm text-gray-400 py-12">
-          {search || statusFilter ? "Không tìm thấy dự án phù hợp" : "Chưa có video nào"}
+          {searchInput || statusFilter ? "Không tìm thấy dự án phù hợp" : "Chưa có video nào"}
         </p>
       ) : (
         <div className="grid gap-3">

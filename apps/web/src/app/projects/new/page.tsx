@@ -40,6 +40,15 @@ const QUALITY_OPTIONS = [
   { value: "premium", label: "Premium - 3 Kling clips" },
 ];
 
+const BRAND_TONE_PRESETS = [
+  { label: "Trẻ trung", value: "trẻ trung, năng động, vui vẻ" },
+  { label: "Chuyên nghiệp", value: "chuyên nghiệp, tin cậy, uy tín" },
+  { label: "Sang trọng", value: "sang trọng, cao cấp, tinh tế" },
+  { label: "Thân thiện", value: "thân thiện, gần gũi, chân thành" },
+  { label: "Hài hước", value: "hài hước, vui nhộn, dễ thương" },
+  { label: "Khẩn cấp", value: "khẩn cấp, thúc đẩy, kêu gọi mạnh" },
+];
+
 interface FormState {
   title: string;
   videoType: string;
@@ -352,11 +361,27 @@ export default function NewProjectPage() {
             <FormField
               label="Phong cách thương hiệu (tùy chọn)"
               htmlFor="brandTone"
-              hint='Ví dụ: "trẻ trung, năng động" hoặc "sang trọng, tin cậy"'
+              hint='Chọn nhanh hoặc tự nhập tone & mood'
             >
+              <div className="flex flex-wrap gap-1.5 mb-2">
+                {BRAND_TONE_PRESETS.map((preset) => (
+                  <button
+                    key={preset.value}
+                    type="button"
+                    onClick={() => setForm((prev) => ({ ...prev, brandTone: preset.value }))}
+                    className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
+                      form.brandTone === preset.value
+                        ? "bg-brand-600 text-white border-brand-600"
+                        : "bg-white text-gray-600 border-gray-300 hover:border-brand-400 hover:text-brand-600"
+                    }`}
+                  >
+                    {preset.label}
+                  </button>
+                ))}
+              </div>
               <Input
                 id="brandTone"
-                placeholder="Mô tả tone & mood thương hiệu..."
+                placeholder="Hoặc tự nhập phong cách thương hiệu..."
                 value={form.brandTone}
                 onChange={set("brandTone")}
               />

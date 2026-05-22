@@ -15,6 +15,7 @@ import { InlineEdit } from "@/components/project/inline-edit";
 import { ScriptViewer } from "@/components/project/script-viewer";
 import { PipelineStep } from "@/components/project/pipeline-step";
 import { PublishPanel } from "@/components/project/publish-panel";
+import { ProjectNotes } from "@/components/project/project-notes";
 
 // Helper: which pipeline step is each status on
 function getStepStatus(projectStatus: string, stepStatuses: string[], activeStatuses: string[], doneStatuses: string[]) {
@@ -560,6 +561,13 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
               </div>
             ))}
           </dl>
+        </CardBody>
+      </Card>
+
+      {/* Personal notes */}
+      <Card className="mt-4">
+        <CardBody>
+          <ProjectNotes projectId={project.id} />
         </CardBody>
       </Card>
 
