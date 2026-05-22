@@ -3,6 +3,8 @@ import Link from "next/link";
 import { ToastProvider } from "@/components/ui/toast";
 import { MobileNav } from "@/components/ui/mobile-nav";
 import { ShortcutsHelp } from "@/components/ui/shortcuts-help";
+import { NavLinks } from "@/components/ui/nav-links";
+import { CommandPalette } from "@/components/ui/command-palette";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -37,15 +39,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               </Link>
 
               {/* Desktop nav */}
-              <nav className="hidden sm:flex items-center gap-6 text-sm">
-                {NAV_LINKS.map((link) => (
-                  <Link key={link.href} href={link.href} className="text-gray-600 hover:text-gray-900 transition-colors">
-                    {link.label}
-                  </Link>
-                ))}
+              <nav className="hidden sm:flex items-center gap-6">
+                <NavLinks links={NAV_LINKS} />
                 <Link
                   href="/projects/new"
-                  className="bg-brand-600 text-white px-4 py-1.5 rounded-full hover:bg-brand-700 transition-colors font-medium"
+                  className="bg-brand-600 text-white px-4 py-1.5 rounded-full hover:bg-brand-700 transition-colors font-medium text-sm"
                 >
                   + Tạo video mới
                 </Link>
@@ -60,6 +58,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <ToastProvider>
               {children}
               <ShortcutsHelp />
+              <CommandPalette />
             </ToastProvider>
           </main>
 

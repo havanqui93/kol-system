@@ -30,6 +30,7 @@ export default function ProductsPage() {
   const [loading, setLoading] = useState(true);
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
   const [sort, setSort] = useState<SortKey>("newest");
+  const [search, setSearch] = useState("");
 
   async function load() {
     const res = await fetch("/api/products", { headers: { "x-user-id": "demo-user" } });
@@ -115,8 +116,19 @@ export default function ProductsPage() {
         </div>
       )}
 
+      {/* Search */}
+      <div className="mb-5">
+        <input
+          type="search"
+          placeholder="Tìm theo tên sản phẩm..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-400"
+        />
+      </div>
+
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {[...products].sort((a, b) => {
+        {[...products].filter((p) => !search || p.name.toLowerCase().includes(search.toLowerCase())).sort((a, b) => {
           if (sort === "most_videos") return (b._count?.videoProjects ?? 0) - (a._count?.videoProjects ?? 0);
           if (sort === "alpha") return a.name.localeCompare(b.name, "vi");
           return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();

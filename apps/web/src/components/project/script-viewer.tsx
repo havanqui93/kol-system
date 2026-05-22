@@ -92,14 +92,19 @@ export function ScriptViewer({ scripts, onApprove, onRegenerate, disabled }: Scr
             </p>
           </div>
           {scripts.length > 1 && (
-            <div className="flex gap-1">
+            <div className="flex gap-1 flex-wrap">
               {scripts.map((s, i) => (
                 <button
                   key={s.id}
                   onClick={() => setSelectedIndex(i)}
-                  className={`text-xs px-2 py-1 rounded ${i === selectedIndex ? "bg-brand-100 text-brand-700 font-medium" : "text-gray-500 hover:bg-gray-100"}`}
+                  className={`text-xs px-2 py-1 rounded flex items-center gap-1 ${
+                    i === selectedIndex
+                      ? "bg-brand-100 text-brand-700 font-medium"
+                      : "text-gray-500 hover:bg-gray-100"
+                  }`}
                 >
                   v{s.version}
+                  {s.isApproved && <span className="text-green-600" title="Đã duyệt">✓</span>}
                 </button>
               ))}
             </div>

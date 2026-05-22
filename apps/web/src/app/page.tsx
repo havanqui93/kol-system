@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@kol/database";
 import { ProjectFilter } from "@/components/project/project-filter";
 import { BulkDeleteFailed } from "@/components/project/bulk-actions";
+import { LastVisitedBanner } from "@/components/project/last-visited-banner";
 import { Button } from "@/components/ui/button";
 import type { Project } from "@/lib/api/client";
 
@@ -56,6 +57,8 @@ export default async function DashboardPage({
 
   return (
     <div>
+      <LastVisitedBanner />
+
       {/* Hero */}
       <div className="mb-8 flex items-center justify-between">
         <div>

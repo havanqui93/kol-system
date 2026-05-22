@@ -35,6 +35,7 @@ export default function KolProfilesPage() {
   const [loading, setLoading] = useState(true);
   const [deleteTarget, setDeleteTarget] = useState<KolProfile | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [search, setSearch] = useState("");
 
   async function load() {
     const res = await fetch("/api/kol-profiles", { headers: { "x-user-id": "demo-user" } });
@@ -113,8 +114,19 @@ export default function KolProfilesPage() {
         </div>
       )}
 
+      {/* Search */}
+      <div className="mb-5">
+        <input
+          type="search"
+          placeholder="Tìm theo tên KOL..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-400"
+        />
+      </div>
+
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {profiles.map((profile) => (
+        {profiles.filter((p) => !search || p.name.toLowerCase().includes(search.toLowerCase())).map((profile) => (
           <Card key={profile.id} className="group relative">
             <CardBody className="flex gap-4">
               {/* Avatar */}

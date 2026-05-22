@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Input, Textarea, Select, FormField } from "@/components/ui/input";
@@ -80,8 +81,9 @@ interface FormState {
   kolStylePrompt: string;
 }
 
-export default function NewProjectPage() {
+function NewProjectContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [productImage, setProductImage] = useState<File | null>(null);
@@ -117,6 +119,23 @@ export default function NewProjectPage() {
       kolStylePrompt: "young Vietnamese female KOL, friendly, confident, energetic, natural social commerce presenter",
     };
   });
+
+  // Apply clone settings from URL params (e.g. navigating from project detail "⎘ Clone")
+  useEffect(() => {
+    const platform = searchParams.get("platform");
+    const videoType = searchParams.get("videoType");
+    const durationSeconds = searchParams.get("durationSeconds");
+    const qualityPreset = searchParams.get("qualityPreset");
+    if (platform || videoType || durationSeconds || qualityPreset) {
+      setForm((prev) => ({
+        ...prev,
+        ...(platform ? { platform } : {}),
+        ...(videoType ? { videoType } : {}),
+        ...(durationSeconds ? { durationSeconds } : {}),
+        ...(qualityPreset ? { qualityPreset } : {}),
+      }));
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     fetch("/api/products", { headers: { "x-user-id": "demo-user" } })
@@ -525,5 +544,13 @@ export default function NewProjectPage() {
         </div>
       </form>
     </div>
+  );
+}
+
+export default function NewProjectPage() {
+  return (
+    <Suspense>
+      <NewProjectContent />
+    </Suspense>
   );
 }

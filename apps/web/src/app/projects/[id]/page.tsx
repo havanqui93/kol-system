@@ -45,6 +45,18 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
   const [renderJobId, setRenderJobId] = useState<string | null>(null);
   const [renderProgress, setRenderProgress] = useState<number | undefined>(undefined);
 
+  // Track last visited project in localStorage
+  useEffect(() => {
+    if (!project) return;
+    const data = {
+      id: project.id,
+      title: project.title ?? `Video #${project.id.slice(-6)}`,
+      status: project.status,
+      visitedAt: Date.now(),
+    };
+    try { localStorage.setItem("kol-last-visited", JSON.stringify(data)); } catch {}
+  }, [project?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Keyboard shortcut: r = refresh
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -149,6 +161,13 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <Link
+            href={`/projects/new?platform=${project.platform}&videoType=${project.videoType}&durationSeconds=${project.durationSeconds}&qualityPreset=${project.qualityPreset}`}
+            className="text-xs text-gray-500 hover:text-gray-700 px-2 py-1 rounded hover:bg-gray-100 transition-colors"
+            title="Tạo video mới với cùng cài đặt"
+          >
+            ⎘ Clone
+          </Link>
           <a
             href={api.projects.exportUrl(project.id)}
             download
