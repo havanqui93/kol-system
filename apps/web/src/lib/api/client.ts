@@ -179,6 +179,8 @@ export const api = {
         method: "POST",
         body: "{}",
       }),
+    duplicate: (id: string) =>
+      apiFetch<Project>(`/api/video-projects/${id}/duplicate`, { method: "POST", body: "{}" }),
   },
 
   script: {

@@ -69,6 +69,14 @@ export function PublishPanel({ projectId, disabled }: PublishPanelProps) {
 
   useEffect(() => { loadData(); }, [projectId]);
 
+  // Auto-poll when any job is in-flight
+  useEffect(() => {
+    const hasActive = publishJobs.some((j) => j.status === "publishing" || j.status === "scheduled");
+    if (!hasActive) return;
+    const id = setInterval(loadData, 5000);
+    return () => clearInterval(id);
+  }, [publishJobs]);
+
   async function handlePublish() {
     if (!selectedAccount) { setError("Chọn tài khoản để đăng"); return; }
     const account = accounts.find((a) => a.id === selectedAccount);

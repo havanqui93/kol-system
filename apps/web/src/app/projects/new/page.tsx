@@ -322,6 +322,33 @@ export default function NewProjectPage() {
               />
             </FormField>
 
+            {/* Cost estimate */}
+            <div className="rounded-lg bg-blue-50 border border-blue-100 px-4 py-3 text-sm">
+              <p className="font-medium text-blue-800 mb-1">Ước tính chi phí</p>
+              <div className="grid grid-cols-3 gap-2 text-xs text-blue-700">
+                {[
+                  { preset: "cheap",    label: "Tiết kiệm", range: "$0.05–$0.15" },
+                  { preset: "balanced", label: "Cân bằng",  range: "$0.10–$0.35" },
+                  { preset: "premium",  label: "Premium",   range: "$0.20–$0.55" },
+                ].map(({ preset, label, range }) => (
+                  <div
+                    key={preset}
+                    className={`rounded-md p-2 text-center border ${
+                      form.qualityPreset === preset
+                        ? "bg-blue-600 text-white border-blue-600"
+                        : "bg-white border-blue-200"
+                    }`}
+                  >
+                    <div className="font-semibold">{range}</div>
+                    <div className="opacity-75">{label}</div>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-blue-500 mt-2">
+                * Bao gồm LLM ($0.01), TTS ($0.02–$0.06), Kling ($0.28/clip × số clip), Whisper ($0.01)
+              </p>
+            </div>
+
             <FormField
               label="Phong cách thương hiệu (tùy chọn)"
               htmlFor="brandTone"

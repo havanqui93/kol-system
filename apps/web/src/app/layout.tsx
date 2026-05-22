@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ToastProvider } from "@/components/ui/toast";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -36,7 +37,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </header>
 
           <main className="flex-1 max-w-6xl mx-auto w-full px-4 py-8">
-            {children}
+            <ToastProvider>
+              {children}
+            </ToastProvider>
           </main>
 
           <footer className="border-t border-gray-200 text-center text-xs text-gray-400 py-4">
