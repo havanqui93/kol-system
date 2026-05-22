@@ -121,6 +121,12 @@ export function ProjectCard({ project, onDeleted }: { project: Project; onDelete
                     <span className="text-gray-700">{project.product.name}</span>
                   </>
                 )}
+                {project.kolProfile && (
+                  <>
+                    <span>·</span>
+                    <span className="text-gray-500">🎭 {project.kolProfile.name}</span>
+                  </>
+                )}
               </div>
 
               <div className="mt-2 flex items-center justify-between">

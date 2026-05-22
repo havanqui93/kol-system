@@ -73,7 +73,9 @@ export default function ProductsPage() {
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Thư viện sản phẩm</h1>
-          <p className="text-sm text-gray-500 mt-1">Tất cả sản phẩm đã tạo để dùng trong video</p>
+          <p className="text-sm text-gray-500 mt-1">
+            {loading ? "Đang tải..." : `${products.length} sản phẩm · Dùng trong video KOL`}
+          </p>
         </div>
         <div className="flex items-center gap-2">
           <select

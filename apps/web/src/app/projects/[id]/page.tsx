@@ -176,6 +176,13 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
           >
             ⬇ JSON
           </a>
+          <button
+            onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/share/${project.id}`); success("Đã sao chép link chia sẻ"); }}
+            title="Sao chép link chia sẻ"
+            className="text-xs text-gray-500 hover:text-gray-700 px-2 py-1 rounded hover:bg-gray-100 transition-colors"
+          >
+            🔗 Chia sẻ
+          </button>
           <Button variant="ghost" size="sm" onClick={() => refresh()} aria-label="Làm mới">
             ↻ Làm mới
           </Button>
@@ -193,6 +200,43 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
           </Button>
         </div>
       </div>
+
+      {/* Product + KOL summary */}
+      {(project.product || project.kolProfile) && (
+        <div className="mb-4 flex flex-wrap gap-3">
+          {project.product && (
+            <div className="flex items-center gap-3 flex-1 min-w-0 bg-gray-50 rounded-xl px-4 py-3">
+              {project.product.imageUrls?.[0] && (
+                <img src={project.product.imageUrls[0]} alt="" className="w-10 h-10 rounded-lg object-cover flex-shrink-0" />
+              )}
+              <div className="min-w-0">
+                <div className="text-xs text-gray-400 mb-0.5">Sản phẩm</div>
+                <div className="font-medium text-gray-900 truncate text-sm">{project.product.name}</div>
+                {project.product.price && (
+                  <div className="text-xs text-gray-500">{Number(project.product.price).toLocaleString("vi-VN")} VND</div>
+                )}
+                {project.product.promotion && (
+                  <div className="text-xs text-green-600">{project.product.promotion}</div>
+                )}
+              </div>
+            </div>
+          )}
+          {project.kolProfile && (
+            <div className="flex items-center gap-3 flex-1 min-w-0 bg-gray-50 rounded-xl px-4 py-3">
+              {project.kolProfile.avatarImageUrl && (
+                <img src={project.kolProfile.avatarImageUrl} alt="" className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
+              )}
+              <div className="min-w-0">
+                <div className="text-xs text-gray-400 mb-0.5">KOL Profile</div>
+                <div className="font-medium text-gray-900 truncate text-sm">{project.kolProfile.name}</div>
+                {project.kolProfile.voiceStyle && (
+                  <div className="text-xs text-gray-500">{project.kolProfile.voiceStyle}{project.kolProfile.language ? ` · ${project.kolProfile.language.toUpperCase()}` : ""}</div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Error banner with retry */}
       {(project.errorMessage || actionError) && (
@@ -293,6 +337,7 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
             <ScriptViewer
               scripts={project.scripts}
               disabled={!!approvedScript || actionLoading !== null}
+              targetDurationSeconds={project.durationSeconds}
               onApprove={(scriptId) =>
                 doAction("approve", () => api.script.approve(project.id, scriptId), "Kịch bản đã được duyệt")
               }

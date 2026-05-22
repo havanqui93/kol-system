@@ -36,8 +36,22 @@ export interface Project {
   thumbnailUrl: string | null;
   createdAt: string;
   updatedAt: string;
-  product?: { name: string; imageUrls?: string[]; imageUrl?: string | null } | null;
-  kolProfile?: { name: string } | null;
+  product?: {
+    name: string;
+    description?: string | null;
+    price?: string | null;
+    promotion?: string | null;
+    category?: string | null;
+    imageUrls?: string[];
+    imageUrl?: string | null;
+  } | null;
+  kolProfile?: {
+    name: string;
+    voiceStyle?: string;
+    voiceGender?: string;
+    language?: string;
+    avatarImageUrl?: string;
+  } | null;
 }
 
 export interface Script {

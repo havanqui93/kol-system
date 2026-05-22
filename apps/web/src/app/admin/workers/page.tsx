@@ -22,18 +22,23 @@ const QUEUE_LABELS: Record<string, string> = {
 export default function WorkersPage() {
   const [health, setHealth] = useState<HealthData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
-  async function load() {
+  async function load(manual = false) {
+    if (manual) setRefreshing(true);
     try {
       const r = await fetch("/api/health");
       setHealth(await r.json());
+      setLastRefreshed(new Date());
     } catch {}
     setLoading(false);
+    if (manual) setRefreshing(false);
   }
 
   useEffect(() => {
     load();
-    const id = setInterval(load, 5000);
+    const id = setInterval(() => load(), 5000);
     return () => clearInterval(id);
   }, []);
 
@@ -42,13 +47,24 @@ export default function WorkersPage() {
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Trạng thái Worker</h1>
-          <p className="text-sm text-gray-500 mt-1">Tự động làm mới mỗi 5 giây</p>
+          <p className="text-sm text-gray-500 mt-1">
+            {lastRefreshed ? `Cập nhật ${lastRefreshed.toLocaleTimeString("vi-VN")} · tự động mỗi 5s` : "Đang tải..."}
+          </p>
         </div>
-        {health && (
-          <span className={`text-xs font-medium px-3 py-1.5 rounded-full ${health.status === "ok" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
-            {health.status === "ok" ? "● Hoạt động tốt" : "● Sự cố"}
-          </span>
-        )}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => load(true)}
+            disabled={refreshing}
+            className="text-xs text-gray-500 hover:text-gray-700 px-3 py-1.5 rounded-lg border border-gray-200 hover:border-gray-300 transition-colors disabled:opacity-50"
+          >
+            {refreshing ? "…" : "↻ Làm mới"}
+          </button>
+          {health && (
+            <span className={`text-xs font-medium px-3 py-1.5 rounded-full ${health.status === "ok" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+              {health.status === "ok" ? "● Hoạt động tốt" : "● Sự cố"}
+            </span>
+          )}
+        </div>
       </div>
 
       {loading && (
@@ -113,7 +129,7 @@ export default function WorkersPage() {
           )}
 
           <p className="text-xs text-gray-400 text-center">
-            Cập nhật lần cuối: {new Date(health.ts).toLocaleTimeString("vi-VN")}
+            Server timestamp: {new Date(health.ts).toLocaleTimeString("vi-VN")}
           </p>
         </div>
       )}

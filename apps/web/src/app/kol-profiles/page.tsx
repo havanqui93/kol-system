@@ -29,6 +29,8 @@ const VOICE_STYLE_LABELS: Record<string, string> = {
   authoritative: "Uy quyền",
 };
 
+type SortKey = "newest" | "most_videos" | "alpha";
+
 export default function KolProfilesPage() {
   const { success, error: toastError } = useToast();
   const [profiles, setProfiles] = useState<KolProfile[]>([]);
@@ -36,6 +38,7 @@ export default function KolProfilesPage() {
   const [deleteTarget, setDeleteTarget] = useState<KolProfile | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [search, setSearch] = useState("");
+  const [sort, setSort] = useState<SortKey>("newest");
 
   async function load() {
     const res = await fetch("/api/kol-profiles", { headers: { "x-user-id": "demo-user" } });
@@ -80,9 +83,20 @@ export default function KolProfilesPage() {
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">KOL Profiles</h1>
-          <p className="text-sm text-gray-500 mt-1">Quản lý avatar AI KOL có thể tái sử dụng</p>
+          <p className="text-sm text-gray-500 mt-1">
+            {loading ? "Đang tải..." : `${profiles.length} KOL profile · Quản lý avatar AI tái sử dụng`}
+          </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
+          <select
+            value={sort}
+            onChange={(e) => setSort(e.target.value as SortKey)}
+            className="text-xs border border-gray-300 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand-400"
+          >
+            <option value="newest">Mới nhất</option>
+            <option value="most_videos">Nhiều video nhất</option>
+            <option value="alpha">A → Z</option>
+          </select>
           <Link href="/kol-profiles/new">
             <Button size="sm" variant="secondary">+ Tạo KOL Profile</Button>
           </Link>
@@ -126,7 +140,14 @@ export default function KolProfilesPage() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {profiles.filter((p) => !search || p.name.toLowerCase().includes(search.toLowerCase())).map((profile) => (
+        {[...profiles]
+          .filter((p) => !search || p.name.toLowerCase().includes(search.toLowerCase()))
+          .sort((a, b) => {
+            if (sort === "most_videos") return (b._count?.videoProjects ?? 0) - (a._count?.videoProjects ?? 0);
+            if (sort === "alpha") return a.name.localeCompare(b.name, "vi");
+            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+          })
+          .map((profile) => (
           <Card key={profile.id} className="group relative">
             <CardBody className="flex gap-4">
               {/* Avatar */}

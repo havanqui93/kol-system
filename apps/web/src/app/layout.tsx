@@ -5,6 +5,7 @@ import { MobileNav } from "@/components/ui/mobile-nav";
 import { ShortcutsHelp } from "@/components/ui/shortcuts-help";
 import { NavLinks } from "@/components/ui/nav-links";
 import { CommandPalette } from "@/components/ui/command-palette";
+import { SearchTrigger } from "@/components/ui/search-trigger";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -41,6 +42,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               {/* Desktop nav */}
               <nav className="hidden sm:flex items-center gap-6">
                 <NavLinks links={NAV_LINKS} />
+                <SearchTrigger />
                 <Link
                   href="/projects/new"
                   className="bg-brand-600 text-white px-4 py-1.5 rounded-full hover:bg-brand-700 transition-colors font-medium text-sm"

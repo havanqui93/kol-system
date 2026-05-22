@@ -28,6 +28,7 @@ interface ScriptViewerProps {
   onApprove: (scriptId: string) => Promise<void>;
   onRegenerate?: () => Promise<void>;
   disabled?: boolean;
+  targetDurationSeconds?: number;
 }
 
 const SECTION_LABELS: { key: keyof Script; label: string; emoji: string }[] = [
@@ -53,7 +54,7 @@ function ScriptSection({ emoji, label, text }: { emoji: string; label: string; t
   );
 }
 
-export function ScriptViewer({ scripts, onApprove, onRegenerate, disabled }: ScriptViewerProps) {
+export function ScriptViewer({ scripts, onApprove, onRegenerate, disabled, targetDurationSeconds }: ScriptViewerProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [approving, setApproving] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
@@ -90,6 +91,25 @@ export function ScriptViewer({ scripts, onApprove, onRegenerate, disabled }: Scr
             <p className="text-xs text-gray-500 mt-0.5">
               ~{script.wordCount ?? "?"} từ · ~{script.estimatedDurationSeconds ?? "?"}s · {script.fullScript.length.toLocaleString()} ký tự
             </p>
+            {targetDurationSeconds && script.estimatedDurationSeconds && (
+              <div className="flex items-center gap-2 mt-1.5">
+                <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all ${
+                      script.estimatedDurationSeconds > targetDurationSeconds * 1.1
+                        ? "bg-red-400"
+                        : script.estimatedDurationSeconds < targetDurationSeconds * 0.8
+                        ? "bg-yellow-400"
+                        : "bg-green-400"
+                    }`}
+                    style={{ width: `${Math.min(100, (script.estimatedDurationSeconds / targetDurationSeconds) * 100)}%` }}
+                  />
+                </div>
+                <span className="text-[10px] text-gray-400 whitespace-nowrap">
+                  {script.estimatedDurationSeconds}s / {targetDurationSeconds}s mục tiêu
+                </span>
+              </div>
+            )}
           </div>
           {scripts.length > 1 && (
             <div className="flex gap-1 flex-wrap">

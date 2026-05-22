@@ -1,26 +1,34 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 const SHORTCUTS = [
+  { keys: ["n"], description: "Tạo video mới" },
   { keys: ["r"], description: "Làm mới dự án (trang chi tiết)" },
+  { keys: ["Ctrl", "K"], description: "Tìm kiếm nhanh" },
   { keys: ["?"], description: "Hiện/ẩn danh sách phím tắt" },
   { keys: ["Esc"], description: "Đóng hộp thoại / menu" },
 ];
 
 export function ShortcutsHelp() {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      if (e.key === "?" && !(e.target instanceof HTMLInputElement) && !(e.target instanceof HTMLTextAreaElement)) {
+      const isInput = e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement;
+      if (e.key === "?" && !isInput) {
         setOpen((v) => !v);
       }
       if (e.key === "Escape") setOpen(false);
+      if (e.key === "n" && !isInput && !e.ctrlKey && !e.metaKey) {
+        router.push("/projects/new");
+      }
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, []);
+  }, [router]);
 
   return (
     <>
