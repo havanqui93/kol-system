@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useProject } from "@/hooks/use-project";
 import { api } from "@/lib/api/client";
 import { StatusBadge } from "@/components/ui/badge";
@@ -28,6 +29,7 @@ const VOICE_STYLE_OPTIONS = [
 ];
 
 export default function ProjectDetailPage({ params }: { params: { id: string } }) {
+  const router = useRouter();
   const { project, loading, error, refresh } = useProject(params.id);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -100,15 +102,39 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
             <StatusBadge status={status} />
           </div>
         </div>
-        <Button variant="ghost" size="sm" onClick={() => refresh()}>
-          ↻ Làm mới
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="sm" onClick={() => refresh()}>
+            ↻ Làm mới
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-red-500 hover:text-red-700 hover:bg-red-50"
+            onClick={async () => {
+              if (!confirm("Xóa dự án này? Hành động không thể hoàn tác.")) return;
+              await api.projects.delete(project.id);
+              router.push("/");
+            }}
+          >
+            Xóa
+          </Button>
+        </div>
       </div>
 
-      {/* Error banner */}
+      {/* Error banner with retry */}
       {(project.errorMessage || actionError) && (
-        <div className="mb-4 bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-sm text-red-700">
-          {actionError ?? project.errorMessage}
+        <div className="mb-4 bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-sm text-red-700 flex items-center justify-between gap-4">
+          <span>{actionError ?? project.errorMessage}</span>
+          {status === "failed" && !actionError && (
+            <Button
+              size="sm"
+              variant="secondary"
+              loading={actionLoading === "retry"}
+              onClick={() => doAction("retry", () => api.projects.retry(project.id))}
+            >
+              Thử lại
+            </Button>
+          )}
         </div>
       )}
 
@@ -164,6 +190,11 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
               disabled={!!approvedScript || actionLoading !== null}
               onApprove={(scriptId) =>
                 doAction("approve", () => api.script.approve(project.id, scriptId))
+              }
+              onRegenerate={
+                !approvedScript
+                  ? () => doAction("script", () => api.script.regenerate(project.id))
+                  : undefined
               }
             />
           )}
@@ -333,6 +364,34 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
           </dl>
         </CardBody>
       </Card>
+
+      {/* Cost breakdown */}
+      {project.costTracking && (
+        <Card className="mt-4">
+          <CardBody>
+            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Chi phí AI</h3>
+            <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+              {[
+                ["LLM (kịch bản)", project.costTracking.llmCostUsd],
+                ["TTS (giọng nói)", project.costTracking.ttsCostUsd],
+                ["Kling (video)", project.costTracking.videoCostUsd],
+                ["Subtitle (Whisper)", project.costTracking.subtitleCostUsd],
+              ].map(([label, val]) => (
+                <div key={label}>
+                  <dt className="text-gray-500 text-xs">{label}</dt>
+                  <dd className="text-gray-800 font-medium">${Number(val).toFixed(4)}</dd>
+                </div>
+              ))}
+            </dl>
+            <div className="mt-3 pt-3 border-t border-gray-100 flex justify-between items-center">
+              <span className="text-xs font-semibold text-gray-600">Tổng chi phí</span>
+              <span className="text-sm font-bold text-gray-900">
+                ${Number(project.costTracking.totalCostUsd).toFixed(4)}
+              </span>
+            </div>
+          </CardBody>
+        </Card>
+      )}
     </div>
   );
 }

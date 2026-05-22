@@ -65,6 +65,15 @@ export interface Asset {
   createdAt: string;
 }
 
+export interface CostTracking {
+  llmCostUsd: string;
+  ttsCostUsd: string;
+  videoCostUsd: string;
+  subtitleCostUsd: string;
+  storageCostUsd: string;
+  totalCostUsd: string;
+}
+
 export interface Scene {
   id: string;
   sceneIndex: number;
@@ -154,13 +163,28 @@ export const api = {
 
   projects: {
     list: () => apiFetch<{ projects: Project[]; total: number }>("/api/video-projects"),
-    get: (id: string) => apiFetch<Project & { scripts: Script[]; scenes: Scene[]; assets: Asset[] }>(`/api/video-projects/${id}`),
+    get: (id: string) =>
+      apiFetch<Project & { scripts: Script[]; scenes: Scene[]; assets: Asset[]; costTracking: CostTracking | null }>(
+        `/api/video-projects/${id}`
+      ),
     create: (data: CreateProjectPayload) =>
       apiFetch<Project>("/api/video-projects", { method: "POST", body: JSON.stringify(data) }),
+    delete: (id: string) =>
+      fetch(`/api/video-projects/${id}`, {
+        method: "DELETE",
+        headers: { "x-user-id": DEMO_USER_ID },
+      }).then((r) => { if (!r.ok && r.status !== 204) throw new Error(`HTTP ${r.status}`); }),
+    retry: (id: string) =>
+      apiFetch<{ status: string; jobId: string | null }>(`/api/video-projects/${id}/retry`, {
+        method: "POST",
+        body: "{}",
+      }),
   },
 
   script: {
     generate: (projectId: string) =>
+      apiFetch<{ jobId: string }>(`/api/video-projects/${projectId}/generate-script`, { method: "POST", body: "{}" }),
+    regenerate: (projectId: string) =>
       apiFetch<{ jobId: string }>(`/api/video-projects/${projectId}/generate-script`, { method: "POST", body: "{}" }),
     approve: (projectId: string, scriptId: string) =>
       apiFetch(`/api/video-projects/${projectId}/approve-script`, {

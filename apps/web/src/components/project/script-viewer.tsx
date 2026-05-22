@@ -8,6 +8,7 @@ import type { Script } from "@/lib/api/client";
 interface ScriptViewerProps {
   scripts: Script[];
   onApprove: (scriptId: string) => Promise<void>;
+  onRegenerate?: () => Promise<void>;
   disabled?: boolean;
 }
 
@@ -34,9 +35,10 @@ function ScriptSection({ emoji, label, text }: { emoji: string; label: string; t
   );
 }
 
-export function ScriptViewer({ scripts, onApprove, disabled }: ScriptViewerProps) {
+export function ScriptViewer({ scripts, onApprove, onRegenerate, disabled }: ScriptViewerProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [approving, setApproving] = useState(false);
+  const [regenerating, setRegenerating] = useState(false);
 
   const script = scripts[selectedIndex];
   if (!script) return null;
@@ -48,6 +50,16 @@ export function ScriptViewer({ scripts, onApprove, disabled }: ScriptViewerProps
       await onApprove(script.id);
     } finally {
       setApproving(false);
+    }
+  }
+
+  async function handleRegenerate() {
+    if (!onRegenerate) return;
+    setRegenerating(true);
+    try {
+      await onRegenerate();
+    } finally {
+      setRegenerating(false);
     }
   }
 
@@ -95,13 +107,25 @@ export function ScriptViewer({ scripts, onApprove, disabled }: ScriptViewerProps
               <span>✓</span> Kịch bản đã được duyệt
             </div>
           ) : (
-            <Button
-              onClick={handleApprove}
-              loading={approving}
-              disabled={disabled || approving}
-            >
-              Duyệt kịch bản này
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={handleApprove}
+                loading={approving}
+                disabled={disabled || approving || regenerating}
+              >
+                Duyệt kịch bản này
+              </Button>
+              {onRegenerate && (
+                <Button
+                  variant="secondary"
+                  onClick={handleRegenerate}
+                  loading={regenerating}
+                  disabled={disabled || approving || regenerating}
+                >
+                  Tạo lại
+                </Button>
+              )}
+            </div>
           )}
 
           <div className="ml-auto">

@@ -16,7 +16,9 @@ export async function POST(request: Request, { params }: { params: { id: string 
 
   const costTracking = await prisma.costTracking.findUnique({ where: { projectId } });
 
-  // Update status
+  // On regeneration unapprove existing scripts so user must review the new version
+  await prisma.videoScript.updateMany({ where: { projectId }, data: { isApproved: false } });
+
   await prisma.videoProject.update({
     where: { id: projectId },
     data: { status: "script_generating", errorMessage: null },

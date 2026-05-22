@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@kol/database";
-import { ProjectCard } from "@/components/project/project-card";
+import { ProjectFilter } from "@/components/project/project-filter";
 import { Button } from "@/components/ui/button";
 import type { Project } from "@/lib/api/client";
 
@@ -55,7 +55,7 @@ export default async function DashboardPage() {
         </div>
       )}
 
-      {/* Project list */}
+      {/* Project list with search + filter */}
       {projects.length === 0 ? (
         <div className="text-center py-24">
           <div className="text-5xl mb-4">🎬</div>
@@ -66,11 +66,7 @@ export default async function DashboardPage() {
           </Link>
         </div>
       ) : (
-        <div className="grid gap-3">
-          {projects.map((project) => (
-            <ProjectCard key={project.id} project={project} />
-          ))}
-        </div>
+        <ProjectFilter initialProjects={projects} />
       )}
     </div>
   );

@@ -1,7 +1,11 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { StatusBadge } from "@/components/ui/badge";
 import { Card, CardBody } from "@/components/ui/card";
-import type { Project } from "@/lib/api/client";
+import { api, type Project } from "@/lib/api/client";
 
 const PLATFORM_ICONS: Record<string, string> = {
   tiktok: "🎵",
@@ -27,13 +31,34 @@ function timeAgo(dateStr: string) {
   return `${Math.floor(hrs / 24)} ngày trước`;
 }
 
-export function ProjectCard({ project }: { project: Project }) {
+export function ProjectCard({ project, onDeleted }: { project: Project; onDeleted?: (id: string) => void }) {
+  const router = useRouter();
+  const [deleting, setDeleting] = useState(false);
   const isProcessing = ["script_generating", "audio_generating", "video_generating", "rendering", "qa_checking", "publishing"].includes(project.status);
 
+  async function handleDelete(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!confirm("Xóa dự án này? Hành động không thể hoàn tác.")) return;
+    setDeleting(true);
+    try {
+      await api.projects.delete(project.id);
+      if (onDeleted) {
+        onDeleted(project.id);
+      } else {
+        router.refresh();
+      }
+    } catch {
+      alert("Xóa thất bại, thử lại sau.");
+      setDeleting(false);
+    }
+  }
+
   return (
-    <Link href={`/projects/${project.id}`}>
-      <Card className="hover:border-brand-300 hover:shadow-md transition-all cursor-pointer">
-        <CardBody className="flex items-start gap-4">
+    <div className="relative group">
+      <Link href={`/projects/${project.id}`}>
+        <Card className="hover:border-brand-300 hover:shadow-md transition-all cursor-pointer">
+          <CardBody className="flex items-start gap-4">
           {/* Thumbnail / placeholder */}
           <div className="w-14 h-20 rounded-lg bg-gradient-to-br from-brand-100 to-purple-100 flex items-center justify-center text-2xl flex-shrink-0">
             {PLATFORM_ICONS[project.platform] ?? "🎬"}
@@ -77,5 +102,14 @@ export function ProjectCard({ project }: { project: Project }) {
         </CardBody>
       </Card>
     </Link>
+      <button
+        onClick={handleDelete}
+        disabled={deleting}
+        title="Xóa dự án"
+        className="absolute top-2 right-2 w-7 h-7 rounded-full bg-white border border-gray-200 text-gray-400 hover:text-red-600 hover:border-red-300 items-center justify-center text-sm opacity-0 group-hover:opacity-100 transition-opacity shadow-sm flex disabled:opacity-30"
+      >
+        {deleting ? "…" : "×"}
+      </button>
+    </div>
   );
 }
