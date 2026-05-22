@@ -61,6 +61,7 @@ function ScriptSection({ emoji, label, text }: { emoji: string; label: string; t
           <div className="flex items-center gap-2">
             <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{label}</div>
             <span className="text-[10px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded-full">{wc} từ</span>
+            <span className="text-[10px] text-gray-300 bg-gray-50 px-1.5 py-0.5 rounded-full">{text.length} ký tự</span>
           </div>
           <button
             onClick={() => { navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 1500); }}

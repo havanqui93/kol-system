@@ -706,9 +706,12 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
             </dl>
             <div className="mt-3 pt-3 border-t border-gray-100 flex justify-between items-center">
               <span className="text-xs font-semibold text-gray-600">Tổng chi phí</span>
-              <span className="text-sm font-bold text-gray-900">
-                ${Number(project.costTracking.totalCostUsd).toFixed(4)}
-              </span>
+              <div className="text-right">
+                <div className="text-sm font-bold text-gray-900">${Number(project.costTracking.totalCostUsd).toFixed(4)}</div>
+                {project.durationSeconds > 0 && (
+                  <div className="text-xs text-gray-400">~${(Number(project.costTracking.totalCostUsd) / project.durationSeconds).toFixed(5)}/giây</div>
+                )}
+              </div>
             </div>
           </CardBody>
         </Card>

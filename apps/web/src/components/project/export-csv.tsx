@@ -10,7 +10,7 @@ const PLATFORM_LABELS: Record<string, string> = {
 function toCSV(projects: Project[]): string {
   const headers = [
     "ID", "Tiêu đề", "Nền tảng", "Loại video", "Chất lượng", "Ngôn ngữ",
-    "Trạng thái", "Sản phẩm", "KOL Profile", "Thời lượng (s)",
+    "Trạng thái", "Lỗi", "Sản phẩm", "KOL Profile", "Thời lượng (s)",
     "Ngày tạo", "Cập nhật", "URL video",
   ];
   const rows = projects.map((p) => [
@@ -21,6 +21,7 @@ function toCSV(projects: Project[]): string {
     p.qualityPreset,
     p.language.toUpperCase(),
     p.status,
+    p.errorMessage ?? "",
     p.product?.name ?? "",
     p.kolProfile?.name ?? "",
     p.durationSeconds,

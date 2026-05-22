@@ -201,6 +201,12 @@ export function ProjectCard({ project, onDeleted }: { project: Project; onDelete
                 </div>
               )}
 
+              {project.status === "failed" && project.errorMessage && (
+                <p className="mt-1 text-xs text-red-500 truncate" title={project.errorMessage}>
+                  ✕ {project.errorMessage}
+                </p>
+              )}
+
               <div className="mt-2 flex items-center justify-between">
                 <span className="text-xs text-gray-400">
                   {timeAgo(project.createdAt)}

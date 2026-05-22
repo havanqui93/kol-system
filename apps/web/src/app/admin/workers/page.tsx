@@ -69,6 +69,23 @@ export default function WorkersPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
+          {health && (
+            <button
+              onClick={() => {
+                const blob = new Blob([JSON.stringify(health, null, 2)], { type: "application/json" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `health-${new Date().toISOString().slice(0, 19).replace(/:/g, "-")}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+              }}
+              className="text-xs text-gray-400 hover:text-gray-600 px-3 py-1.5 rounded-lg border border-gray-200 hover:border-gray-300 transition-colors"
+              title="Tải xuống báo cáo health JSON"
+            >
+              ⬇ JSON
+            </button>
+          )}
           <button
             onClick={() => load(true)}
             disabled={refreshing}

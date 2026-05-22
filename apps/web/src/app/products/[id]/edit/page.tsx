@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Input, Textarea, FormField } from "@/components/ui/input";
+import { useToast } from "@/components/ui/toast";
 
 interface ProductForm {
   name: string;
@@ -17,6 +18,7 @@ interface ProductForm {
 
 export default function EditProductPage({ params }: { params: { id: string } }) {
   const router = useRouter();
+  const { success } = useToast();
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -63,6 +65,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
         }),
       });
       if (!res.ok) throw new Error("Cập nhật thất bại");
+      success("Đã cập nhật sản phẩm");
       router.push("/products");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Đã xảy ra lỗi");

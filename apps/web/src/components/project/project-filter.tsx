@@ -83,7 +83,10 @@ export function ProjectFilter({ initialProjects, initialStatus = "" }: { initial
     return "";
   });
   const [videoTypeFilter, setVideoTypeFilter] = useState("");
-  const [sort, setSort] = useState("newest");
+  const [sort, setSort] = useState(() => {
+    if (typeof window !== "undefined") return localStorage.getItem("kol-project-sort") ?? "newest";
+    return "newest";
+  });
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -94,6 +97,7 @@ export function ProjectFilter({ initialProjects, initialStatus = "" }: { initial
   }, [searchInput]);
 
   useEffect(() => { localStorage.setItem("kol-platform-filter", platformFilter); }, [platformFilter]);
+  useEffect(() => { localStorage.setItem("kol-project-sort", sort); }, [sort]);
 
   const focusSearch = useCallback(() => { searchInputRef.current?.focus(); }, []);
 
@@ -192,7 +196,12 @@ export function ProjectFilter({ initialProjects, initialStatus = "" }: { initial
       {/* Active filter chips */}
       {(searchInput || statusFilter || platformFilter || videoTypeFilter) && (
         <div className="flex items-center gap-2 mb-3 flex-wrap">
-          <span className="text-xs text-gray-400">Đang lọc:</span>
+          <span className="text-xs text-gray-400">
+            Đang lọc
+            {[searchInput, statusFilter, platformFilter, videoTypeFilter].filter(Boolean).length > 1 &&
+              ` (${[searchInput, statusFilter, platformFilter, videoTypeFilter].filter(Boolean).length})`}
+            :
+          </span>
           {searchInput && (
             <span className="inline-flex items-center gap-1 text-xs bg-brand-50 text-brand-700 border border-brand-200 rounded-full px-2.5 py-0.5">
               "{searchInput}"
