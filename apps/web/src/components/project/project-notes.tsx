@@ -64,13 +64,28 @@ export function ProjectNotes({ projectId }: { projectId: string }) {
             </span>
           )}
           {notes && (
-            <button
-              onClick={handleDownload}
-              title="Tải xuống ghi chú (.txt)"
-              className="text-xs text-gray-400 hover:text-brand-600 transition-colors"
-            >
-              ⬇
-            </button>
+            <>
+              <button
+                onClick={handleDownload}
+                title="Tải xuống ghi chú (.txt)"
+                className="text-xs text-gray-400 hover:text-brand-600 transition-colors"
+              >
+                ⬇
+              </button>
+              <button
+                onClick={() => {
+                  if (!confirm("Xóa tất cả ghi chú?")) return;
+                  setNotes("");
+                  localStorage.removeItem(STORAGE_KEY(projectId));
+                  localStorage.removeItem(TS_KEY(projectId));
+                  setLastUpdated(null);
+                }}
+                title="Xóa ghi chú"
+                className="text-xs text-gray-400 hover:text-red-500 transition-colors"
+              >
+                ×
+              </button>
+            </>
           )}
         </div>
       </div>

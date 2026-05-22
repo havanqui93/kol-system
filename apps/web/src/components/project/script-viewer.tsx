@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import type { Script } from "@/lib/api/client";
 
-function CopyScriptButton({ text }: { text: string }) {
+function CopyScriptButton({ text, label = "⎘ Sao chép" }: { text: string; label?: string }) {
   const [copied, setCopied] = useState(false);
   async function handleCopy() {
     await navigator.clipboard.writeText(text);
@@ -15,10 +15,10 @@ function CopyScriptButton({ text }: { text: string }) {
   return (
     <button
       onClick={handleCopy}
-      title="Sao chép full script"
+      title="Sao chép script"
       className="text-xs text-gray-400 hover:text-brand-600 transition-colors px-1"
     >
-      {copied ? "✓ Đã sao chép" : "⎘ Sao chép"}
+      {copied ? "✓ Đã sao chép" : label}
     </button>
   );
 }
@@ -216,6 +216,7 @@ export function ScriptViewer({ scripts, onApprove, onRegenerate, disabled, targe
             >
               🖨
             </button>
+            <CopyScriptButton text={SECTION_LABELS.filter(({ key }) => script[key]).map(({ label, key }) => `[${label.toUpperCase()}]\n${script[key] as string}`).join("\n\n")} label="⎘ Sao chép có định dạng" />
             <CopyScriptButton text={script.fullScript} />
             <details>
               <summary className="text-xs text-gray-400 cursor-pointer hover:text-gray-600">Xem full script</summary>

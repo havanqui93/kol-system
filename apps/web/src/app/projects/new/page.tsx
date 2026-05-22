@@ -277,9 +277,16 @@ function NewProjectContent() {
                     </option>
                   ))}
                 </select>
-                {selectedProductId && (
-                  <p className="text-xs text-brand-600 mt-1">✓ Dùng sản phẩm đã có — không cần nhập lại thông tin</p>
-                )}
+                {selectedProductId && (() => {
+                  const prod = existingProducts.find((p) => p.id === selectedProductId);
+                  return prod ? (
+                    <div className="mt-2 bg-white border border-brand-200 rounded-lg px-3 py-2 text-xs">
+                      <div className="font-semibold text-gray-800">{prod.name}</div>
+                      {prod.description && <div className="text-gray-500 mt-0.5 line-clamp-2">{prod.description}</div>}
+                      {prod.price && <div className="text-brand-700 mt-0.5 font-medium">{Number(prod.price).toLocaleString("vi-VN")} VND</div>}
+                    </div>
+                  ) : <p className="text-xs text-brand-600 mt-1">✓ Dùng sản phẩm đã có</p>;
+                })()}
               </div>
             )}
 

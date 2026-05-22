@@ -34,6 +34,7 @@ export default function ProductsPage() {
     return "newest";
   });
   const [search, setSearch] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("");
   const searchRef = useRef<HTMLInputElement>(null);
 
   async function load() {
@@ -143,6 +144,32 @@ export default function ProductsPage() {
         </div>
       )}
 
+      {/* Category filter */}
+      {(() => {
+        const categories = [...new Set(products.map((p) => p.category).filter(Boolean))] as string[];
+        if (categories.length === 0) return null;
+        return (
+          <div className="mb-3 flex items-center gap-2 flex-wrap">
+            <span className="text-xs text-gray-400">Danh mục:</span>
+            <button
+              onClick={() => setCategoryFilter("")}
+              className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${!categoryFilter ? "bg-brand-600 text-white border-brand-600" : "bg-white text-gray-600 border-gray-300 hover:border-brand-400"}`}
+            >
+              Tất cả
+            </button>
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setCategoryFilter(cat === categoryFilter ? "" : cat)}
+                className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${cat === categoryFilter ? "bg-brand-600 text-white border-brand-600" : "bg-white text-gray-600 border-gray-300 hover:border-brand-400"}`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        );
+      })()}
+
       {/* Search */}
       <div className="mb-5 relative">
         <input
@@ -172,7 +199,11 @@ export default function ProductsPage() {
       )}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {[...products].filter((p) => !search || p.name.toLowerCase().includes(search.toLowerCase())).sort((a, b) => {
+        {[...products].filter((p) => {
+          if (search && !p.name.toLowerCase().includes(search.toLowerCase())) return false;
+          if (categoryFilter && p.category !== categoryFilter) return false;
+          return true;
+        }).sort((a, b) => {
           if (sort === "most_videos") return (b._count?.videoProjects ?? 0) - (a._count?.videoProjects ?? 0);
           if (sort === "alpha") return a.name.localeCompare(b.name, "vi");
           if (sort === "oldest") return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();

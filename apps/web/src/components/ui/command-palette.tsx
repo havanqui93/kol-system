@@ -6,9 +6,11 @@ import type { Project } from "@/lib/api/client";
 
 const QUICK_LINKS = [
   { id: "home", label: "Dashboard", href: "/", icon: "🏠" },
-  { id: "new", label: "Tạo video mới", href: "/projects/new", icon: "➕" },
-  { id: "products", label: "Sản phẩm", href: "/products", icon: "📦" },
-  { id: "kols", label: "KOL Profiles", href: "/kol-profiles", icon: "🎭" },
+  { id: "new", label: "Tạo video mới", href: "/projects/new", icon: "🎬" },
+  { id: "new-product", label: "Thêm sản phẩm", href: "/products/new", icon: "📦" },
+  { id: "new-kol", label: "Tạo KOL Profile", href: "/kol-profiles/new", icon: "🎭" },
+  { id: "products", label: "Thư viện sản phẩm", href: "/products", icon: "🏪" },
+  { id: "kols", label: "Danh sách KOL", href: "/kol-profiles", icon: "👤" },
   { id: "settings", label: "Cài đặt", href: "/settings", icon: "⚙️" },
 ];
 

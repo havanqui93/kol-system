@@ -62,6 +62,15 @@ export function MobileNav({ links }: { links: NavLink[] }) {
               </Link>
             ))}
             <Link
+              href="/admin/workers"
+              role="menuitem"
+              className={`px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                pathname.startsWith("/admin") ? "bg-brand-50 text-brand-700" : "text-gray-700 hover:bg-gray-100"
+              }`}
+            >
+              Trạng thái Worker
+            </Link>
+            <Link
               href="/projects/new"
               role="menuitem"
               className="mt-1 px-3 py-2.5 rounded-lg text-sm font-medium text-center bg-brand-600 text-white hover:bg-brand-700 transition-colors"
