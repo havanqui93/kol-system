@@ -7,6 +7,7 @@ import type { Project } from "@/lib/api/client";
 
 const STATUS_FILTER_OPTIONS = [
   { value: "", label: "Tất cả" },
+  { value: "draft", label: "Nháp" },
   { value: "processing", label: "Đang xử lý" },
   { value: "script_ready", label: "Chờ duyệt kịch bản" },
   { value: "ready_to_publish", label: "Sẵn sàng đăng" },
@@ -102,13 +103,25 @@ export function ProjectFilter({ initialProjects, initialStatus = "" }: { initial
         </select>
       </div>
 
-      {/* Result count + CSV export */}
-      {filtered.length > 0 && (
-        <div className="flex items-center justify-between mb-2 text-xs text-gray-400">
-          <span>{filtered.length} dự án</span>
-          <ExportCSVButton projects={filtered} />
+      {/* Result count + reset + CSV export */}
+      <div className="flex items-center justify-between mb-2 text-xs text-gray-400">
+        <div className="flex items-center gap-2">
+          <span>
+            {filtered.length < projects.length
+              ? `${filtered.length} / ${projects.length} dự án`
+              : `${projects.length} dự án`}
+          </span>
+          {(searchInput || statusFilter) && (
+            <button
+              onClick={() => { setSearchInput(""); setStatusFilter(""); setSort("newest"); }}
+              className="text-brand-600 hover:underline"
+            >
+              Xóa bộ lọc
+            </button>
+          )}
         </div>
-      )}
+        {filtered.length > 0 && <ExportCSVButton projects={filtered} />}
+      </div>
 
       {filtered.length === 0 ? (
         <p className="text-center text-sm text-gray-400 py-12">

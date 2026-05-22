@@ -532,6 +532,10 @@ function NewProjectContent() {
           </div>
         )}
 
+        <div className="text-xs text-gray-400 text-center">
+          💡 Video thường hoàn thành trong ~5–15 phút · Bạn có thể theo dõi tiến độ sau khi tạo
+        </div>
+
         <div className="flex gap-3">
           <Button type="submit" size="lg" loading={loading} className="flex-1">
             {loading ? "Đang tạo kịch bản..." : "Tạo video & Bắt đầu"}

@@ -53,7 +53,7 @@ export function MobileNav({ links }: { links: NavLink[] }) {
                 href={link.href}
                 role="menuitem"
                 className={`px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                  pathname === link.href
+                  (link.href === "/" ? pathname === "/" : pathname.startsWith(link.href))
                     ? "bg-brand-50 text-brand-700"
                     : "text-gray-700 hover:bg-gray-100"
                 }`}

@@ -30,13 +30,40 @@ export function BulkDeleteFailed({ failedCount }: { failedCount: number }) {
     }
   }
 
+  async function handleBulkRetry() {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/video-projects/bulk?status=failed", {
+        method: "PATCH",
+        headers: { "x-user-id": "demo-user" },
+      });
+      if (!res.ok) throw new Error();
+      const { reset } = await res.json();
+      success(`Đã reset ${reset} dự án về nháp`);
+      router.refresh();
+    } catch {
+      toastError("Thao tác thất bại, thử lại sau.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
-    <button
-      onClick={handleBulkDelete}
-      disabled={loading}
-      className="text-xs text-red-500 hover:text-red-700 hover:underline disabled:opacity-50 transition-colors"
-    >
-      {loading ? "Đang xóa..." : `Xóa tất cả thất bại (${failedCount})`}
-    </button>
+    <div className="flex items-center gap-3">
+      <button
+        onClick={handleBulkRetry}
+        disabled={loading}
+        className="text-xs text-brand-600 hover:text-brand-800 hover:underline disabled:opacity-50 transition-colors"
+      >
+        {loading ? "Đang xử lý..." : `↺ Reset về nháp (${failedCount})`}
+      </button>
+      <button
+        onClick={handleBulkDelete}
+        disabled={loading}
+        className="text-xs text-red-500 hover:text-red-700 hover:underline disabled:opacity-50 transition-colors"
+      >
+        {loading ? "Đang xóa..." : `Xóa tất cả thất bại (${failedCount})`}
+      </button>
+    </div>
   );
 }

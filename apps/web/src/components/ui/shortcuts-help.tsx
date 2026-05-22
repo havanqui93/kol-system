@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 
 const SHORTCUTS = [
   { keys: ["n"], description: "Tạo video mới" },
+  { keys: ["s"], description: "Mở trang cài đặt" },
   { keys: ["r"], description: "Làm mới dự án (trang chi tiết)" },
   { keys: ["Ctrl", "K"], description: "Tìm kiếm nhanh" },
   { keys: ["?"], description: "Hiện/ẩn danh sách phím tắt" },
@@ -24,6 +25,9 @@ export function ShortcutsHelp() {
       if (e.key === "Escape") setOpen(false);
       if (e.key === "n" && !isInput && !e.ctrlKey && !e.metaKey) {
         router.push("/projects/new");
+      }
+      if (e.key === "s" && !isInput && !e.ctrlKey && !e.metaKey) {
+        router.push("/settings");
       }
     }
     window.addEventListener("keydown", onKey);

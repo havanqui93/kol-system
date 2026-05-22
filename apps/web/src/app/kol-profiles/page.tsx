@@ -29,6 +29,14 @@ const VOICE_STYLE_LABELS: Record<string, string> = {
   authoritative: "Uy quyền",
 };
 
+const VOICE_STYLE_COLORS: Record<string, string> = {
+  energetic: "bg-orange-100 text-orange-700",
+  professional: "bg-blue-100 text-blue-700",
+  funny: "bg-yellow-100 text-yellow-700",
+  calm: "bg-teal-100 text-teal-700",
+  authoritative: "bg-purple-100 text-purple-700",
+};
+
 type SortKey = "newest" | "most_videos" | "alpha";
 
 export default function KolProfilesPage() {
@@ -191,7 +199,7 @@ export default function KolProfilesPage() {
                   <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
                     {profile.voiceGender === "female" ? "Nữ" : "Nam"}
                   </span>
-                  <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
+                  <span className={`text-xs px-2 py-0.5 rounded-full ${VOICE_STYLE_COLORS[profile.voiceStyle] ?? "bg-gray-100 text-gray-600"}`}>
                     {VOICE_STYLE_LABELS[profile.voiceStyle] ?? profile.voiceStyle}
                   </span>
                   <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">

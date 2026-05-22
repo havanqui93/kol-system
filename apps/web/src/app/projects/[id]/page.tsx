@@ -162,7 +162,7 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
             <span>/</span>
             <span className="text-gray-700 truncate max-w-xs">{project.title ?? `Video ${params.id.slice(-6)}`}</span>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center flex-wrap gap-2">
             <h1 className="text-xl font-bold text-gray-900 min-w-0">
               <InlineEdit
                 value={project.title ?? `Video ${params.id.slice(-6)}`}
@@ -170,6 +170,9 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
               />
             </h1>
             <StatusBadge status={status} />
+            <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full flex-shrink-0">
+              {{ tiktok: "🎵 TikTok", facebook: "📘 Facebook", instagram: "📸 Instagram", youtube_shorts: "▶️ YouTube" }[project.platform] ?? project.platform}
+            </span>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -627,7 +630,7 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
               ["Chất lượng", { cheap: "Tiết kiệm", balanced: "Cân bằng", premium: "Premium" }[project.qualityPreset] ?? project.qualityPreset],
               ["Ngôn ngữ", project.language.toUpperCase()],
               ["ID", project.id.slice(-8)],
-              ["Tạo lúc", new Date(project.createdAt).toLocaleDateString("vi-VN")],
+              ["Tạo lúc", (() => { const d = new Date(project.createdAt); const diff = Date.now() - d.getTime(); const h = Math.floor(diff / 3600000); return h < 24 ? `${h} giờ trước` : d.toLocaleDateString("vi-VN"); })()],
               ["Cập nhật", new Date(project.updatedAt).toLocaleDateString("vi-VN")],
             ].map(([label, value]) => (
               <div key={label}>

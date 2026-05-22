@@ -182,6 +182,19 @@ export function ScriptViewer({ scripts, onApprove, onRegenerate, disabled, targe
           )}
 
           <div className="ml-auto flex items-center gap-2">
+            <button
+              onClick={() => {
+                const win = window.open("", "_blank");
+                if (!win) return;
+                win.document.write(`<html><head><title>Kịch bản</title><style>body{font-family:sans-serif;max-width:600px;margin:40px auto;line-height:1.6}h2{font-size:11px;text-transform:uppercase;color:#888;margin-top:20px}p{margin:0 0 8px}</style></head><body>${SECTION_LABELS.map(({ label, key }) => script[key] ? `<h2>${label}</h2><p>${(script[key] as string).replace(/\n/g, "<br>")}</p>` : "").join("")}</body></html>`);
+                win.document.close();
+                win.print();
+              }}
+              title="In kịch bản"
+              className="text-xs text-gray-400 hover:text-brand-600 transition-colors px-1"
+            >
+              🖨
+            </button>
             <CopyScriptButton text={script.fullScript} />
             <details>
               <summary className="text-xs text-gray-400 cursor-pointer hover:text-gray-600">Xem full script</summary>
