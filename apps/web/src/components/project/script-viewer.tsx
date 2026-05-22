@@ -107,7 +107,9 @@ export function ScriptViewer({ scripts, onApprove, onRegenerate, disabled, targe
           <div>
             <h3 className="font-semibold text-gray-800">Kịch bản</h3>
             <p className="text-xs text-gray-500 mt-0.5">
-              ~{script.wordCount ?? "?"} từ · ~{script.estimatedDurationSeconds ?? "?"}s · {script.fullScript.length.toLocaleString()} ký tự
+              ~{script.wordCount ?? SECTION_LABELS.reduce((sum, { key }) => sum + wordCount((script[key] as string | null) ?? ""), 0)} từ
+              {" · "}~{script.estimatedDurationSeconds ?? "?"}s
+              {" · "}{script.fullScript.length.toLocaleString()} ký tự
             </p>
             {targetDurationSeconds && script.estimatedDurationSeconds && (
               <div className="flex items-center gap-2 mt-1.5">

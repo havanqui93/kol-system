@@ -104,12 +104,12 @@ export default function WorkersPage() {
                     <div className="flex items-center gap-2">
                       <div className="w-24 h-1.5 bg-gray-100 rounded-full overflow-hidden">
                         <div
-                          className={`h-full rounded-full transition-all ${count > 0 ? "bg-yellow-400" : "bg-green-400"}`}
+                          className={`h-full rounded-full transition-all ${count > 5 ? "bg-red-400" : count > 0 ? "bg-yellow-400" : "bg-green-400"}`}
                           style={{ width: `${Math.min(100, count * 10)}%` }}
                         />
                       </div>
-                      <span className={`text-xs font-bold min-w-[2rem] text-right ${count > 0 ? "text-yellow-700" : "text-green-600"}`}>
-                        {count < 0 ? "?" : count}
+                      <span className={`text-xs font-bold min-w-[2.5rem] text-right ${count > 5 ? "text-red-600" : count > 0 ? "text-yellow-700" : "text-green-600"}`}>
+                        {count < 0 ? "?" : count === 0 ? "trống" : `${count} job`}
                       </span>
                     </div>
                   </div>

@@ -93,7 +93,11 @@ export default function ProductsPage() {
           <p className="text-sm text-gray-500 mt-1">
             {loading ? "Đang tải..." : (() => {
               const totalVideos = products.reduce((sum, p) => sum + (p._count?.videoProjects ?? 0), 0);
-              return `${products.length} sản phẩm · ${totalVideos} video tổng`;
+              const prices = products.map((p) => Number(p.price)).filter((n) => n > 0);
+              const priceRange = prices.length > 1
+                ? ` · ${Math.min(...prices).toLocaleString("vi-VN")}–${Math.max(...prices).toLocaleString("vi-VN")} VND`
+                : "";
+              return `${products.length} sản phẩm · ${totalVideos} video tổng${priceRange}`;
             })()}
           </p>
         </div>

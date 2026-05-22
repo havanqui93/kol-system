@@ -6,6 +6,7 @@ import Link from "next/link";
 import { StatusBadge } from "@/components/ui/badge";
 import { Card, CardBody } from "@/components/ui/card";
 import { useToast } from "@/components/ui/toast";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { InlineEdit } from "@/components/project/inline-edit";
 import { api, type Project } from "@/lib/api/client";
 
@@ -37,14 +38,12 @@ export function ProjectCard({ project, onDeleted }: { project: Project; onDelete
   const router = useRouter();
   const { success, error: toastError } = useToast();
   const [deleting, setDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [duplicating, setDuplicating] = useState(false);
   const [title, setTitle] = useState(project.title ?? `Video ${project.id.slice(-6)}`);
   const isProcessing = ["script_generating", "audio_generating", "video_generating", "rendering", "qa_checking", "publishing"].includes(project.status);
 
-  async function handleDelete(e: React.MouseEvent) {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!confirm("Xóa dự án này? Hành động không thể hoàn tác.")) return;
+  async function handleDelete() {
     setDeleting(true);
     try {
       await api.projects.delete(project.id);
@@ -81,6 +80,15 @@ export function ProjectCard({ project, onDeleted }: { project: Project; onDelete
 
   return (
     <div className="relative group">
+      <ConfirmDialog
+        open={showDeleteConfirm}
+        title="Xóa dự án"
+        message={`Xóa dự án "${title}"? Hành động này không thể hoàn tác.`}
+        confirmLabel="Xóa"
+        danger
+        onConfirm={handleDelete}
+        onCancel={() => setShowDeleteConfirm(false)}
+      />
       <Link href={`/projects/${project.id}`}>
         <Card className={`hover:border-brand-300 hover:shadow-md transition-all cursor-pointer ${cardBorderClass}`}>
           <CardBody className="flex items-start gap-4">
@@ -168,7 +176,7 @@ export function ProjectCard({ project, onDeleted }: { project: Project; onDelete
           {duplicating ? "…" : "⎘"}
         </button>
         <button
-          onClick={handleDelete}
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowDeleteConfirm(true); }}
           disabled={deleting || duplicating}
           title="Xóa dự án"
           className="w-7 h-7 rounded-full bg-white border border-gray-200 text-gray-400 hover:text-red-600 hover:border-red-300 items-center justify-center text-sm shadow-sm flex disabled:opacity-30"

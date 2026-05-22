@@ -117,6 +117,15 @@ const PLATFORMS = [
     docsUrl: "https://console.cloud.google.com",
     envKeys: ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET"],
   },
+  {
+    id: "instagram",
+    name: "Instagram Reels",
+    icon: "📸",
+    color: "bg-gradient-to-br from-purple-500 to-pink-500 text-white",
+    description: "Đăng Reels lên tài khoản Instagram của bạn",
+    docsUrl: "https://developers.facebook.com/docs/instagram",
+    envKeys: ["FACEBOOK_APP_ID", "FACEBOOK_APP_SECRET"],
+  },
 ] as const;
 
 function StatusMessages() {

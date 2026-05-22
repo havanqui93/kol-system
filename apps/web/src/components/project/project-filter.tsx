@@ -129,6 +129,31 @@ export function ProjectFilter({ initialProjects, initialStatus = "" }: { initial
         </select>
       </div>
 
+      {/* Active filter chips */}
+      {(searchInput || statusFilter) && (
+        <div className="flex items-center gap-2 mb-3 flex-wrap">
+          <span className="text-xs text-gray-400">Đang lọc:</span>
+          {searchInput && (
+            <span className="inline-flex items-center gap-1 text-xs bg-brand-50 text-brand-700 border border-brand-200 rounded-full px-2.5 py-0.5">
+              "{searchInput}"
+              <button onClick={() => setSearchInput("")} className="hover:text-brand-900 leading-none">×</button>
+            </span>
+          )}
+          {statusFilter && (
+            <span className="inline-flex items-center gap-1 text-xs bg-gray-100 text-gray-700 border border-gray-200 rounded-full px-2.5 py-0.5">
+              {STATUS_FILTER_OPTIONS.find((o) => o.value === statusFilter)?.label ?? statusFilter}
+              <button onClick={() => setStatusFilter("")} className="hover:text-gray-900 leading-none">×</button>
+            </span>
+          )}
+          <button
+            onClick={() => { setSearchInput(""); setStatusFilter(""); setSort("newest"); }}
+            className="text-xs text-gray-400 hover:text-red-500 transition-colors"
+          >
+            Xóa tất cả
+          </button>
+        </div>
+      )}
+
       {/* Result count + reset + CSV export */}
       <div className="flex items-center justify-between mb-2 text-xs text-gray-400">
         <div className="flex items-center gap-2">
@@ -137,14 +162,6 @@ export function ProjectFilter({ initialProjects, initialStatus = "" }: { initial
               ? `${filtered.length} / ${projects.length} dự án`
               : `${projects.length} dự án`}
           </span>
-          {(searchInput || statusFilter) && (
-            <button
-              onClick={() => { setSearchInput(""); setStatusFilter(""); setSort("newest"); }}
-              className="text-brand-600 hover:underline"
-            >
-              Xóa bộ lọc
-            </button>
-          )}
         </div>
         {filtered.length > 0 && <ExportCSVButton projects={filtered} />}
       </div>

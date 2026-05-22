@@ -37,6 +37,15 @@ const VOICE_STYLE_COLORS: Record<string, string> = {
   authoritative: "bg-purple-100 text-purple-700",
 };
 
+const LANGUAGE_FLAGS: Record<string, string> = {
+  vi: "🇻🇳",
+  en: "🇺🇸",
+  zh: "🇨🇳",
+  ja: "🇯🇵",
+  ko: "🇰🇷",
+  th: "🇹🇭",
+};
+
 type SortKey = "newest" | "most_videos" | "alpha";
 
 export default function KolProfilesPage() {
@@ -230,7 +239,7 @@ export default function KolProfilesPage() {
                     {VOICE_STYLE_LABELS[profile.voiceStyle] ?? profile.voiceStyle}
                   </span>
                   <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
-                    {profile.language.toUpperCase()}
+                    {LANGUAGE_FLAGS[profile.language] ?? ""} {profile.language.toUpperCase()}
                   </span>
                   {profile._count !== undefined && (
                     <span className="text-xs text-gray-400 px-2 py-0.5">{profile._count.videoProjects} video</span>

@@ -3,6 +3,7 @@ import { prisma } from "@kol/database";
 import { ProjectFilter } from "@/components/project/project-filter";
 import { BulkDeleteFailed } from "@/components/project/bulk-actions";
 import { LastVisitedBanner } from "@/components/project/last-visited-banner";
+import { DashboardGreeting } from "@/components/ui/greeting";
 import { Button } from "@/components/ui/button";
 import type { Project } from "@/lib/api/client";
 
@@ -67,7 +68,7 @@ export default async function DashboardPage({
       {/* Hero */}
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Dashboard <DashboardGreeting /></h1>
           <p className="mt-1 text-sm text-gray-500">{total} dự án video</p>
         </div>
         <Link href="/projects/new">

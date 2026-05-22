@@ -516,12 +516,19 @@ function NewProjectContent() {
                   </button>
                 ))}
               </div>
-              <Input
-                id="brandTone"
-                placeholder="Hoặc tự nhập phong cách thương hiệu..."
-                value={form.brandTone}
-                onChange={set("brandTone")}
-              />
+              <div className="relative">
+                <Input
+                  id="brandTone"
+                  placeholder="Hoặc tự nhập phong cách thương hiệu..."
+                  value={form.brandTone}
+                  onChange={set("brandTone")}
+                />
+                {form.brandTone && (
+                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-400 pointer-events-none">
+                    {form.brandTone.length}
+                  </span>
+                )}
+              </div>
             </FormField>
           </CardBody>
         </Card>
