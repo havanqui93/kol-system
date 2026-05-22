@@ -218,6 +218,14 @@ export const api = {
         body: JSON.stringify(opts ?? {}),
       }),
     getJob: (renderJobId: string) =>
-      apiFetch<{ status: string; outputUrl: string | null; errorMessage: string | null }>(`/api/render-jobs/${renderJobId}`),
+      apiFetch<{ id: string; status: string; outputUrl: string | null; errorMessage: string | null; attempts: number }>(`/api/render-jobs/${renderJobId}`),
+  },
+
+  hashtags: {
+    generate: (projectId: string) =>
+      apiFetch<{ hashtags: string[]; caption: string }>(`/api/video-projects/${projectId}/hashtags`, {
+        method: "POST",
+        body: "{}",
+      }),
   },
 };

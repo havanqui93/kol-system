@@ -23,6 +23,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <Link href="/" className="text-gray-600 hover:text-gray-900 transition-colors">
                   Dashboard
                 </Link>
+                <Link href="/kol-profiles" className="text-gray-600 hover:text-gray-900 transition-colors">
+                  KOL Profiles
+                </Link>
+                <Link href="/products" className="text-gray-600 hover:text-gray-900 transition-colors">
+                  Sản phẩm
+                </Link>
                 <Link href="/settings" className="text-gray-600 hover:text-gray-900 transition-colors">
                   Cài đặt
                 </Link>

@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardBody } from "@/components/ui/card";
 import { ProjectDetailSkeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/toast";
+import { ProgressBar } from "@/components/ui/progress-bar";
 import { ScriptViewer } from "@/components/project/script-viewer";
 import { PipelineStep } from "@/components/project/pipeline-step";
 import { PublishPanel } from "@/components/project/publish-panel";
@@ -37,6 +38,10 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
   const [actionError, setActionError] = useState<string | null>(null);
   const [voiceStyle, setVoiceStyle] = useState("energetic");
   const [musicFile, setMusicFile] = useState<File | null>(null);
+  const [hashtags, setHashtags] = useState<string[] | null>(null);
+  const [hashtagCaption, setHashtagCaption] = useState<string | null>(null);
+  const [renderJobId, setRenderJobId] = useState<string | null>(null);
+  const [renderProgress, setRenderProgress] = useState<number | undefined>(undefined);
 
   // Keyboard shortcut: r = refresh
   useEffect(() => {
@@ -65,6 +70,25 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
       setActionLoading(null);
     }
   }, [refresh, success, toastError]);
+
+  // Poll render job progress while rendering
+  useEffect(() => {
+    if (!renderJobId || !project || project.status !== "rendering") return;
+    const id = setInterval(async () => {
+      try {
+        const job = await api.render.getJob(renderJobId);
+        if (job.status === "completed") {
+          setRenderProgress(100);
+          clearInterval(id);
+          refresh();
+        } else if (job.status === "failed") {
+          clearInterval(id);
+          refresh();
+        }
+      } catch {}
+    }, 3000);
+    return () => clearInterval(id);
+  }, [renderJobId, project?.status, refresh]);
 
   if (loading) return <ProjectDetailSkeleton />;
   if (error || !project) {
@@ -183,6 +207,17 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
                     onClick={() => { navigator.clipboard.writeText(finalVideo); success("Đã sao chép link video"); }}
                   >
                     ⎘ Sao chép link
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      const url = `${window.location.origin}/share/${project.id}`;
+                      navigator.clipboard.writeText(url);
+                      success("Đã sao chép link chia sẻ");
+                    }}
+                  >
+                    🔗 Chia sẻ
                   </Button>
                 </div>
                 <p className="text-xs text-gray-400 mt-3">Nhấn Space để phát/dừng · Loop bật sẵn</p>
@@ -389,7 +424,9 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
                 onClick={() =>
                   doAction("render", async () => {
                     const musicUpload = musicFile ? await api.uploads.music(musicFile) : null;
-                    await api.render.start(project.id, { backgroundMusicUrl: musicUpload?.url });
+                    const result = await api.render.start(project.id, { backgroundMusicUrl: musicUpload?.url });
+                    setRenderJobId(result.renderJobId);
+                    setRenderProgress(0);
                   }, "Render đã bắt đầu")
                 }
               >
@@ -399,7 +436,10 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
           )}
 
           {status === "rendering" && (
-            <p className="text-xs text-brand-700 animate-pulse">Đang render video, vui lòng chờ...</p>
+            <div className="space-y-2">
+              <p className="text-xs text-brand-700 animate-pulse">Đang render video, vui lòng chờ...</p>
+              <ProgressBar value={renderProgress} label="Tiến độ render" />
+            </div>
           )}
 
           {finalVideo && renderStep === "done" && (
@@ -407,12 +447,77 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
           )}
         </PipelineStep>
 
-        {/* Step 4: Publish */}
+        {/* Step 5: Publish */}
         {finalVideo && (
           <PublishPanel
             projectId={project.id}
             disabled={actionLoading !== null}
           />
+        )}
+
+        {/* Hashtag generator */}
+        {approvedScript && (
+          <Card>
+            <CardBody>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-semibold text-sm text-gray-800"># Hashtags & Caption</h3>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  loading={actionLoading === "hashtags"}
+                  onClick={async () => {
+                    setActionLoading("hashtags");
+                    try {
+                      const result = await api.hashtags.generate(project.id);
+                      setHashtags(result.hashtags);
+                      setHashtagCaption(result.caption);
+                      success("Đã tạo hashtags");
+                    } catch (err) {
+                      toastError(err instanceof Error ? err.message : "Lỗi tạo hashtags");
+                    } finally {
+                      setActionLoading(null);
+                    }
+                  }}
+                >
+                  Tạo hashtags AI
+                </Button>
+              </div>
+              {hashtags && (
+                <div className="space-y-3">
+                  {hashtagCaption && (
+                    <div className="bg-gray-50 rounded-lg p-3">
+                      <p className="text-xs font-medium text-gray-500 mb-1">Caption</p>
+                      <p className="text-sm text-gray-800">{hashtagCaption}</p>
+                      <button
+                        className="text-xs text-brand-600 hover:underline mt-1"
+                        onClick={() => { navigator.clipboard.writeText(hashtagCaption); success("Đã sao chép caption"); }}
+                      >
+                        Sao chép
+                      </button>
+                    </div>
+                  )}
+                  <div className="flex flex-wrap gap-1.5">
+                    {hashtags.map((tag) => (
+                      <span
+                        key={tag}
+                        onClick={() => { navigator.clipboard.writeText(tag); }}
+                        className="text-xs bg-brand-50 text-brand-700 px-2 py-1 rounded-full cursor-pointer hover:bg-brand-100 transition-colors"
+                        title="Click để sao chép"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                  <button
+                    className="text-xs text-brand-600 hover:underline"
+                    onClick={() => { navigator.clipboard.writeText(hashtags.join(" ")); success("Đã sao chép tất cả hashtags"); }}
+                  >
+                    Sao chép tất cả
+                  </button>
+                </div>
+              )}
+            </CardBody>
+          </Card>
         )}
       </div>
 
