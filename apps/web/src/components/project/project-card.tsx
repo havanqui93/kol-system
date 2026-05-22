@@ -43,6 +43,12 @@ const VIDEO_TYPE_LABELS: Record<string, string> = {
   b_roll: "B-roll",
 };
 
+const QUALITY_LABELS: Record<string, string> = {
+  cheap: "💰 Tiết kiệm",
+  balanced: "⚖️ Cân bằng",
+  premium: "💎 Premium",
+};
+
 function timeAgo(dateStr: string) {
   const diff = Date.now() - new Date(dateStr).getTime();
   const mins = Math.floor(diff / 60000);
@@ -146,6 +152,12 @@ export function ProjectCard({ project, onDeleted }: { project: Project; onDelete
                 <span>{project.durationSeconds}s</span>
                 <span>·</span>
                 <span>{project.language.toUpperCase()}</span>
+                {project.qualityPreset && (
+                  <>
+                    <span>·</span>
+                    <span className="text-gray-400">{QUALITY_LABELS[project.qualityPreset] ?? project.qualityPreset}</span>
+                  </>
+                )}
                 {project.product && (
                   <>
                     <span>·</span>
@@ -175,7 +187,12 @@ export function ProjectCard({ project, onDeleted }: { project: Project; onDelete
               )}
 
               <div className="mt-2 flex items-center justify-between">
-                <span className="text-xs text-gray-400">{timeAgo(project.createdAt)}</span>
+                <span className="text-xs text-gray-400">
+                  {timeAgo(project.createdAt)}
+                  {project.updatedAt !== project.createdAt && Date.now() - new Date(project.updatedAt).getTime() < 86400000 && (
+                    <span className="ml-1 text-gray-300" title={`Cập nhật: ${timeAgo(project.updatedAt)}`}>· ↻ {timeAgo(project.updatedAt)}</span>
+                  )}
+                </span>
                 {isProcessing && (
                   <span className="flex items-center gap-1 text-xs text-yellow-700">
                     <span className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse" />

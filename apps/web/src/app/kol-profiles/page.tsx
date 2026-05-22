@@ -123,6 +123,21 @@ export default function KolProfilesPage() {
               return `${profiles.length} KOL profile · ${totalVideos} video tổng`;
             })()}
           </p>
+          {!loading && profiles.length > 0 && (() => {
+            const langCounts = profiles.reduce<Record<string, number>>((acc, p) => {
+              acc[p.language] = (acc[p.language] ?? 0) + 1;
+              return acc;
+            }, {});
+            return (
+              <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                {Object.entries(langCounts).sort((a, b) => b[1] - a[1]).map(([lang, count]) => (
+                  <span key={lang} className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">
+                    {LANGUAGE_FLAGS[lang] ?? ""} {lang.toUpperCase()} {count}
+                  </span>
+                ))}
+              </div>
+            );
+          })()}
         </div>
         <div className="flex items-center gap-2">
           <select

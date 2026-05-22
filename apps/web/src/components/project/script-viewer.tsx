@@ -45,6 +45,10 @@ function wordCount(text: string) {
   return text.trim().split(/\s+/).filter(Boolean).length;
 }
 
+function sentenceCount(text: string) {
+  return text.split(/[.!?]+/).filter((s) => s.trim().length > 0).length;
+}
+
 function ScriptSection({ emoji, label, text }: { emoji: string; label: string; text: string | null }) {
   const [copied, setCopied] = useState(false);
   if (!text) return null;
@@ -109,6 +113,7 @@ export function ScriptViewer({ scripts, onApprove, onRegenerate, disabled, targe
             <h3 className="font-semibold text-gray-800">Kịch bản</h3>
             <p className="text-xs text-gray-500 mt-0.5">
               ~{script.wordCount ?? SECTION_LABELS.reduce((sum, { key }) => sum + wordCount((script[key] as string | null) ?? ""), 0)} từ
+              {" · "}{sentenceCount(script.fullScript)} câu
               {" · "}~{script.estimatedDurationSeconds ?? "?"}s
               {" · "}{script.fullScript.length.toLocaleString()} ký tự
               {" · "}đọc ~{Math.ceil((script.wordCount ?? SECTION_LABELS.reduce((sum, { key }) => sum + wordCount((script[key] as string | null) ?? ""), 0)) / 150)} phút

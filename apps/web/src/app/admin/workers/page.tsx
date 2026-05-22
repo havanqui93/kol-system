@@ -57,8 +57,15 @@ export default function WorkersPage() {
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Trạng thái Worker</h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
             {lastRefreshed ? `Cập nhật ${lastRefreshed.toLocaleTimeString("vi-VN")} · tự động mỗi 5s` : "Đang tải..."}
+            <button
+              onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/api/health`); }}
+              title="Sao chép URL health check API"
+              className="text-gray-300 hover:text-gray-500 transition-colors text-xs"
+            >
+              ⎘ /api/health
+            </button>
           </p>
         </div>
         <div className="flex items-center gap-3">

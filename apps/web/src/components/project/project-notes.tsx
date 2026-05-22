@@ -50,6 +50,7 @@ export function ProjectNotes({ projectId }: { projectId: string }) {
 
   const remaining = MAX_CHARS - notes.length;
   const nearLimit = remaining < 200;
+  const wordCount = notes.trim() ? notes.trim().split(/\s+/).filter(Boolean).length : 0;
 
   return (
     <div className="mt-4">
@@ -122,6 +123,7 @@ export function ProjectNotes({ projectId }: { projectId: string }) {
       <div className="flex items-center justify-between mt-0.5">
         <p className="text-xs text-gray-400">Lưu trữ cục bộ trên trình duyệt</p>
         <span className={`text-xs ${nearLimit ? "text-orange-500" : "text-gray-400"}`}>
+          {wordCount > 0 && <span className="mr-1">{wordCount} từ ·</span>}
           {notes.length} / {MAX_CHARS}
         </span>
       </div>

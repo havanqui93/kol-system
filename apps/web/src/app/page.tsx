@@ -144,7 +144,12 @@ export default async function DashboardPage({
       {costAgg._sum.totalCostUsd && Number(costAgg._sum.totalCostUsd) > 0 && (
         <div className="flex items-center justify-between bg-blue-50 border border-blue-100 rounded-xl px-5 py-3 mb-6 text-sm">
           <span className="text-blue-700 font-medium">Tổng chi phí AI</span>
-          <span className="text-blue-900 font-bold">${Number(costAgg._sum.totalCostUsd).toFixed(4)}</span>
+          <div className="flex items-center gap-3">
+            {total > 0 && (
+              <span className="text-xs text-blue-500">~${(Number(costAgg._sum.totalCostUsd) / total).toFixed(4)}/video</span>
+            )}
+            <span className="text-blue-900 font-bold">${Number(costAgg._sum.totalCostUsd).toFixed(4)}</span>
+          </div>
         </div>
       )}
 

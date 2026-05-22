@@ -67,11 +67,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
           <footer className="border-t border-gray-200 text-center text-xs text-gray-400 py-4 space-y-1">
             <p>KOL System · Powered by Claude + Kling + ElevenLabs</p>
-            <p className="flex items-center justify-center gap-2">
+            <p className="flex items-center justify-center gap-2 flex-wrap">
               <HealthDot />
               <a href="/admin/workers" className="hover:text-gray-600 underline transition-colors">Workers</a>
               {" · "}
               <a href="https://github.com/havanqui93/kol-system/issues" target="_blank" rel="noreferrer" className="hover:text-gray-600 underline transition-colors">Báo lỗi</a>
+              {" · "}
+              <span title="Nhấn ? để xem tất cả phím tắt">? = phím tắt</span>
             </p>
           </footer>
         </div>

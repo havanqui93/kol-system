@@ -309,6 +309,11 @@ function NewProjectContent() {
                   value={form.productDescription}
                   onChange={set("productDescription")}
                 />
+                {form.productDescription && (
+                  <span className="text-xs text-gray-400 mt-0.5 block text-right">
+                    {form.productDescription.length} ký tự
+                  </span>
+                )}
               </FormField>
 
               <div className="grid grid-cols-2 gap-4">

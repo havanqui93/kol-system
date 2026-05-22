@@ -15,12 +15,25 @@ const STATUS_FILTER_OPTIONS = [
   { value: "failed", label: "Thất bại" },
 ];
 
+const PLATFORM_FILTER_OPTIONS = [
+  { value: "", label: "Tất cả nền tảng" },
+  { value: "tiktok", label: "🎵 TikTok" },
+  { value: "facebook", label: "📘 Facebook" },
+  { value: "instagram", label: "📸 Instagram" },
+  { value: "youtube_shorts", label: "▶️ YouTube" },
+];
+
 const PROCESSING_STATUSES = new Set(["script_generating", "audio_generating", "video_generating", "rendering", "qa_checking", "publishing"]);
 
 function matchesStatus(project: Project, filter: string) {
   if (!filter) return true;
   if (filter === "processing") return PROCESSING_STATUSES.has(project.status);
   return project.status === filter;
+}
+
+function matchesPlatform(project: Project, filter: string) {
+  if (!filter) return true;
+  return project.platform === filter;
 }
 
 function matchesSearch(project: Project, query: string) {
@@ -51,6 +64,10 @@ export function ProjectFilter({ initialProjects, initialStatus = "" }: { initial
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState(initialStatus);
+  const [platformFilter, setPlatformFilter] = useState(() => {
+    if (typeof window !== "undefined") return localStorage.getItem("kol-platform-filter") ?? "";
+    return "";
+  });
   const [sort, setSort] = useState("newest");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -60,6 +77,8 @@ export function ProjectFilter({ initialProjects, initialStatus = "" }: { initial
     debounceRef.current = setTimeout(() => setSearch(searchInput), 300);
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
   }, [searchInput]);
+
+  useEffect(() => { localStorage.setItem("kol-platform-filter", platformFilter); }, [platformFilter]);
 
   const focusSearch = useCallback(() => { searchInputRef.current?.focus(); }, []);
 
@@ -76,10 +95,10 @@ export function ProjectFilter({ initialProjects, initialStatus = "" }: { initial
 
   const filtered = useMemo(
     () => sortProjects(
-      projects.filter((p) => matchesStatus(p, statusFilter) && matchesSearch(p, search)),
+      projects.filter((p) => matchesStatus(p, statusFilter) && matchesSearch(p, search) && matchesPlatform(p, platformFilter)),
       sort
     ),
-    [projects, search, statusFilter, sort]
+    [projects, search, statusFilter, platformFilter, sort]
   );
 
   function handleDeleted(id: string) {
@@ -119,6 +138,15 @@ export function ProjectFilter({ initialProjects, initialStatus = "" }: { initial
           ))}
         </select>
         <select
+          value={platformFilter}
+          onChange={(e) => setPlatformFilter(e.target.value)}
+          className="text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-400"
+        >
+          {PLATFORM_FILTER_OPTIONS.map((o) => (
+            <option key={o.value} value={o.value}>{o.label}</option>
+          ))}
+        </select>
+        <select
           value={sort}
           onChange={(e) => setSort(e.target.value)}
           className="text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-400"
@@ -130,7 +158,7 @@ export function ProjectFilter({ initialProjects, initialStatus = "" }: { initial
       </div>
 
       {/* Active filter chips */}
-      {(searchInput || statusFilter) && (
+      {(searchInput || statusFilter || platformFilter) && (
         <div className="flex items-center gap-2 mb-3 flex-wrap">
           <span className="text-xs text-gray-400">Đang lọc:</span>
           {searchInput && (
@@ -145,8 +173,14 @@ export function ProjectFilter({ initialProjects, initialStatus = "" }: { initial
               <button onClick={() => setStatusFilter("")} className="hover:text-gray-900 leading-none">×</button>
             </span>
           )}
+          {platformFilter && (
+            <span className="inline-flex items-center gap-1 text-xs bg-gray-100 text-gray-700 border border-gray-200 rounded-full px-2.5 py-0.5">
+              {PLATFORM_FILTER_OPTIONS.find((o) => o.value === platformFilter)?.label ?? platformFilter}
+              <button onClick={() => setPlatformFilter("")} className="hover:text-gray-900 leading-none">×</button>
+            </span>
+          )}
           <button
-            onClick={() => { setSearchInput(""); setStatusFilter(""); setSort("newest"); }}
+            onClick={() => { setSearchInput(""); setStatusFilter(""); setPlatformFilter(""); setSort("newest"); }}
             className="text-xs text-gray-400 hover:text-red-500 transition-colors"
           >
             Xóa tất cả
@@ -173,7 +207,7 @@ export function ProjectFilter({ initialProjects, initialStatus = "" }: { initial
 
       {filtered.length === 0 ? (
         <p className="text-center text-sm text-gray-400 py-12">
-          {searchInput || statusFilter ? "Không tìm thấy dự án phù hợp" : "Chưa có video nào"}
+          {searchInput || statusFilter || platformFilter ? "Không tìm thấy dự án phù hợp" : "Chưa có video nào"}
         </p>
       ) : (
         <div className="grid gap-3">
