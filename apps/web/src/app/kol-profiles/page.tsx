@@ -101,7 +101,15 @@ export default function KolProfilesPage() {
         <div className="text-center py-24 text-gray-400">
           <div className="text-5xl mb-4">🎭</div>
           <p className="font-medium text-gray-600">Chưa có KOL profile nào</p>
-          <p className="text-sm mt-1">Tạo dự án video mới và upload avatar để tạo profile.</p>
+          <p className="text-sm mt-1 mb-6">Tạo profile KOL để tái sử dụng avatar trong nhiều video.</p>
+          <div className="flex gap-3 justify-center">
+            <Link href="/kol-profiles/new">
+              <Button>+ Tạo KOL Profile</Button>
+            </Link>
+            <Link href="/projects/new">
+              <Button variant="secondary">Tạo video mới</Button>
+            </Link>
+          </div>
         </div>
       )}
 

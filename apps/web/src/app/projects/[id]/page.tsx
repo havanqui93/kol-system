@@ -554,6 +554,7 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
               ["Ngôn ngữ", project.language.toUpperCase()],
               ["ID", project.id.slice(-8)],
               ["Tạo lúc", new Date(project.createdAt).toLocaleDateString("vi-VN")],
+              ["Cập nhật", new Date(project.updatedAt).toLocaleDateString("vi-VN")],
             ].map(([label, value]) => (
               <div key={label}>
                 <dt className="text-gray-500 text-xs">{label}</dt>
@@ -561,6 +562,25 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
               </div>
             ))}
           </dl>
+          {/* Editable brand tone */}
+          <div className="mt-3 pt-3 border-t border-gray-100">
+            <dt className="text-gray-500 text-xs mb-1">Tone thương hiệu</dt>
+            <dd>
+              <InlineEdit
+                value={(project as any).brandTone ?? ""}
+                placeholder="Nhập phong cách thương hiệu..."
+                onSave={async (brandTone) => {
+                  await fetch(`/api/video-projects/${project.id}`, {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json", "x-user-id": "demo-user" },
+                    body: JSON.stringify({ brandTone }),
+                  });
+                  await refresh();
+                  success("Đã cập nhật tone thương hiệu");
+                }}
+              />
+            </dd>
+          </div>
         </CardBody>
       </Card>
 

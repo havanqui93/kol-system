@@ -91,7 +91,15 @@ export default function ProductsPage() {
         <div className="text-center py-24 text-gray-400">
           <div className="text-5xl mb-4">📦</div>
           <p className="font-medium text-gray-600">Chưa có sản phẩm nào</p>
-          <p className="text-sm mt-1">Sản phẩm được tạo khi bạn tạo dự án video mới.</p>
+          <p className="text-sm mt-1 mb-6">Thêm sản phẩm trực tiếp hoặc tạo dự án video mới.</p>
+          <div className="flex gap-3 justify-center">
+            <Link href="/products/new">
+              <Button>+ Thêm sản phẩm</Button>
+            </Link>
+            <Link href="/projects/new">
+              <Button variant="secondary">Tạo video mới</Button>
+            </Link>
+          </div>
         </div>
       )}
 

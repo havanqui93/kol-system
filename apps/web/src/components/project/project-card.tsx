@@ -6,6 +6,7 @@ import Link from "next/link";
 import { StatusBadge } from "@/components/ui/badge";
 import { Card, CardBody } from "@/components/ui/card";
 import { useToast } from "@/components/ui/toast";
+import { InlineEdit } from "@/components/project/inline-edit";
 import { api, type Project } from "@/lib/api/client";
 
 const PLATFORM_ICONS: Record<string, string> = {
@@ -37,6 +38,7 @@ export function ProjectCard({ project, onDeleted }: { project: Project; onDelete
   const { success, error: toastError } = useToast();
   const [deleting, setDeleting] = useState(false);
   const [duplicating, setDuplicating] = useState(false);
+  const [title, setTitle] = useState(project.title ?? `Video ${project.id.slice(-6)}`);
   const isProcessing = ["script_generating", "audio_generating", "video_generating", "rendering", "qa_checking", "publishing"].includes(project.status);
 
   async function handleDelete(e: React.MouseEvent) {
@@ -94,8 +96,15 @@ export function ProjectCard({ project, onDeleted }: { project: Project; onDelete
 
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-2">
-                <h3 className="font-semibold text-gray-900 truncate">
-                  {project.title ?? `Video ${project.id.slice(-6)}`}
+                <h3 className="font-semibold text-gray-900 truncate min-w-0" onClick={(e) => e.preventDefault()}>
+                  <InlineEdit
+                    value={title}
+                    onSave={async (newTitle) => {
+                      await api.projects.rename(project.id, newTitle);
+                      setTitle(newTitle);
+                      success("Đã đổi tên");
+                    }}
+                  />
                 </h3>
                 <StatusBadge status={project.status} />
               </div>
