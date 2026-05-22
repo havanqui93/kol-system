@@ -2,17 +2,26 @@
 
 import type { Project } from "@/lib/api/client";
 
+const PLATFORM_LABELS: Record<string, string> = {
+  tiktok: "TikTok", facebook: "Facebook Reels",
+  instagram: "Instagram Reels", youtube_shorts: "YouTube Shorts",
+};
+
 function toCSV(projects: Project[]): string {
-  const headers = ["ID", "Tiêu đề", "Nền tảng", "Loại video", "Trạng thái", "Sản phẩm", "Thời lượng (s)", "Ngày tạo"];
+  const headers = ["ID", "Tiêu đề", "Nền tảng", "Loại video", "Chất lượng", "Ngôn ngữ", "Trạng thái", "Sản phẩm", "KOL Profile", "Thời lượng (s)", "Ngày tạo", "URL video"];
   const rows = projects.map((p) => [
     p.id,
     p.title ?? "",
-    p.platform,
+    PLATFORM_LABELS[p.platform] ?? p.platform,
     p.videoType,
+    p.qualityPreset,
+    p.language.toUpperCase(),
     p.status,
     p.product?.name ?? "",
+    p.kolProfile?.name ?? "",
     p.durationSeconds,
     new Date(p.createdAt).toLocaleDateString("vi-VN"),
+    p.finalVideoUrl ?? "",
   ]);
   return [headers, ...rows].map((row) => row.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
 }

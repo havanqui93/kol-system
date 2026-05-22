@@ -84,7 +84,10 @@ export default function KolProfilesPage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">KOL Profiles</h1>
           <p className="text-sm text-gray-500 mt-1">
-            {loading ? "Đang tải..." : `${profiles.length} KOL profile · Quản lý avatar AI tái sử dụng`}
+            {loading ? "Đang tải..." : (() => {
+              const totalVideos = profiles.reduce((sum, p) => sum + (p._count?.videoProjects ?? 0), 0);
+              return `${profiles.length} KOL profile · ${totalVideos} video tổng`;
+            })()}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -139,6 +142,13 @@ export default function KolProfilesPage() {
         />
       </div>
 
+      {search && profiles.filter((p) => p.name.toLowerCase().includes(search.toLowerCase())).length === 0 && (
+        <div className="py-12 text-center text-gray-400">
+          <p className="text-sm">Không tìm thấy KOL profile nào cho "<span className="font-medium text-gray-600">{search}</span>"</p>
+          <button onClick={() => setSearch("")} className="mt-2 text-xs text-brand-600 hover:underline">Xóa bộ lọc</button>
+        </div>
+      )}
+
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {[...profiles]
           .filter((p) => !search || p.name.toLowerCase().includes(search.toLowerCase()))
@@ -155,6 +165,7 @@ export default function KolProfilesPage() {
                 <img
                   src={profile.avatarImageUrl}
                   alt={profile.name}
+                  loading="lazy"
                   className="w-full h-full object-cover"
                   onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                 />

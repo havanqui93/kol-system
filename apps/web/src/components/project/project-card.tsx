@@ -74,10 +74,15 @@ export function ProjectCard({ project, onDeleted }: { project: Project; onDelete
     }
   }
 
+  const cardBorderClass =
+    project.status === "failed" ? "border-l-4 border-l-red-400" :
+    project.status === "published" || project.status === "ready_to_publish" ? "border-l-4 border-l-green-400" :
+    isProcessing ? "border-l-4 border-l-yellow-400" : "";
+
   return (
     <div className="relative group">
       <Link href={`/projects/${project.id}`}>
-        <Card className="hover:border-brand-300 hover:shadow-md transition-all cursor-pointer">
+        <Card className={`hover:border-brand-300 hover:shadow-md transition-all cursor-pointer ${cardBorderClass}`}>
           <CardBody className="flex items-start gap-4">
             {/* Thumbnail / product image */}
             <div className="w-14 h-20 rounded-lg overflow-hidden flex-shrink-0">

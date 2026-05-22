@@ -11,6 +11,7 @@ import { Card, CardBody } from "@/components/ui/card";
 import { ProjectDetailSkeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/toast";
 import { ProgressBar } from "@/components/ui/progress-bar";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { InlineEdit } from "@/components/project/inline-edit";
 import { ScriptViewer } from "@/components/project/script-viewer";
 import { PipelineStep } from "@/components/project/pipeline-step";
@@ -44,6 +45,7 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
   const [hashtagCaption, setHashtagCaption] = useState<string | null>(null);
   const [renderJobId, setRenderJobId] = useState<string | null>(null);
   const [renderProgress, setRenderProgress] = useState<number | undefined>(undefined);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   // Track last visited project in localStorage
   useEffect(() => {
@@ -142,6 +144,16 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
 
   return (
     <div className="max-w-3xl mx-auto">
+      <ConfirmDialog
+        open={showDeleteConfirm}
+        title="Xóa dự án"
+        message={`Xóa dự án "${project.title ?? project.id.slice(-6)}"? Hành động này không thể hoàn tác.`}
+        confirmLabel="Xóa"
+        danger
+        onConfirm={async () => { await api.projects.delete(project.id); router.push("/"); }}
+        onCancel={() => setShowDeleteConfirm(false)}
+      />
+
       {/* Header */}
       <div className="mb-6 flex items-center justify-between gap-4">
         <div>
@@ -190,11 +202,7 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
             variant="ghost"
             size="sm"
             className="text-red-500 hover:text-red-700 hover:bg-red-50"
-            onClick={async () => {
-              if (!confirm("Xóa dự án này? Hành động không thể hoàn tác.")) return;
-              await api.projects.delete(project.id);
-              router.push("/");
-            }}
+            onClick={() => setShowDeleteConfirm(true)}
           >
             Xóa
           </Button>
@@ -613,10 +621,10 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
           <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Chi tiết dự án</h3>
           <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
             {[
-              ["Nền tảng", project.platform],
-              ["Loại video", project.videoType],
+              ["Nền tảng", { tiktok: "TikTok", facebook: "Facebook Reels", instagram: "Instagram Reels", youtube_shorts: "YouTube Shorts" }[project.platform] ?? project.platform],
+              ["Loại video", { product_review: "Review sản phẩm", affiliate: "Affiliate", used_car: "Ô tô cũ", virtual_kol: "KOL ảo", b_roll: "B-roll" }[project.videoType] ?? project.videoType],
               ["Thời lượng", `${project.durationSeconds}s`],
-              ["Preset", project.qualityPreset],
+              ["Chất lượng", { cheap: "Tiết kiệm", balanced: "Cân bằng", premium: "Premium" }[project.qualityPreset] ?? project.qualityPreset],
               ["Ngôn ngữ", project.language.toUpperCase()],
               ["ID", project.id.slice(-8)],
               ["Tạo lúc", new Date(project.createdAt).toLocaleDateString("vi-VN")],

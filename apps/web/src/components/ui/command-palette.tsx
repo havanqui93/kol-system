@@ -105,25 +105,37 @@ export function CommandPalette() {
         </div>
 
         <ul className="py-2 max-h-72 overflow-y-auto">
-          {items.length === 0 && (
-            <li className="px-4 py-8 text-center text-sm text-gray-400">Không tìm thấy kết quả</li>
+          {query && items.length === 0 && (
+            <li className="px-4 py-8 text-center text-sm text-gray-400">Không tìm thấy kết quả cho "{query}"</li>
+          )}
+          {!query && (
+            <li className="px-4 pt-1 pb-1 text-[11px] text-gray-400 font-semibold uppercase tracking-wider">
+              Liên kết nhanh
+            </li>
           )}
           {items.map((item, i) => (
-            <li key={item.id}>
-              <button
-                onClick={() => navigate(item.href)}
-                onMouseEnter={() => setActiveIndex(i)}
-                className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm text-left transition-colors ${
-                  i === activeIndex ? "bg-brand-50 text-brand-700" : "text-gray-700 hover:bg-gray-50"
-                }`}
-              >
-                <span className="text-base flex-shrink-0">{item.icon}</span>
-                <div className="flex-1 min-w-0">
-                  <span className="font-medium truncate block">{item.label}</span>
-                  {item.sub && <span className="text-xs text-gray-400 truncate block">{item.sub}</span>}
-                </div>
-              </button>
-            </li>
+            <>
+              {!query && i === QUICK_LINKS.length && projectItems.length > 0 && (
+                <li key={`sep-${i}`} className="px-4 pt-3 pb-1 text-[11px] text-gray-400 font-semibold uppercase tracking-wider border-t border-gray-50 mt-1">
+                  Dự án gần đây
+                </li>
+              )}
+              <li key={item.id}>
+                <button
+                  onClick={() => navigate(item.href)}
+                  onMouseEnter={() => setActiveIndex(i)}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm text-left transition-colors ${
+                    i === activeIndex ? "bg-brand-50 text-brand-700" : "text-gray-700 hover:bg-gray-50"
+                  }`}
+                >
+                  <span className="text-base flex-shrink-0">{item.icon}</span>
+                  <div className="flex-1 min-w-0">
+                    <span className="font-medium truncate block">{item.label}</span>
+                    {item.sub && <span className="text-xs text-gray-400 truncate block">{item.sub}</span>}
+                  </div>
+                </button>
+              </li>
+            </>
           ))}
         </ul>
 

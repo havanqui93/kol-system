@@ -74,7 +74,10 @@ export default function ProductsPage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Thư viện sản phẩm</h1>
           <p className="text-sm text-gray-500 mt-1">
-            {loading ? "Đang tải..." : `${products.length} sản phẩm · Dùng trong video KOL`}
+            {loading ? "Đang tải..." : (() => {
+              const totalVideos = products.reduce((sum, p) => sum + (p._count?.videoProjects ?? 0), 0);
+              return `${products.length} sản phẩm · ${totalVideos} video tổng`;
+            })()}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -129,6 +132,13 @@ export default function ProductsPage() {
         />
       </div>
 
+      {search && products.filter((p) => p.name.toLowerCase().includes(search.toLowerCase())).length === 0 && (
+        <div className="py-12 text-center text-gray-400">
+          <p className="text-sm">Không tìm thấy sản phẩm nào cho "<span className="font-medium text-gray-600">{search}</span>"</p>
+          <button onClick={() => setSearch("")} className="mt-2 text-xs text-brand-600 hover:underline">Xóa bộ lọc</button>
+        </div>
+      )}
+
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {[...products].filter((p) => !search || p.name.toLowerCase().includes(search.toLowerCase())).sort((a, b) => {
           if (sort === "most_videos") return (b._count?.videoProjects ?? 0) - (a._count?.videoProjects ?? 0);
@@ -140,7 +150,7 @@ export default function ProductsPage() {
               {/* Product image */}
               <div className="w-16 h-16 rounded-lg bg-gray-100 flex-shrink-0 overflow-hidden">
                 {product.imageUrls[0] ? (
-                  <img src={product.imageUrls[0]} alt={product.name} className="w-full h-full object-cover" />
+                  <img src={product.imageUrls[0]} alt={product.name} loading="lazy" className="w-full h-full object-cover" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-2xl">📦</div>
                 )}
