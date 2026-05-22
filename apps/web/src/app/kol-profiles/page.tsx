@@ -195,16 +195,23 @@ export default function KolProfilesPage() {
       )}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {[...profiles]
-          .filter((p) => !search || p.name.toLowerCase().includes(search.toLowerCase()))
-          .sort((a, b) => {
-            if (sort === "most_videos") return (b._count?.videoProjects ?? 0) - (a._count?.videoProjects ?? 0);
-            if (sort === "alpha") return a.name.localeCompare(b.name, "vi");
-            if (sort === "oldest") return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-          })
-          .map((profile) => (
-          <Card key={profile.id} className="group relative">
+        {(() => {
+          const sorted = [...profiles]
+            .filter((p) => !search || p.name.toLowerCase().includes(search.toLowerCase()))
+            .sort((a, b) => {
+              if (sort === "most_videos") return (b._count?.videoProjects ?? 0) - (a._count?.videoProjects ?? 0);
+              if (sort === "alpha") return a.name.localeCompare(b.name, "vi");
+              if (sort === "oldest") return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+              return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+            });
+          const maxVideos = Math.max(0, ...sorted.map((p) => p._count?.videoProjects ?? 0));
+          return sorted.map((profile) => {
+          const isMostUsed = maxVideos > 0 && (profile._count?.videoProjects ?? 0) === maxVideos;
+          return (
+          <Card key={profile.id} className={`group relative ${isMostUsed && maxVideos > 1 ? "ring-2 ring-brand-300" : ""}`}>
+            {isMostUsed && maxVideos > 1 && (
+              <div className="absolute -top-2 -right-2 z-10 text-base" title="KOL được dùng nhiều nhất">👑</div>
+            )}
             <CardBody className="flex gap-4">
               {/* Avatar */}
               <div className="w-16 h-16 rounded-full bg-gradient-to-br from-brand-100 to-purple-100 flex-shrink-0 overflow-hidden">
@@ -276,7 +283,9 @@ export default function KolProfilesPage() {
               </button>
             </div>
           </Card>
-        ))}
+        );
+        });
+        })()}
       </div>
     </div>
   );

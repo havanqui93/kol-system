@@ -162,6 +162,11 @@ export function ProjectFilter({ initialProjects, initialStatus = "" }: { initial
               ? `${filtered.length} / ${projects.length} dự án`
               : `${projects.length} dự án`}
           </span>
+          {filtered.length > 0 && (
+            <span>
+              · {Math.floor(filtered.reduce((sum, p) => sum + p.durationSeconds, 0) / 60)}m{filtered.reduce((sum, p) => sum + p.durationSeconds, 0) % 60}s tổng
+            </span>
+          )}
         </div>
         {filtered.length > 0 && <ExportCSVButton projects={filtered} />}
       </div>

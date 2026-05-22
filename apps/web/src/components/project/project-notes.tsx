@@ -89,6 +89,27 @@ export function ProjectNotes({ projectId }: { projectId: string }) {
           )}
         </div>
       </div>
+      <div className="flex gap-1 mb-1 flex-wrap">
+        {["✅", "⚠️", "❌", "💡", "🔥", "📌"].map((emoji) => (
+          <button
+            key={emoji}
+            type="button"
+            onClick={() => {
+              const ta = textareaRef.current;
+              if (!ta) return;
+              const pos = ta.selectionStart ?? notes.length;
+              const newVal = notes.slice(0, pos) + emoji + " " + notes.slice(pos);
+              const ev = { target: { value: newVal } } as React.ChangeEvent<HTMLTextAreaElement>;
+              handleChange(ev);
+              setTimeout(() => { ta.focus(); ta.setSelectionRange(pos + emoji.length + 1, pos + emoji.length + 1); }, 0);
+            }}
+            className="text-base hover:scale-125 transition-transform"
+            title={`Thêm ${emoji}`}
+          >
+            {emoji}
+          </button>
+        ))}
+      </div>
       <textarea
         id="project-notes"
         ref={textareaRef}

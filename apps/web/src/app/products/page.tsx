@@ -113,6 +113,22 @@ export default function ProductsPage() {
             <option value="alpha">A → Z</option>
             <option value="oldest">Cũ nhất</option>
           </select>
+          {products.length > 0 && (
+            <button
+              onClick={() => {
+                const json = JSON.stringify(products.map(({ id, name, description, price, promotion, category, imageUrls }) => ({ id, name, description, price, promotion, category, imageUrls })), null, 2);
+                const blob = new Blob([json], { type: "application/json" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url; a.download = "products.json"; a.click();
+                URL.revokeObjectURL(url);
+              }}
+              className="text-xs text-gray-400 hover:text-gray-600 border border-gray-200 rounded-lg px-2.5 py-1.5 transition-colors"
+              title="Xuất danh sách sản phẩm JSON"
+            >
+              ⬇ JSON
+            </button>
+          )}
           <Link href="/products/new">
             <Button size="sm" variant="secondary">+ Thêm sản phẩm</Button>
           </Link>

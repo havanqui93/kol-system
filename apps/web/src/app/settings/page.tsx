@@ -304,6 +304,13 @@ export default function SettingsPage() {
                   <code className="bg-gray-100 px-1 rounded text-xs">
                     {`${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/api/social/callback/${p.id}`}
                   </code>
+                  {" "}
+                  <button
+                    onClick={() => navigator.clipboard.writeText(`${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/api/social/callback/${p.id}`)}
+                    className="text-brand-600 hover:underline text-xs"
+                  >
+                    Sao chép
+                  </button>
                 </li>
               </ol>
             </div>

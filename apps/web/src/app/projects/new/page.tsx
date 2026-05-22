@@ -294,6 +294,7 @@ function NewProjectContent() {
               <FormField label="Tên sản phẩm" htmlFor="productName" required>
                 <Input
                   id="productName"
+                  autoFocus
                   placeholder="Ví dụ: Serum dưỡng da Vitamin C"
                   value={form.productName}
                   onChange={set("productName")}

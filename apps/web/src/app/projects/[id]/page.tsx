@@ -557,7 +557,12 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
           <Card>
             <CardBody>
               <div className="flex items-center justify-between mb-3">
-                <h3 className="font-semibold text-sm text-gray-800"># Hashtags & Caption</h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-semibold text-sm text-gray-800"># Hashtags & Caption</h3>
+                  {hashtags && (
+                    <span className="text-xs bg-brand-100 text-brand-700 px-1.5 py-0.5 rounded-full">{hashtags.length} tags</span>
+                  )}
+                </div>
                 <Button
                   size="sm"
                   variant="secondary"
