@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@kol/database";
 import { StatusBadge } from "@/components/ui/badge";
+import { ShareButtons } from "@/components/share/share-buttons";
 
 export const dynamic = "force-dynamic";
 
@@ -80,7 +81,9 @@ export default async function SharePage({ params }: { params: { id: string } }) 
         </div>
       )}
 
-      <p className="text-center text-xs text-gray-400 mt-8">
+      <ShareButtons title={project.title ?? "KOL Video"} />
+
+      <p className="text-center text-xs text-gray-400 mt-4">
         Tạo bởi KOL System · AI Video Generator
       </p>
     </div>

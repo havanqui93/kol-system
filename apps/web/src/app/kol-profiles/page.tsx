@@ -17,6 +17,7 @@ interface KolProfile {
   voiceStyle: string;
   language: string;
   createdAt: string;
+  _count?: { videoProjects: number };
 }
 
 const VOICE_STYLE_LABELS: Record<string, string> = {
@@ -79,9 +80,14 @@ export default function KolProfilesPage() {
           <h1 className="text-2xl font-bold text-gray-900">KOL Profiles</h1>
           <p className="text-sm text-gray-500 mt-1">Quản lý avatar AI KOL có thể tái sử dụng</p>
         </div>
-        <Link href="/projects/new">
-          <Button size="sm">+ Dùng trong video mới</Button>
-        </Link>
+        <div className="flex gap-2">
+          <Link href="/kol-profiles/new">
+            <Button size="sm" variant="secondary">+ Tạo KOL Profile</Button>
+          </Link>
+          <Link href="/projects/new">
+            <Button size="sm">+ Tạo video mới</Button>
+          </Link>
+        </div>
       </div>
 
       {loading && (
@@ -126,6 +132,9 @@ export default function KolProfilesPage() {
                   <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
                     {profile.language.toUpperCase()}
                   </span>
+                  {profile._count !== undefined && (
+                    <span className="text-xs text-gray-400 px-2 py-0.5">{profile._count.videoProjects} video</span>
+                  )}
                 </div>
               </div>
             </CardBody>

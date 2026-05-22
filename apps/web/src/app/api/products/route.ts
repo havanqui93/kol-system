@@ -43,6 +43,7 @@ export async function GET(request: Request) {
     where: { userId },
     orderBy: { createdAt: "desc" },
     take: 50,
+    include: { _count: { select: { videoProjects: true } } },
   });
 
   return NextResponse.json({ products });

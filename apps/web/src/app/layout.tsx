@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ToastProvider } from "@/components/ui/toast";
 import { MobileNav } from "@/components/ui/mobile-nav";
+import { ShortcutsHelp } from "@/components/ui/shortcuts-help";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -51,6 +52,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <main className="flex-1 max-w-6xl mx-auto w-full px-4 py-8">
             <ToastProvider>
               {children}
+              <ShortcutsHelp />
             </ToastProvider>
           </main>
 

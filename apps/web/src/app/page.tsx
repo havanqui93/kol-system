@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@kol/database";
 import { ProjectFilter } from "@/components/project/project-filter";
+import { BulkDeleteFailed } from "@/components/project/bulk-actions";
 import { Button } from "@/components/ui/button";
 import type { Project } from "@/lib/api/client";
 
@@ -72,6 +73,13 @@ export default async function DashboardPage({
               <div className="text-xs text-gray-500 mt-0.5">{stat.label}</div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Bulk actions row */}
+      {failed > 0 && (
+        <div className="flex justify-end mb-3">
+          <BulkDeleteFailed failedCount={failed} />
         </div>
       )}
 

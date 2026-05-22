@@ -18,6 +18,7 @@ interface Product {
   category: string | null;
   imageUrls: string[];
   createdAt: string;
+  _count?: { videoProjects: number };
 }
 
 export default function ProductsPage() {
@@ -69,9 +70,14 @@ export default function ProductsPage() {
           <h1 className="text-2xl font-bold text-gray-900">Thư viện sản phẩm</h1>
           <p className="text-sm text-gray-500 mt-1">Tất cả sản phẩm đã tạo để dùng trong video</p>
         </div>
-        <Link href="/projects/new">
-          <Button size="sm">+ Tạo video mới</Button>
-        </Link>
+        <div className="flex gap-2">
+          <Link href="/products/new">
+            <Button size="sm" variant="secondary">+ Thêm sản phẩm</Button>
+          </Link>
+          <Link href="/projects/new">
+            <Button size="sm">+ Tạo video mới</Button>
+          </Link>
+        </div>
       </div>
 
       {loading && (
@@ -113,6 +119,9 @@ export default function ProductsPage() {
                   )}
                   {product.promotion && <span className="text-green-600">{product.promotion}</span>}
                   {product.category && <span className="bg-gray-100 px-2 py-0.5 rounded-full">{product.category}</span>}
+                  {product._count !== undefined && (
+                    <span className="text-gray-400">{product._count.videoProjects} video</span>
+                  )}
                 </div>
               </div>
             </CardBody>
