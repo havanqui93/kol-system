@@ -134,7 +134,7 @@ export function createRenderVideoWorker(connection: Redis) {
         await rm(workDir, { recursive: true, force: true });
       }
     },
-    { connection, concurrency: 2 }
+    { connection, concurrency: Number(process.env.WORKER_CONCURRENCY_RENDER ?? "2") }
   );
 }
 

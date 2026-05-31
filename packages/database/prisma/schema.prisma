@@ -243,6 +243,7 @@ model VideoScene {
   project VideoProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@index([projectId, sceneIndex])
+  @@index([projectId, status])
   @@map("video_scenes")
 }
 
@@ -303,6 +304,7 @@ model PublishJob {
 
   @@index([projectId])
   @@index([platform, status])
+  @@index([status, scheduledAt])
   @@map("publish_jobs")
 }
 
@@ -326,6 +328,8 @@ model ProviderUsage {
   @@index([userId])
   @@index([projectId])
   @@index([createdAt])
+  @@index([userId, createdAt])
+  @@index([userId, providerType])
   @@map("provider_usage")
 }
 

@@ -117,7 +117,7 @@ export function createGenerateKlingWorker(connection: Redis) {
     },
     {
       connection,
-      concurrency: 2, // Kling is slow, keep concurrency low
+      concurrency: Number(process.env.WORKER_CONCURRENCY_KLING ?? "2"), // Kling is slow
       limiter: { max: 5, duration: 60000 },
     }
   );

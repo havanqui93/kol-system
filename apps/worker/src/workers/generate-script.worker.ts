@@ -119,8 +119,8 @@ export function createGenerateScriptWorker(connection: Redis) {
     },
     {
       connection,
-      concurrency: 3,
-      limiter: { max: 10, duration: 60000 }, // 10 script jobs/minute
+      concurrency: Number(process.env.WORKER_CONCURRENCY_SCRIPT ?? "3"),
+      limiter: { max: 10, duration: 60000 },
     }
   );
 }

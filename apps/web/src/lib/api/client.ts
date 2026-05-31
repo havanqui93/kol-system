@@ -22,6 +22,16 @@ async function apiFetch<T>(url: string, init?: RequestInit): Promise<T> {
 
 // ─── Types (mirrors Prisma models) ───────────────────────────────────────────
 
+export interface CostTracking {
+  llmCostUsd: string;
+  ttsCostUsd: string;
+  videoCostUsd: string;
+  subtitleCostUsd: string;
+  storageCostUsd: string;
+  totalCostUsd: string;
+  budgetLimitUsd: string | null;
+}
+
 export interface Project {
   id: string;
   title: string | null;
@@ -38,6 +48,7 @@ export interface Project {
   updatedAt: string;
   product?: { name: string } | null;
   kolProfile?: { name: string } | null;
+  costTracking?: CostTracking[] | null;
 }
 
 export interface Script {
@@ -141,6 +152,7 @@ export const api = {
   },
 
   kolProfiles: {
+    list: () => apiFetch<{ profiles: KolProfile[] }>("/api/kol-profiles"),
     create: (data: {
       name: string;
       description?: string;
@@ -154,9 +166,11 @@ export const api = {
 
   projects: {
     list: () => apiFetch<{ projects: Project[]; total: number }>("/api/video-projects"),
-    get: (id: string) => apiFetch<Project & { scripts: Script[]; scenes: Scene[]; assets: Asset[] }>(`/api/video-projects/${id}`),
+    get: (id: string) => apiFetch<Project & { scripts: Script[]; scenes: Scene[]; assets: Asset[]; costTracking: CostTracking[] }>(`/api/video-projects/${id}`),
     create: (data: CreateProjectPayload) =>
       apiFetch<Project>("/api/video-projects", { method: "POST", body: JSON.stringify(data) }),
+    duplicate: (id: string) =>
+      apiFetch<Project>(`/api/video-projects/${id}/duplicate`, { method: "POST", body: "{}" }),
   },
 
   script: {

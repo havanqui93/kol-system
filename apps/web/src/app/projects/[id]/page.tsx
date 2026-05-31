@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useProject } from "@/hooks/use-project";
 import { api } from "@/lib/api/client";
@@ -29,10 +30,12 @@ const VOICE_STYLE_OPTIONS = [
 
 export default function ProjectDetailPage({ params }: { params: { id: string } }) {
   const { project, loading, error, refresh } = useProject(params.id);
+  const router = useRouter();
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [voiceStyle, setVoiceStyle] = useState("energetic");
   const [musicFile, setMusicFile] = useState<File | null>(null);
+  const [duplicating, setDuplicating] = useState(false);
 
   async function doAction(key: string, fn: () => Promise<unknown>) {
     setActionLoading(key);
@@ -100,9 +103,27 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
             <StatusBadge status={status} />
           </div>
         </div>
-        <Button variant="ghost" size="sm" onClick={() => refresh()}>
-          ↻ Làm mới
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            loading={duplicating}
+            onClick={async () => {
+              setDuplicating(true);
+              try {
+                const clone = await api.projects.duplicate(project.id);
+                router.push(`/projects/${clone.id}`);
+              } finally {
+                setDuplicating(false);
+              }
+            }}
+          >
+            Nhân bản
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => refresh()}>
+            ↻ Làm mới
+          </Button>
+        </div>
       </div>
 
       {/* Error banner */}
@@ -333,6 +354,57 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
           </dl>
         </CardBody>
       </Card>
+
+      {/* Cost breakdown */}
+      {project.costTracking && project.costTracking.length > 0 && (() => {
+        const cost = project.costTracking[0];
+        const total = parseFloat(cost.totalCostUsd);
+        const budget = cost.budgetLimitUsd ? parseFloat(cost.budgetLimitUsd) : null;
+        const items = [
+          { label: "LLM (Claude/GPT)", value: parseFloat(cost.llmCostUsd) },
+          { label: "TTS (ElevenLabs)", value: parseFloat(cost.ttsCostUsd) },
+          { label: "Video (Kling)", value: parseFloat(cost.videoCostUsd) },
+          { label: "Subtitle (Whisper)", value: parseFloat(cost.subtitleCostUsd) },
+          { label: "Storage (R2)", value: parseFloat(cost.storageCostUsd) },
+        ].filter((item) => item.value > 0);
+
+        return (
+          <Card className="mt-4">
+            <CardBody>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Chi phí</h3>
+                <span className="font-semibold text-gray-800 text-sm">
+                  ${total.toFixed(4)}
+                  {budget && (
+                    <span className="text-gray-400 font-normal"> / ${budget.toFixed(2)}</span>
+                  )}
+                </span>
+              </div>
+              {budget && (
+                <div className="mb-3">
+                  <div className="w-full bg-gray-200 rounded-full h-1.5">
+                    <div
+                      className={`h-1.5 rounded-full transition-all ${total / budget > 0.8 ? "bg-red-500" : "bg-brand-500"}`}
+                      style={{ width: `${Math.min(100, (total / budget) * 100)}%` }}
+                    />
+                  </div>
+                  <p className="text-xs text-gray-400 mt-1">{Math.round((total / budget) * 100)}% ngân sách đã dùng</p>
+                </div>
+              )}
+              {items.length > 0 && (
+                <dl className="space-y-1.5">
+                  {items.map(({ label, value }) => (
+                    <div key={label} className="flex items-center justify-between text-xs">
+                      <dt className="text-gray-500">{label}</dt>
+                      <dd className="text-gray-700 font-medium">${value.toFixed(4)}</dd>
+                    </div>
+                  ))}
+                </dl>
+              )}
+            </CardBody>
+          </Card>
+        );
+      })()}
     </div>
   );
 }

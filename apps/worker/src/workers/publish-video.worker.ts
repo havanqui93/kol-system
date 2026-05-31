@@ -121,7 +121,7 @@ export function createPublishVideoWorker(connection: Redis) {
     },
     {
       connection,
-      concurrency: 3,
+      concurrency: Number(process.env.WORKER_CONCURRENCY_PUBLISH ?? "3"),
       limiter: { max: 10, duration: 60000 },
     }
   );
