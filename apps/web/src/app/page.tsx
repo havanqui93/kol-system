@@ -1,27 +1,81 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { prisma } from "@kol/database";
 import { ProjectCard } from "@/components/project/project-card";
+import { ProjectFilter } from "@/components/project/project-filter";
 import { Button } from "@/components/ui/button";
 import type { Project } from "@/lib/api/client";
 
-// Server component — reads DB directly
 export const dynamic = "force-dynamic";
 
-async function getProjects(): Promise<Project[]> {
-  const rows = await prisma.videoProject.findMany({
-    where: { userId: "demo-user" },
-    orderBy: { createdAt: "desc" },
-    take: 50,
-    include: {
-      product: { select: { name: true } },
-      kolProfile: { select: { name: true } },
-    },
-  });
-  return rows as unknown as Project[];
+const PAGE_SIZE = 20;
+
+async function getProjects(
+  q: string,
+  status: string,
+  platform: string,
+  page: number
+): Promise<{ projects: Project[]; total: number }> {
+  const where = {
+    userId: "demo-user",
+    ...(status ? { status: status as any } : {}),
+    ...(platform ? { platform: platform as any } : {}),
+    ...(q
+      ? {
+          title: { contains: q, mode: "insensitive" as const },
+        }
+      : {}),
+  };
+
+  const [projects, total] = await Promise.all([
+    prisma.videoProject.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      skip: (page - 1) * PAGE_SIZE,
+      take: PAGE_SIZE,
+      include: {
+        product: { select: { name: true } },
+        kolProfile: { select: { name: true } },
+      },
+    }),
+    prisma.videoProject.count({ where }),
+  ]);
+
+  return { projects: projects as unknown as Project[], total };
 }
 
-export default async function DashboardPage() {
-  const projects = await getProjects();
+async function getAllStats() {
+  const all = await prisma.videoProject.findMany({
+    where: { userId: "demo-user" },
+    select: { status: true, finalVideoUrl: true },
+  });
+  return {
+    total: all.length,
+    done: all.filter((p) => p.finalVideoUrl).length,
+    processing: all.filter((p) =>
+      ["script_generating", "audio_generating", "video_generating", "rendering"].includes(p.status)
+    ).length,
+    failed: all.filter((p) => p.status === "failed").length,
+  };
+}
+
+interface PageProps {
+  searchParams: { q?: string; status?: string; platform?: string; page?: string };
+}
+
+export default async function DashboardPage({ searchParams }: PageProps) {
+  const q = searchParams.q ?? "";
+  const status = searchParams.status ?? "";
+  const platform = searchParams.platform ?? "";
+  const page = Math.max(1, Number(searchParams.page ?? "1"));
+
+  const [{ projects, total }, stats] = await Promise.all([
+    getProjects(q, status, platform, page),
+    getAllStats(),
+  ]);
+
+  const totalPages = Math.ceil(total / PAGE_SIZE);
+  const isFiltered = q || status || platform;
 
   return (
     <div>
@@ -30,7 +84,7 @@ export default async function DashboardPage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
           <p className="mt-1 text-sm text-gray-500">
-            {projects.length} video project{projects.length !== 1 ? "s" : ""}
+            {stats.total} video project{stats.total !== 1 ? "s" : ""}
           </p>
         </div>
         <Link href="/projects/new">
@@ -39,13 +93,13 @@ export default async function DashboardPage() {
       </div>
 
       {/* Stats row */}
-      {projects.length > 0 && (
+      {stats.total > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
           {[
-            { label: "Tổng video", value: projects.length },
-            { label: "Đã hoàn thành", value: projects.filter((p) => p.finalVideoUrl).length },
-            { label: "Đang xử lý", value: projects.filter((p) => ["script_generating","audio_generating","video_generating","rendering"].includes(p.status)).length },
-            { label: "Thất bại", value: projects.filter((p) => p.status === "failed").length },
+            { label: "Tổng video", value: stats.total },
+            { label: "Đã hoàn thành", value: stats.done },
+            { label: "Đang xử lý", value: stats.processing },
+            { label: "Thất bại", value: stats.failed },
           ].map((stat) => (
             <div key={stat.label} className="bg-white rounded-xl border border-gray-200 px-5 py-4">
               <div className="text-2xl font-bold text-gray-900">{stat.value}</div>
@@ -55,22 +109,75 @@ export default async function DashboardPage() {
         </div>
       )}
 
+      {/* Search & Filter */}
+      {stats.total > 0 && (
+        <div className="mb-5">
+          <Suspense fallback={null}>
+            <ProjectFilter />
+          </Suspense>
+        </div>
+      )}
+
       {/* Project list */}
       {projects.length === 0 ? (
         <div className="text-center py-24">
-          <div className="text-5xl mb-4">🎬</div>
-          <h2 className="text-xl font-semibold text-gray-700">Chưa có video nào</h2>
-          <p className="text-gray-500 mt-2 mb-6">Tạo video KOL đầu tiên của bạn chỉ trong vài bước</p>
-          <Link href="/projects/new">
-            <Button size="lg">Tạo video đầu tiên</Button>
-          </Link>
+          {isFiltered ? (
+            <>
+              <div className="text-4xl mb-4">🔍</div>
+              <h2 className="text-xl font-semibold text-gray-700">Không tìm thấy video</h2>
+              <p className="text-gray-500 mt-2 mb-6">Thử thay đổi bộ lọc hoặc từ khoá tìm kiếm</p>
+              <Link href="/">
+                <Button variant="outline">Xoá bộ lọc</Button>
+              </Link>
+            </>
+          ) : (
+            <>
+              <div className="text-5xl mb-4">🎬</div>
+              <h2 className="text-xl font-semibold text-gray-700">Chưa có video nào</h2>
+              <p className="text-gray-500 mt-2 mb-6">Tạo video KOL đầu tiên của bạn chỉ trong vài bước</p>
+              <Link href="/projects/new">
+                <Button size="lg">Tạo video đầu tiên</Button>
+              </Link>
+            </>
+          )}
         </div>
       ) : (
-        <div className="grid gap-3">
-          {projects.map((project) => (
-            <ProjectCard key={project.id} project={project} />
-          ))}
-        </div>
+        <>
+          <div className="grid gap-3">
+            {projects.map((project) => (
+              <ProjectCard key={project.id} project={project} />
+            ))}
+          </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="mt-6 flex items-center justify-between text-sm">
+              <span className="text-gray-500">
+                Hiển thị {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, total)} / {total}
+              </span>
+              <div className="flex gap-2">
+                {page > 1 && (
+                  <Link
+                    href={`/?${new URLSearchParams({ q, status, platform, page: String(page - 1) }).toString()}`}
+                  >
+                    <Button variant="outline" size="sm">
+                      ← Trước
+                    </Button>
+                  </Link>
+                )}
+                {page < totalPages && (
+                  <Link
+                    href={`/?${new URLSearchParams({ q, status, platform, page: String(page + 1) }).toString()}`}
+                  >
+                    <Button variant="outline" size="sm">
+                      Tiếp →
+                    </Button>
+                  </Link>
+                )}
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

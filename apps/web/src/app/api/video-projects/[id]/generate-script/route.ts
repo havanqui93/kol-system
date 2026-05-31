@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@kol/database";
 import { queues } from "@/lib/queues";
+import { assertBudget, BudgetExceededError } from "@/lib/budget-guard";
 
 // POST /api/video-projects/:id/generate-script
 export async function POST(request: Request, { params }: { params: { id: string } }) {
@@ -14,9 +15,20 @@ export async function POST(request: Request, { params }: { params: { id: string 
     return NextResponse.json({ error: "Project is already being processed" }, { status: 409 });
   }
 
+  try {
+    await assertBudget(projectId);
+  } catch (err) {
+    if (err instanceof BudgetExceededError) {
+      return NextResponse.json(
+        { error: "Budget exceeded", detail: err.message },
+        { status: 402 }
+      );
+    }
+    throw err;
+  }
+
   const costTracking = await prisma.costTracking.findUnique({ where: { projectId } });
 
-  // Update status
   await prisma.videoProject.update({
     where: { id: projectId },
     data: { status: "script_generating", errorMessage: null },

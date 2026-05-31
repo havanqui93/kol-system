@@ -5,3 +5,5 @@ export { ElevenLabsTTSProvider } from "./tts/elevenlabs.js";
 export { KlingVideoProvider } from "./video/kling.js";
 export { WhisperSubtitleProvider } from "./subtitle/whisper.js";
 export { R2StorageProvider } from "./storage/r2.js";
+export { withRetry } from "./retry.js";
+export type { RetryOptions } from "./retry.js";
