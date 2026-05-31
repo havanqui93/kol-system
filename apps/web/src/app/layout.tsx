@@ -13,8 +13,27 @@ import { DemoBanner } from "@/components/ui/demo-banner";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "KOL System — AI Video Generator",
+  title: {
+    default: "KOL System — AI Video Generator",
+    template: "%s | KOL System",
+  },
   description: "Tạo video KOL tự động bằng AI cho TikTok, Facebook Reels, YouTube Shorts",
+  keywords: ["KOL", "AI video", "TikTok", "Vietnam", "video generator", "short-form video"],
+  authors: [{ name: "KOL System" }],
+  manifest: "/manifest.json",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
+  openGraph: {
+    type: "website",
+    siteName: "KOL System",
+    title: "KOL System — AI Video Generator",
+    description: "Tạo video KOL tự động bằng AI cho TikTok, Facebook Reels, YouTube Shorts",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "KOL System — AI Video Generator",
+    description: "Tạo video KOL tự động bằng AI cho TikTok, Facebook Reels, YouTube Shorts",
+  },
+  robots: { index: false, follow: false }, // private app — no SEO indexing
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -32,7 +51,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <span className="text-2xl">🎬</span>
                 KOL System
               </Link>
-              <nav className="hidden sm:flex items-center gap-6 text-sm">
+              <nav className="hidden sm:flex items-center gap-5 text-sm">
                 <Link href="/" className="text-gray-600 hover:text-gray-900 transition-colors flex items-center">
                   Dashboard
                   <ProcessingBadge />
@@ -41,22 +60,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   Sản phẩm
                 </Link>
                 <Link href="/kol-profiles" className="text-gray-600 hover:text-gray-900 transition-colors">
-                  KOL Profiles
+                  KOL
                 </Link>
                 <Link href="/schedule" className="text-gray-600 hover:text-gray-900 transition-colors">
                   Lịch đăng
                 </Link>
-                <Link href="/assets" className="text-gray-600 hover:text-gray-900 transition-colors">
-                  Assets
+                <Link href="/music" className="text-gray-600 hover:text-gray-900 transition-colors">
+                  Nhạc
                 </Link>
-                <Link href="/admin/queues" className="text-gray-600 hover:text-gray-900 transition-colors">
-                  Queues
+                <Link href="/platform-guide" className="text-gray-600 hover:text-gray-900 transition-colors">
+                  Hướng dẫn
                 </Link>
                 <Link href="/admin/costs" className="text-gray-600 hover:text-gray-900 transition-colors">
                   Chi phí
-                </Link>
-                <Link href="/docs" className="text-gray-600 hover:text-gray-900 transition-colors">
-                  API Docs
                 </Link>
                 <Link href="/settings" className="text-gray-600 hover:text-gray-900 transition-colors">
                   Cài đặt

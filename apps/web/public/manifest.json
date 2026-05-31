@@ -1,0 +1,43 @@
+{
+  "name": "KOL System — AI Video Generator",
+  "short_name": "KOL System",
+  "description": "Tạo video KOL viral bằng AI cho TikTok, Facebook Reels và YouTube Shorts",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#7c3aed",
+  "orientation": "portrait-primary",
+  "lang": "vi",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable any"
+    }
+  ],
+  "screenshots": [],
+  "categories": ["productivity", "social"],
+  "shortcuts": [
+    {
+      "name": "Tạo video mới",
+      "short_name": "Tạo mới",
+      "description": "Bắt đầu tạo video KOL mới",
+      "url": "/projects/new",
+      "icons": [{ "src": "/icon-96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "Xem danh sách video",
+      "url": "/",
+      "icons": [{ "src": "/icon-96.png", "sizes": "96x96" }]
+    }
+  ]
+}
