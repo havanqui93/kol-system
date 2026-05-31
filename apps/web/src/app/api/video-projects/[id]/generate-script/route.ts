@@ -2,11 +2,15 @@ import { NextResponse } from "next/server";
 import { prisma } from "@kol/database";
 import { queues } from "@/lib/queues";
 import { assertBudget, BudgetExceededError } from "@/lib/budget-guard";
+import { checkRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
 
 // POST /api/video-projects/:id/generate-script
 export async function POST(request: Request, { params }: { params: { id: string } }) {
   const userId = request.headers.get("x-user-id") ?? "demo-user";
   const { id: projectId } = params;
+
+  const rateLimitResponse = await checkRateLimit(request, RATE_LIMITS.generateScript);
+  if (rateLimitResponse) return rateLimitResponse;
 
   const project = await prisma.videoProject.findFirst({ where: { id: projectId, userId } });
   if (!project) return NextResponse.json({ error: "Project not found" }, { status: 404 });

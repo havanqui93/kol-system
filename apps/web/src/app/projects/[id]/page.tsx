@@ -104,6 +104,13 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
           </div>
         </div>
         <div className="flex gap-2">
+          <a
+            href={`/api/video-projects/${project.id}/export`}
+            download
+            className="inline-flex items-center justify-center gap-2 font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 text-xs px-3 py-1.5 bg-transparent text-gray-700 border border-gray-300 hover:bg-gray-50 focus:ring-gray-400"
+          >
+            ⬇ Export
+          </a>
           <Button
             variant="outline"
             size="sm"

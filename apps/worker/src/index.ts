@@ -1,6 +1,7 @@
 import Redis from "ioredis";
 import { validateWorkerEnv } from "./env.js";
 import { logger } from "./logger.js";
+import { prisma } from "@kol/database";
 
 // Fail fast if required env vars are missing
 validateWorkerEnv();
@@ -35,12 +36,27 @@ for (const worker of workers) {
     workerLog.info("Job completed", { jobId: job.id, duration: job.processedOn ? Date.now() - job.processedOn : undefined });
   });
 
-  worker.on("failed", (job, err) => {
+  worker.on("failed", async (job, err) => {
     workerLog.error("Job failed", {
       jobId: job?.id,
       error: err.message,
       attempts: job?.attemptsMade,
     });
+
+    // Mark project as failed when all retry attempts exhausted
+    const projectId = (job?.data as any)?.projectId as string | undefined;
+    const maxAttempts = job?.opts?.attempts ?? 1;
+    if (projectId && job && job.attemptsMade >= maxAttempts) {
+      try {
+        await prisma.videoProject.update({
+          where: { id: projectId },
+          data: { status: "failed", errorMessage: err.message.slice(0, 500) },
+        });
+        workerLog.info("Project marked as failed", { projectId });
+      } catch (dbErr) {
+        workerLog.error("Failed to update project status", { projectId, error: String(dbErr) });
+      }
+    }
   });
 
   worker.on("error", (err) => {
