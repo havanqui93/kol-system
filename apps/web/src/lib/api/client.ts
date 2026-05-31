@@ -140,6 +140,7 @@ export const api = {
   },
 
   products: {
+    list: () => apiFetch<{ products: Product[] }>("/api/products"),
     create: (data: {
       name: string;
       description?: string;

@@ -80,8 +80,17 @@ export function ProjectCard({ project }: { project: Project }) {
       <Card className="hover:border-brand-300 hover:shadow-md transition-all cursor-pointer group">
         <CardBody className="flex items-start gap-4">
           {/* Thumbnail / placeholder */}
-          <div className="w-14 h-20 rounded-lg bg-gradient-to-br from-brand-100 to-purple-100 flex items-center justify-center text-2xl flex-shrink-0">
-            {PLATFORM_ICONS[project.platform] ?? "🎬"}
+          <div className="w-14 h-20 rounded-lg bg-gradient-to-br from-brand-100 to-purple-100 flex items-center justify-center text-2xl flex-shrink-0 overflow-hidden">
+            {project.thumbnailUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={project.thumbnailUrl}
+                alt="thumbnail"
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              PLATFORM_ICONS[project.platform] ?? "🎬"
+            )}
           </div>
 
           <div className="flex-1 min-w-0">
