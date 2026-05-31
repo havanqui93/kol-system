@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
@@ -48,6 +48,46 @@ const PLATFORMS = [
     envKeys: ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET"],
   },
 ] as const;
+
+const ENV_VARS = [
+  { key: "ANTHROPIC_API_KEY", label: "Claude AI (Anthropic)", required: true },
+  { key: "ELEVENLABS_API_KEY", label: "ElevenLabs TTS", required: true },
+  { key: "FAL_KEY", label: "Kling Video (fal.ai)", required: true },
+  { key: "R2_ACCESS_KEY_ID", label: "Cloudflare R2", required: true },
+  { key: "DATABASE_URL", label: "PostgreSQL DB", required: true },
+  { key: "REDIS_URL", label: "Redis", required: true },
+  { key: "OPENAI_API_KEY", label: "OpenAI (fallback LLM)", required: false },
+];
+
+function EnvStatus() {
+  const statuses = ENV_VARS.map((v) => ({
+    ...v,
+    configured: typeof (process.env as any)[v.key] === "string" && (process.env as any)[v.key] !== "",
+  }));
+
+  return (
+    <Card>
+      <CardHeader>
+        <h2 className="font-semibold text-gray-800">Trạng thái môi trường</h2>
+      </CardHeader>
+      <CardBody>
+        <div className="space-y-2">
+          {statuses.map((v) => (
+            <div key={v.key} className="flex items-center justify-between text-sm">
+              <div>
+                <span className="font-medium text-gray-700">{v.label}</span>
+                <code className="ml-2 text-xs text-gray-400">{v.key}</code>
+              </div>
+              <span className={`text-xs font-medium ${v.configured ? "text-green-600" : v.required ? "text-red-600" : "text-gray-400"}`}>
+                {v.configured ? "✓ Đã cấu hình" : v.required ? "✗ Chưa cấu hình" : "— Tùy chọn"}
+              </span>
+            </div>
+          ))}
+        </div>
+      </CardBody>
+    </Card>
+  );
+}
 
 function StatusMessages() {
   const params = useSearchParams();
@@ -136,6 +176,77 @@ function PlatformCard({
   );
 }
 
+function WebhookSettings() {
+  const [url, setUrl] = useState("");
+  const [saved, setSaved] = useState<string | null>(null);
+  const [status, setStatus] = useState<"idle" | "saving" | "testing" | "saved" | "error">("idle");
+  const [msg, setMsg] = useState("");
+
+  useEffect(() => {
+    fetch("/api/webhooks/test", { headers: { "x-user-id": "demo-user" } })
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.webhookUrl) { setUrl(d.webhookUrl); setSaved(d.webhookUrl); }
+      });
+  }, []);
+
+  async function handleSave() {
+    setStatus("saving");
+    try {
+      const res = await fetch("/api/webhooks/test", {
+        method: "POST",
+        headers: { "content-type": "application/json", "x-user-id": "demo-user" },
+        body: JSON.stringify({ url: url.trim() || undefined }),
+      });
+      const d = await res.json();
+      if (!res.ok) throw new Error(d.error ?? "Lỗi");
+      setSaved(d.webhookUrl);
+      setStatus("saved");
+      setMsg(d.testFired ? "✓ Đã lưu và gửi test ping" : "✓ Đã xoá webhook");
+    } catch (e) {
+      setStatus("error");
+      setMsg(e instanceof Error ? e.message : "Lỗi");
+    }
+  }
+
+  async function handleRemove() {
+    await fetch("/api/webhooks/test", { method: "DELETE", headers: { "x-user-id": "demo-user" } });
+    setUrl(""); setSaved(null); setStatus("idle"); setMsg("");
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <h2 className="font-semibold text-gray-800">Webhook thông báo</h2>
+        <p className="text-xs text-gray-500 mt-0.5">Nhận HTTP POST khi video hoàn thành hoặc đăng xong</p>
+      </CardHeader>
+      <CardBody className="space-y-3">
+        <div className="flex gap-2">
+          <input
+            type="url"
+            value={url}
+            onChange={(e) => { setUrl(e.target.value); setStatus("idle"); setMsg(""); }}
+            placeholder="https://your-server.com/webhook"
+            className="flex-1 text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500"
+          />
+          <Button size="sm" loading={status === "saving"} onClick={handleSave}>
+            {saved ? "Cập nhật" : "Lưu"}
+          </Button>
+          {saved && (
+            <Button size="sm" variant="outline" onClick={handleRemove}>Xoá</Button>
+          )}
+        </div>
+        {msg && (
+          <p className={`text-xs ${status === "error" ? "text-red-600" : "text-green-600"}`}>{msg}</p>
+        )}
+        <div className="text-xs text-gray-400 bg-gray-50 rounded-lg p-3 font-mono leading-relaxed">
+          {`POST <your-url>\n{"event":"project.completed","projectId":"...","status":"...","finalVideoUrl":"..."}`}
+        </div>
+      </CardBody>
+    </Card>
+  );
+}
+
 export default function SettingsPage() {
   const [accounts, setAccounts] = useState<SocialAccount[]>([]);
   const [loading, setLoading] = useState(true);
@@ -197,6 +308,15 @@ export default function SettingsPage() {
           </div>
         )}
       </div>
+
+      {/* Webhook settings */}
+      <div className="mb-8">
+        <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Webhook</h2>
+        <WebhookSettings />
+      </div>
+
+      {/* Environment status */}
+      <EnvStatus />
 
       {/* Setup guide */}
       <Card>

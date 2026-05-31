@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Input, Textarea, Select, FormField } from "@/components/ui/input";
-import { api } from "@/lib/api/client";
+import { api, type Product, type KolProfile } from "@/lib/api/client";
 
 const PLATFORM_OPTIONS = [
   { value: "tiktok", label: "🎵 TikTok" },
@@ -40,6 +40,45 @@ const QUALITY_OPTIONS = [
   { value: "premium", label: "Premium - 3 Kling clips" },
 ];
 
+// Rough cost estimates per quality preset (USD)
+const COST_ESTIMATES: Record<string, { llm: number; tts: number; kling: number }> = {
+  cheap:    { llm: 0.01, tts: 0.03, kling: 0.14 },
+  balanced: { llm: 0.015, tts: 0.05, kling: 0.28 },
+  premium:  { llm: 0.02, tts: 0.07, kling: 0.42 },
+};
+
+function CostEstimate({ qualityPreset, durationSeconds }: { qualityPreset: string; durationSeconds: string }) {
+  const est = COST_ESTIMATES[qualityPreset] ?? COST_ESTIMATES.balanced;
+  const dur = Number(durationSeconds) || 30;
+  // TTS scales with duration
+  const tts = est.tts * (dur / 30);
+  const total = est.llm + tts + est.kling;
+
+  return (
+    <div className="bg-blue-50 border border-blue-100 rounded-xl px-5 py-4 text-sm">
+      <div className="flex items-center justify-between mb-2">
+        <span className="font-semibold text-blue-800">Ước tính chi phí</span>
+        <span className="font-bold text-blue-900 text-base">${total.toFixed(3)}</span>
+      </div>
+      <div className="grid grid-cols-3 gap-2 text-xs text-blue-700">
+        <div>
+          <div className="font-medium">Claude AI</div>
+          <div className="text-blue-500">${est.llm.toFixed(3)}</div>
+        </div>
+        <div>
+          <div className="font-medium">ElevenLabs TTS</div>
+          <div className="text-blue-500">~${tts.toFixed(3)}</div>
+        </div>
+        <div>
+          <div className="font-medium">Kling video</div>
+          <div className="text-blue-500">${est.kling.toFixed(3)}</div>
+        </div>
+      </div>
+      <p className="text-xs text-blue-400 mt-2">* Ước tính, chi phí thực tế có thể thay đổi ±30%</p>
+    </div>
+  );
+}
+
 interface FormState {
   title: string;
   videoType: string;
@@ -63,6 +102,20 @@ export default function NewProjectPage() {
   const [error, setError] = useState<string | null>(null);
   const [productImage, setProductImage] = useState<File | null>(null);
   const [avatarImage, setAvatarImage] = useState<File | null>(null);
+  const [existingProducts, setExistingProducts] = useState<Product[]>([]);
+  const [existingKols, setExistingKols] = useState<KolProfile[]>([]);
+  const [selectedProductId, setSelectedProductId] = useState<string>("");
+  const [selectedKolId, setSelectedKolId] = useState<string>("");
+
+  useEffect(() => {
+    Promise.all([
+      api.products.list?.().catch(() => ({ products: [] })),
+      api.kolProfiles.list().catch(() => ({ kolProfiles: [] })),
+    ]).then(([productsRes, kolsRes]) => {
+      setExistingProducts((productsRes as any)?.products ?? []);
+      setExistingKols(kolsRes?.kolProfiles ?? []);
+    });
+  }, []);
 
   const [form, setForm] = useState<FormState>({
     title: "",
@@ -88,8 +141,10 @@ export default function NewProjectPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.productName.trim()) {
-      setError("Vui lòng nhập tên sản phẩm");
+
+    const usingExistingProduct = !!selectedProductId;
+    if (!usingExistingProduct && !form.productName.trim()) {
+      setError("Vui lòng nhập tên sản phẩm hoặc chọn sản phẩm có sẵn");
       return;
     }
 
@@ -97,22 +152,28 @@ export default function NewProjectPage() {
     setError(null);
 
     try {
-      const [productImageUpload, avatarImageUpload] = await Promise.all([
-        productImage ? api.uploads.image(productImage, "product") : Promise.resolve(null),
-        avatarImage ? api.uploads.image(avatarImage, "avatar") : Promise.resolve(null),
-      ]);
+      let productId = selectedProductId;
+      let kolProfileId = selectedKolId;
 
-      const product = await api.products.create({
-        name: form.productName.trim(),
-        description: form.productDescription || undefined,
-        price: form.productPrice || undefined,
-        promotion: form.productPromotion || undefined,
-        targetCustomer: form.targetCustomer || undefined,
-        imageUrls: productImageUpload ? [productImageUpload.url] : [],
-      });
+      // Only create new product/KOL if not reusing existing ones
+      if (!usingExistingProduct) {
+        const [productImageUpload, avatarImageUpload] = await Promise.all([
+          productImage ? api.uploads.image(productImage, "product") : Promise.resolve(null),
+          avatarImage ? api.uploads.image(avatarImage, "avatar") : Promise.resolve(null),
+        ]);
 
-      const kolProfile = avatarImageUpload
-        ? await api.kolProfiles.create({
+        const product = await api.products.create({
+          name: form.productName.trim(),
+          description: form.productDescription || undefined,
+          price: form.productPrice || undefined,
+          promotion: form.productPromotion || undefined,
+          targetCustomer: form.targetCustomer || undefined,
+          imageUrls: productImageUpload ? [productImageUpload.url] : [],
+        });
+        productId = product.id;
+
+        if (!selectedKolId && avatarImageUpload) {
+          const kolProfile = await api.kolProfiles.create({
             name: form.kolName.trim() || "AI Girl KOL",
             description: "Uploaded avatar for virtual KOL video generation",
             avatarImageUrl: avatarImageUpload.url,
@@ -120,10 +181,11 @@ export default function NewProjectPage() {
             voiceStyle: "energetic",
             language: form.language,
             stylePrompt: form.kolStylePrompt || undefined,
-          })
-        : null;
+          });
+          kolProfileId = kolProfile.id;
+        }
+      }
 
-      // 1. Create the project with real product/avatar inputs
       const project = await api.projects.create({
         title: form.title || undefined,
         videoType: form.videoType,
@@ -132,13 +194,11 @@ export default function NewProjectPage() {
         qualityPreset: form.qualityPreset as "cheap" | "balanced" | "premium",
         language: form.language,
         brandTone: form.brandTone || undefined,
-        productId: product.id,
-        kolProfileId: kolProfile?.id,
+        productId: productId || undefined,
+        kolProfileId: kolProfileId || undefined,
       });
 
-      // 2. Kick off script generation immediately
       await api.script.generate(project.id);
-
       router.push(`/projects/${project.id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Đã xảy ra lỗi");
@@ -160,6 +220,24 @@ export default function NewProjectPage() {
             <h2 className="font-semibold text-gray-800">Thông tin sản phẩm</h2>
           </CardHeader>
           <CardBody className="space-y-4">
+            {existingProducts.length > 0 && (
+              <FormField label="Dùng sản phẩm có sẵn" htmlFor="existingProduct">
+                <select
+                  id="existingProduct"
+                  value={selectedProductId}
+                  onChange={(e) => setSelectedProductId(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white"
+                >
+                  <option value="">— Tạo sản phẩm mới —</option>
+                  {existingProducts.map((p) => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+              </FormField>
+            )}
+
+            {!selectedProductId && (
+              <>
             <FormField label="Tên sản phẩm" htmlFor="productName" required>
               <Input
                 id="productName"
@@ -216,6 +294,8 @@ export default function NewProjectPage() {
                 onChange={(e) => setProductImage(e.target.files?.[0] ?? null)}
               />
             </FormField>
+              </>
+            )}
           </CardBody>
         </Card>
 
@@ -225,6 +305,24 @@ export default function NewProjectPage() {
             <h2 className="font-semibold text-gray-800">KOL avatar</h2>
           </CardHeader>
           <CardBody className="space-y-4">
+            {existingKols.length > 0 && (
+              <FormField label="Dùng KOL có sẵn" htmlFor="existingKol">
+                <select
+                  id="existingKol"
+                  value={selectedKolId}
+                  onChange={(e) => setSelectedKolId(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white"
+                >
+                  <option value="">— Tạo KOL mới —</option>
+                  {existingKols.map((k) => (
+                    <option key={k.id} value={k.id}>{k.name} ({k.voiceStyle})</option>
+                  ))}
+                </select>
+              </FormField>
+            )}
+
+            {!selectedKolId && (
+              <>
             <FormField label="Ảnh avatar cô gái" htmlFor="avatarImage" hint="Ảnh chân dung rõ mặt sẽ cho talking-head clip tốt hơn.">
               <Input
                 id="avatarImage"
@@ -251,6 +349,8 @@ export default function NewProjectPage() {
                 onChange={set("kolStylePrompt")}
               />
             </FormField>
+              </>
+            )}
           </CardBody>
         </Card>
 
@@ -336,6 +436,9 @@ export default function NewProjectPage() {
             </FormField>
           </CardBody>
         </Card>
+
+        {/* Estimated cost calculator */}
+        <CostEstimate qualityPreset={form.qualityPreset} durationSeconds={form.durationSeconds} />
 
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-sm text-red-700">

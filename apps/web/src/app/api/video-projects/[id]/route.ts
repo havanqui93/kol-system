@@ -17,12 +17,16 @@ export async function GET(_request: Request, { params }: { params: { id: string 
   });
 
   if (!project) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  return NextResponse.json(project);
+
+  return NextResponse.json(project, {
+    headers: { "Cache-Control": "private, no-cache, must-revalidate" },
+  });
 }
 
 const PatchSchema = z.object({
   title: z.string().optional(),
   brandTone: z.string().optional(),
+  notes: z.string().max(2000).optional(),
   platform: z.enum(["tiktok", "facebook", "instagram", "youtube_shorts"]).optional(),
   durationSeconds: z.number().int().min(15).max(60).optional(),
 });

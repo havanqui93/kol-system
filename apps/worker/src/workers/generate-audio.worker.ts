@@ -84,6 +84,6 @@ export function createGenerateAudioWorker(connection: Redis) {
       await job.updateProgress(100);
       return { audioUrl, durationMs, costUsd };
     },
-    { connection, concurrency: 5 }
+    { connection, concurrency: Number(process.env.WORKER_CONCURRENCY_AUDIO ?? "5") }
   );
 }

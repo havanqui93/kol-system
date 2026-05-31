@@ -6,6 +6,7 @@ export interface GenerateScriptJobPayload {
   projectId: string;
   userId: string;
   budgetLimitUsd?: number;
+  feedback?: string;
 }
 
 // ─── generate-audio-job ──────────────────────────────────────────────────────

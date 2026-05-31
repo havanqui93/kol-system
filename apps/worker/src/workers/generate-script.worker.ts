@@ -10,7 +10,7 @@ export function createGenerateScriptWorker(connection: Redis) {
   return new Worker<GenerateScriptJobPayload>(
     QUEUE_NAMES.GENERATE_SCRIPT,
     async (job) => {
-      const { projectId, userId, budgetLimitUsd } = job.data;
+      const { projectId, userId, budgetLimitUsd, feedback } = job.data;
 
       const project = await prisma.videoProject.findUnique({
         where: { id: projectId },
@@ -42,8 +42,13 @@ export function createGenerateScriptWorker(connection: Redis) {
       });
       totalCost += intakeCost;
 
-      if (budgetLimitUsd && totalCost > budgetLimitUsd) {
-        throw new Error(`Budget limit $${budgetLimitUsd} exceeded at intake stage`);
+      // Check budget at 90% threshold — fail fast before expensive stages
+      if (budgetLimitUsd) {
+        const tracking = await prisma.costTracking.findUnique({ where: { projectId }, select: { totalCostUsd: true } });
+        const alreadySpent = Number(tracking?.totalCostUsd ?? 0);
+        if (alreadySpent + totalCost >= budgetLimitUsd * 0.9) {
+          throw new Error(`Budget alert: ${Math.round(((alreadySpent + totalCost) / budgetLimitUsd) * 100)}% of budget consumed`);
+        }
       }
 
       // 2. Research
@@ -51,17 +56,15 @@ export function createGenerateScriptWorker(connection: Redis) {
       const { output: researchOutput, costUsd: researchCost } = await researchAgent.run(intakeOutput.normalizedContext);
       totalCost += researchCost;
 
-      // 3. Script
+      // 3. Script (or regenerate with feedback)
       await job.updateProgress(60);
       const duration = [15, 30, 45, 60].includes(project.durationSeconds)
         ? (project.durationSeconds as 15 | 30 | 45 | 60)
         : 30;
 
-      const { output: scriptOutput, costUsd: scriptCost } = await scriptAgent.run(
-        intakeOutput.normalizedContext,
-        researchOutput,
-        duration
-      );
+      const { output: scriptOutput, costUsd: scriptCost } = feedback
+        ? await scriptAgent.regenerate(intakeOutput.normalizedContext, researchOutput, duration, feedback)
+        : await scriptAgent.run(intakeOutput.normalizedContext, researchOutput, duration);
       totalCost += scriptCost;
 
       // 4. Persist to DB
@@ -119,8 +122,8 @@ export function createGenerateScriptWorker(connection: Redis) {
     },
     {
       connection,
-      concurrency: 3,
-      limiter: { max: 10, duration: 60000 }, // 10 script jobs/minute
+      concurrency: Number(process.env.WORKER_CONCURRENCY_SCRIPT ?? "3"),
+      limiter: { max: 10, duration: 60000 },
     }
   );
 }

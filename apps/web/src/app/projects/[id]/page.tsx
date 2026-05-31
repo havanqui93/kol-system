@@ -1,6 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { useJobProgress } from "@/hooks/use-job-progress";
+import { useNotesHistory } from "@/hooks/use-notes-history";
+import { usePageVisibilityRefresh } from "@/hooks/use-page-visibility-refresh";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useProject } from "@/hooks/use-project";
 import { api } from "@/lib/api/client";
@@ -11,6 +15,9 @@ import { PageSpinner } from "@/components/ui/spinner";
 import { ScriptViewer } from "@/components/project/script-viewer";
 import { PipelineStep } from "@/components/project/pipeline-step";
 import { PublishPanel } from "@/components/project/publish-panel";
+import { TagEditor } from "@/components/project/tag-editor";
+import { PlatformPreview } from "@/components/project/platform-preview";
+import { SceneGallery } from "@/components/project/scene-gallery";
 
 // Helper: which pipeline step is each status on
 function getStepStatus(projectStatus: string, stepStatuses: string[], activeStatuses: string[], doneStatuses: string[]) {
@@ -29,10 +36,17 @@ const VOICE_STYLE_OPTIONS = [
 
 export default function ProjectDetailPage({ params }: { params: { id: string } }) {
   const { project, loading, error, refresh } = useProject(params.id);
+  const router = useRouter();
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [voiceStyle, setVoiceStyle] = useState("energetic");
   const [musicFile, setMusicFile] = useState<File | null>(null);
+  const [duplicating, setDuplicating] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+  const [archiving, setArchiving] = useState(false);
+  const isProcessing = ["script_generating", "audio_generating", "video_generating", "rendering", "publishing"].includes(status);
+  const { overallProgress } = useJobProgress(params.id, isProcessing);
+  usePageVisibilityRefresh(refresh, 5000);
 
   async function doAction(key: string, fn: () => Promise<unknown>) {
     setActionLoading(key);
@@ -94,16 +108,105 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
             <span className="text-gray-700 truncate max-w-xs">{project.title ?? `Video ${params.id.slice(-6)}`}</span>
           </div>
           <div className="flex items-center gap-3">
-            <h1 className="text-xl font-bold text-gray-900">
-              {project.title ?? `Video ${params.id.slice(-6)}`}
-            </h1>
+            <InlineTitle projectId={project.id} title={project.title ?? `Video ${params.id.slice(-6)}`} onSaved={refresh} />
             <StatusBadge status={status} />
           </div>
         </div>
-        <Button variant="ghost" size="sm" onClick={() => refresh()}>
-          ↻ Làm mới
-        </Button>
+        <div className="flex gap-2">
+          <Link
+            href={`/projects/${project.id}/activity`}
+            className="inline-flex items-center justify-center gap-2 font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 text-xs px-3 py-1.5 bg-transparent text-gray-700 border border-gray-300 hover:bg-gray-50 focus:ring-gray-400"
+          >
+            📋 Lịch sử
+          </Link>
+          <a
+            href={`/api/video-projects/${project.id}/export`}
+            download
+            className="inline-flex items-center justify-center gap-2 font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 text-xs px-3 py-1.5 bg-transparent text-gray-700 border border-gray-300 hover:bg-gray-50 focus:ring-gray-400"
+          >
+            ⬇ Export
+          </a>
+          <Button
+            variant="outline"
+            size="sm"
+            loading={duplicating}
+            onClick={async () => {
+              setDuplicating(true);
+              try {
+                const clone = await api.projects.duplicate(project.id);
+                router.push(`/projects/${clone.id}`);
+              } finally {
+                setDuplicating(false);
+              }
+            }}
+          >
+            Nhân bản
+          </Button>
+          {["script_generating", "audio_generating", "video_generating", "rendering", "publishing"].includes(status) && (
+            <Button
+              variant="danger"
+              size="sm"
+              loading={cancelling}
+              onClick={async () => {
+                if (!confirm("Bạn có chắc muốn hủy quá trình xử lý?")) return;
+                setCancelling(true);
+                try {
+                  await fetch(`/api/video-projects/${project.id}/cancel`, {
+                    method: "POST",
+                    headers: { "x-user-id": "demo-user" },
+                  });
+                  await refresh();
+                } finally {
+                  setCancelling(false);
+                }
+              }}
+            >
+              Hủy
+            </Button>
+          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            loading={archiving}
+            onClick={async () => {
+              const isArchived = !!(project as any).archivedAt;
+              if (!isArchived && !confirm("Lưu trữ project này? Nó sẽ không hiện trên Dashboard nữa.")) return;
+              setArchiving(true);
+              try {
+                await fetch(`/api/video-projects/${project.id}/archive`, {
+                  method: isArchived ? "DELETE" : "POST",
+                  headers: { "x-user-id": "demo-user" },
+                });
+                if (!isArchived) router.push("/");
+                else await refresh();
+              } finally {
+                setArchiving(false);
+              }
+            }}
+          >
+            {(project as any).archivedAt ? "Khôi phục" : "Lưu trữ"}
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => refresh()}>
+            ↻ Làm mới
+          </Button>
+        </div>
       </div>
+
+      {/* Progress bar when processing */}
+      {isProcessing && overallProgress > 0 && (
+        <div className="mb-4">
+          <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
+            <span>Đang xử lý...</span>
+            <span>{overallProgress}%</span>
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-1.5">
+            <div
+              className="h-1.5 rounded-full bg-brand-500 transition-all duration-500"
+              style={{ width: `${overallProgress}%` }}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Error banner */}
       {(project.errorMessage || actionError) && (
@@ -116,19 +219,21 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
       {finalVideo && (
         <Card className="mb-6 border-green-200">
           <CardBody>
-            <div className="flex items-start gap-4">
-              <video
-                src={finalVideo}
-                controls
-                className="w-36 rounded-lg bg-black"
-                style={{ aspectRatio: "9/16" }}
-              />
+            <div className="flex items-start gap-6">
+              <PlatformPreview videoUrl={finalVideo} platform={project.platform} title={project.title ?? undefined} />
               <div className="flex-1">
                 <div className="text-green-700 font-semibold text-sm mb-1">✓ Video đã sẵn sàng!</div>
                 <p className="text-xs text-gray-500 mb-3">Video của bạn đã được render thành công.</p>
-                <a href={finalVideo} download>
-                  <Button size="sm">⬇ Tải xuống MP4</Button>
-                </a>
+                <div className="flex flex-wrap gap-2">
+                  <a href={finalVideo} download>
+                    <Button size="sm">⬇ Tải xuống MP4</Button>
+                  </a>
+                  {approvedScript && (
+                    <a href={`/api/video-projects/${project.id}/export-script`} download>
+                      <Button size="sm" variant="outline">📄 Export kịch bản</Button>
+                    </a>
+                  )}
+                </div>
               </div>
             </div>
           </CardBody>
@@ -164,6 +269,11 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
               disabled={!!approvedScript || actionLoading !== null}
               onApprove={(scriptId) =>
                 doAction("approve", () => api.script.approve(project.id, scriptId))
+              }
+              onRegenerate={
+                !approvedScript
+                  ? (feedback) => doAction("script", () => api.script.regenerate(project.id, feedback))
+                  : undefined
               }
             />
           )}
@@ -240,19 +350,21 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
             <p className="text-xs text-brand-700 animate-pulse">Đang tạo clip avatar/product bằng Kling...</p>
           )}
 
-          {project.scenes.length > 0 && (
+          {videoClipAssets.length > 0 ? (
             <div className="space-y-2">
               <p className="text-xs text-gray-500">
-                {videoClipAssets.length} clip đã tạo / {project.scenes.filter((s) => s.status !== "completed" || s.clipUrl).length || project.scenes.length} cảnh
+                {videoClipAssets.length} clip đã tạo / {project.scenes.length} cảnh
               </p>
-              <div className="grid grid-cols-2 gap-2">
-                {project.scenes.slice(0, 4).map((scene) => (
-                  <div key={scene.id} className="rounded-lg border border-gray-200 px-3 py-2 text-xs">
-                    <div className="font-medium text-gray-700">Scene {scene.sceneIndex}: {scene.visualType}</div>
-                    <div className={scene.status === "completed" ? "text-green-700" : "text-gray-500"}>{scene.status}</div>
-                  </div>
-                ))}
-              </div>
+              <SceneGallery clips={videoClipAssets as any} projectId={project.id} />
+            </div>
+          ) : project.scenes.length > 0 && (
+            <div className="grid grid-cols-2 gap-2">
+              {project.scenes.slice(0, 4).map((scene) => (
+                <div key={scene.id} className="rounded-lg border border-gray-200 px-3 py-2 text-xs">
+                  <div className="font-medium text-gray-700">Scene {scene.sceneIndex}: {scene.visualType}</div>
+                  <div className={scene.status === "completed" ? "text-green-700" : "text-gray-500"}>{scene.status}</div>
+                </div>
+              ))}
             </div>
           )}
         </PipelineStep>
@@ -307,12 +419,25 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
           <PublishPanel
             projectId={project.id}
             disabled={actionLoading !== null}
+            platform={project.platform}
+            videoType={project.videoType}
           />
         )}
       </div>
 
-      {/* Project meta */}
+      {/* Tags */}
       <Card className="mt-6">
+        <CardBody>
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Tags</h3>
+            <ShareButton projectId={project.id} />
+          </div>
+          <TagEditor projectId={project.id} />
+        </CardBody>
+      </Card>
+
+      {/* Project meta */}
+      <Card className="mt-4">
         <CardBody>
           <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Chi tiết dự án</h3>
           <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
@@ -333,6 +458,235 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
           </dl>
         </CardBody>
       </Card>
+
+      {/* Cost breakdown */}
+      {project.costTracking && project.costTracking.length > 0 && (() => {
+        const cost = project.costTracking[0];
+        const total = parseFloat(cost.totalCostUsd);
+        const budget = cost.budgetLimitUsd ? parseFloat(cost.budgetLimitUsd) : null;
+        const items = [
+          { label: "LLM (Claude/GPT)", value: parseFloat(cost.llmCostUsd) },
+          { label: "TTS (ElevenLabs)", value: parseFloat(cost.ttsCostUsd) },
+          { label: "Video (Kling)", value: parseFloat(cost.videoCostUsd) },
+          { label: "Subtitle (Whisper)", value: parseFloat(cost.subtitleCostUsd) },
+          { label: "Storage (R2)", value: parseFloat(cost.storageCostUsd) },
+        ].filter((item) => item.value > 0);
+
+        return (
+          <Card className="mt-4">
+            <CardBody>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Chi phí</h3>
+                <span className="font-semibold text-gray-800 text-sm">
+                  ${total.toFixed(4)}
+                  {budget && (
+                    <span className="text-gray-400 font-normal"> / ${budget.toFixed(2)}</span>
+                  )}
+                </span>
+              </div>
+              {budget && (
+                <div className="mb-3">
+                  <div className="w-full bg-gray-200 rounded-full h-1.5">
+                    <div
+                      className={`h-1.5 rounded-full transition-all ${total / budget > 0.8 ? "bg-red-500" : "bg-brand-500"}`}
+                      style={{ width: `${Math.min(100, (total / budget) * 100)}%` }}
+                    />
+                  </div>
+                  <p className="text-xs text-gray-400 mt-1">{Math.round((total / budget) * 100)}% ngân sách đã dùng</p>
+                </div>
+              )}
+              {items.length > 0 && (
+                <dl className="space-y-1.5">
+                  {items.map(({ label, value }) => (
+                    <div key={label} className="flex items-center justify-between text-xs">
+                      <dt className="text-gray-500">{label}</dt>
+                      <dd className="text-gray-700 font-medium">${value.toFixed(4)}</dd>
+                    </div>
+                  ))}
+                </dl>
+              )}
+            </CardBody>
+          </Card>
+        );
+      })()}
+
+      {/* Notes editor */}
+      <NotesEditor projectId={project.id} initialNotes={(project as any).notes ?? ""} />
     </div>
+  );
+}
+
+function InlineTitle({
+  projectId,
+  title,
+  onSaved,
+}: {
+  projectId: string;
+  title: string;
+  onSaved: () => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState(title);
+  const [saving, setSaving] = useState(false);
+
+  async function save() {
+    if (!value.trim() || value === title) { setEditing(false); return; }
+    setSaving(true);
+    try {
+      await fetch(`/api/video-projects/${projectId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", "x-user-id": "demo-user" },
+        body: JSON.stringify({ title: value.trim() }),
+      });
+      onSaved();
+    } finally {
+      setSaving(false);
+      setEditing(false);
+    }
+  }
+
+  if (editing) {
+    return (
+      <input
+        autoFocus
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        onBlur={save}
+        onKeyDown={(e) => { if (e.key === "Enter") save(); if (e.key === "Escape") setEditing(false); }}
+        disabled={saving}
+        className="text-xl font-bold text-gray-900 border-b-2 border-brand-400 outline-none bg-transparent w-64"
+      />
+    );
+  }
+
+  return (
+    <h1
+      className="text-xl font-bold text-gray-900 cursor-pointer hover:underline decoration-dashed decoration-gray-300"
+      title="Click để sửa tiêu đề"
+      onClick={() => setEditing(true)}
+    >
+      {title}
+    </h1>
+  );
+}
+
+function NotesEditor({ projectId, initialNotes }: { projectId: string; initialNotes: string }) {
+  const [notes, setNotes] = useState(initialNotes);
+  const [status, setStatus] = useState<"idle" | "saving" | "saved">("idle");
+  const [showHistory, setShowHistory] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const { history, pushVersion } = useNotesHistory(projectId);
+
+  function handleChange(value: string) {
+    setNotes(value);
+    setStatus("saving");
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(async () => {
+      try {
+        await fetch(`/api/video-projects/${projectId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json", "x-user-id": "demo-user" },
+          body: JSON.stringify({ notes: value }),
+        });
+        pushVersion(value);
+        setStatus("saved");
+        setTimeout(() => setStatus("idle"), 2000);
+      } catch {
+        setStatus("idle");
+      }
+    }, 800);
+  }
+
+  function restoreVersion(text: string) {
+    setNotes(text);
+    setShowHistory(false);
+    handleChange(text);
+  }
+
+  return (
+    <Card className="mt-4">
+      <CardBody>
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Ghi chú</h3>
+          <div className="flex items-center gap-3">
+            {history.length > 0 && (
+              <button
+                onClick={() => setShowHistory(!showHistory)}
+                className="text-xs text-gray-400 hover:text-gray-600"
+              >
+                {showHistory ? "Ẩn lịch sử" : `Lịch sử (${history.length})`}
+              </button>
+            )}
+            {status === "saving" && <span className="text-xs text-gray-400 animate-pulse">Đang lưu...</span>}
+            {status === "saved" && <span className="text-xs text-green-600">✓ Đã lưu</span>}
+          </div>
+        </div>
+        <textarea
+          value={notes}
+          onChange={(e) => handleChange(e.target.value)}
+          placeholder="Thêm ghi chú cho project này..."
+          rows={3}
+          className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500 resize-none"
+        />
+        {showHistory && history.length > 0 && (
+          <div className="mt-3 border-t border-gray-100 pt-3 space-y-2 max-h-48 overflow-y-auto">
+            {history.map((v, i) => (
+              <div key={v.savedAt} className="flex items-start gap-2 group">
+                <span className="text-xs text-gray-400 flex-shrink-0 mt-0.5">
+                  {new Date(v.savedAt).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}
+                </span>
+                <p className="text-xs text-gray-600 flex-1 truncate">{v.text || <em className="text-gray-400">trống</em>}</p>
+                {i > 0 && (
+                  <button
+                    onClick={() => restoreVersion(v.text)}
+                    className="text-xs text-brand-600 hover:underline opacity-0 group-hover:opacity-100 flex-shrink-0"
+                  >
+                    Khôi phục
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </CardBody>
+    </Card>
+  );
+}
+
+function ShareButton({ projectId }: { projectId: string }) {
+  const [state, setState] = useState<"idle" | "loading" | "done">("idle");
+  const [shareUrl, setShareUrl] = useState("");
+
+  async function handleShare() {
+    setState("loading");
+    const res = await fetch(`/api/video-projects/${projectId}/share`, { method: "POST" });
+    const d = await res.json();
+    setShareUrl(d.shareUrl ?? "");
+    setState("done");
+  }
+
+  if (state === "done" && shareUrl) {
+    return (
+      <div className="flex items-center gap-2">
+        <input
+          readOnly
+          value={shareUrl}
+          className="text-xs border border-gray-200 rounded px-2 py-1 bg-gray-50 font-mono w-48 truncate"
+          onClick={(e) => { (e.target as HTMLInputElement).select(); navigator.clipboard.writeText(shareUrl); }}
+          title="Click để sao chép"
+        />
+        <button onClick={() => setState("idle")} className="text-xs text-gray-400 hover:text-gray-600">✕</button>
+      </div>
+    );
+  }
+
+  return (
+    <button
+      onClick={handleShare}
+      disabled={state === "loading"}
+      className="text-xs text-gray-400 hover:text-brand-600 transition-colors"
+    >
+      {state === "loading" ? "..." : "🔗 Chia sẻ"}
+    </button>
   );
 }

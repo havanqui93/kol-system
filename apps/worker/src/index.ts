@@ -1,4 +1,10 @@
 import Redis from "ioredis";
+import { validateWorkerEnv } from "./env.js";
+import { logger } from "./logger.js";
+import { prisma } from "@kol/database";
+
+// Fail fast if required env vars are missing
+validateWorkerEnv();
 import { createGenerateScriptWorker } from "./workers/generate-script.worker.js";
 import { createGenerateAudioWorker } from "./workers/generate-audio.worker.js";
 import { createGenerateKlingWorker } from "./workers/generate-kling.worker.js";
@@ -12,6 +18,9 @@ const connection = new Redis(REDIS_URL, {
   enableReadyCheck: false,
 });
 
+connection.on("connect", () => logger.info("Redis connected", { url: REDIS_URL }));
+connection.on("error", (err) => logger.error("Redis error", { error: err.message }));
+
 const workers = [
   createGenerateScriptWorker(connection),
   createGenerateAudioWorker(connection),
@@ -21,27 +30,114 @@ const workers = [
 ];
 
 for (const worker of workers) {
+  const workerLog = logger.child({ worker: worker.name });
+
   worker.on("completed", (job) => {
-    console.log(`[${worker.name}] Job ${job.id} completed`);
+    workerLog.info("Job completed", { jobId: job.id, duration: job.processedOn ? Date.now() - job.processedOn : undefined });
   });
-  worker.on("failed", (job, err) => {
-    console.error(`[${worker.name}] Job ${job?.id} failed:`, err.message);
+
+  worker.on("failed", async (job, err) => {
+    workerLog.error("Job failed", {
+      jobId: job?.id,
+      error: err.message,
+      attempts: job?.attemptsMade,
+    });
+
+    // Mark project as failed when all retry attempts exhausted
+    const projectId = (job?.data as any)?.projectId as string | undefined;
+    const maxAttempts = job?.opts?.attempts ?? 1;
+    if (projectId && job && job.attemptsMade >= maxAttempts) {
+      try {
+        await prisma.videoProject.update({
+          where: { id: projectId },
+          data: { status: "failed", errorMessage: err.message.slice(0, 500) },
+        });
+        workerLog.info("Project marked as failed", { projectId });
+      } catch (dbErr) {
+        workerLog.error("Failed to update project status", { projectId, error: String(dbErr) });
+      }
+    }
   });
+
   worker.on("error", (err) => {
-    console.error(`[${worker.name}] Worker error:`, err);
+    workerLog.error("Worker error", { error: err.message, stack: err.stack });
+  });
+
+  worker.on("active", (job) => {
+    workerLog.info("Job started", { jobId: job.id });
+  });
+
+  worker.on("stalled", (jobId) => {
+    workerLog.warn("Job stalled", { jobId });
   });
 }
 
-console.log(`KOL Worker started. Listening on ${REDIS_URL}`);
-console.log(`Active workers: ${workers.map((w) => w.name).join(", ")}`);
+logger.info("KOL Worker started", {
+  redisUrl: REDIS_URL,
+  workers: workers.map((w) => w.name),
+  nodeVersion: process.version,
+});
 
-// Graceful shutdown
-const shutdown = async () => {
-  console.log("Shutting down workers...");
+// Heartbeat — register this worker instance as alive every 30s
+const WORKER_ID = `worker-${process.pid}-${Date.now()}`;
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+
+async function sendHeartbeat() {
+  try {
+    await fetch(`${APP_URL}/api/workers/heartbeat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        workerId: WORKER_ID,
+        workerType: "bullmq",
+        version: process.version,
+      }),
+    });
+  } catch {
+    // Non-critical — worker continues even if heartbeat fails
+  }
+}
+
+sendHeartbeat();
+const heartbeatInterval = setInterval(sendHeartbeat, 30_000);
+
+// Graceful shutdown — wait for active jobs to drain before closing
+const shutdown = async (signal: string) => {
+  logger.info("Graceful shutdown initiated", { signal });
+
+  // Stop accepting new jobs
+  await Promise.all(workers.map((w) => w.pause()));
+
+  // Wait up to 120s for active jobs to finish
+  const drainTimeout = 120_000;
+  const drainStart = Date.now();
+
+  const drainAll = async () => {
+    while (Date.now() - drainStart < drainTimeout) {
+      const active = await Promise.all(workers.map((w) => w.getActiveCount()));
+      const totalActive = active.reduce((a, b) => a + b, 0);
+      if (totalActive === 0) break;
+      logger.info("Waiting for active jobs to finish", { totalActive });
+      await new Promise((r) => setTimeout(r, 2000));
+    }
+  };
+
+  clearInterval(heartbeatInterval);
+  await drainAll();
   await Promise.all(workers.map((w) => w.close()));
   await connection.quit();
+  logger.info("Workers shut down cleanly");
   process.exit(0);
 };
 
-process.on("SIGTERM", shutdown);
-process.on("SIGINT", shutdown);
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on("SIGINT", () => shutdown("SIGINT"));
+
+process.on("uncaughtException", (err) => {
+  logger.error("Uncaught exception", { error: err.message, stack: err.stack });
+  process.exit(1);
+});
+
+process.on("unhandledRejection", (reason) => {
+  logger.error("Unhandled rejection", { reason: String(reason) });
+});
