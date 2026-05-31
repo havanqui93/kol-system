@@ -4,6 +4,7 @@ import { prisma } from "@kol/database";
 import { ProjectCard } from "@/components/project/project-card";
 import { ProjectFilter } from "@/components/project/project-filter";
 import { StatusTabs } from "@/components/project/status-tabs";
+import { ProjectListWithSelect } from "@/components/project/bulk-select-bar";
 import { Button } from "@/components/ui/button";
 import { DashboardSkeleton } from "@/components/ui/skeleton";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
@@ -196,11 +197,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
         <>
           <ErrorBoundary>
             <Suspense fallback={<DashboardSkeleton />}>
-              <div className="grid gap-3">
-                {projects.map((project) => (
-                  <ProjectCard key={project.id} project={project} />
-                ))}
-              </div>
+              <ProjectListWithSelect projects={projects} />
             </Suspense>
           </ErrorBoundary>
 

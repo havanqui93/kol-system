@@ -45,8 +45,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <Link href="/schedule" className="text-gray-600 hover:text-gray-900 transition-colors">
                   Lịch đăng
                 </Link>
+                <Link href="/assets" className="text-gray-600 hover:text-gray-900 transition-colors">
+                  Assets
+                </Link>
                 <Link href="/admin/costs" className="text-gray-600 hover:text-gray-900 transition-colors">
                   Chi phí
+                </Link>
+                <Link href="/docs" className="text-gray-600 hover:text-gray-900 transition-colors">
+                  API Docs
                 </Link>
                 <Link href="/settings" className="text-gray-600 hover:text-gray-900 transition-colors">
                   Cài đặt

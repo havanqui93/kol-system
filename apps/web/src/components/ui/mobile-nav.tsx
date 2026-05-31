@@ -8,7 +8,9 @@ const NAV_LINKS = [
   { href: "/products", label: "Sản phẩm" },
   { href: "/kol-profiles", label: "KOL Profiles" },
   { href: "/schedule", label: "Lịch đăng" },
+  { href: "/assets", label: "Assets" },
   { href: "/admin/costs", label: "Chi phí" },
+  { href: "/docs", label: "API Docs" },
   { href: "/settings", label: "Cài đặt" },
 ];
 

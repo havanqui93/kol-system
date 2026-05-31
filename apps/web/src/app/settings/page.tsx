@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
@@ -176,6 +176,77 @@ function PlatformCard({
   );
 }
 
+function WebhookSettings() {
+  const [url, setUrl] = useState("");
+  const [saved, setSaved] = useState<string | null>(null);
+  const [status, setStatus] = useState<"idle" | "saving" | "testing" | "saved" | "error">("idle");
+  const [msg, setMsg] = useState("");
+
+  useEffect(() => {
+    fetch("/api/webhooks/test", { headers: { "x-user-id": "demo-user" } })
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.webhookUrl) { setUrl(d.webhookUrl); setSaved(d.webhookUrl); }
+      });
+  }, []);
+
+  async function handleSave() {
+    setStatus("saving");
+    try {
+      const res = await fetch("/api/webhooks/test", {
+        method: "POST",
+        headers: { "content-type": "application/json", "x-user-id": "demo-user" },
+        body: JSON.stringify({ url: url.trim() || undefined }),
+      });
+      const d = await res.json();
+      if (!res.ok) throw new Error(d.error ?? "Lỗi");
+      setSaved(d.webhookUrl);
+      setStatus("saved");
+      setMsg(d.testFired ? "✓ Đã lưu và gửi test ping" : "✓ Đã xoá webhook");
+    } catch (e) {
+      setStatus("error");
+      setMsg(e instanceof Error ? e.message : "Lỗi");
+    }
+  }
+
+  async function handleRemove() {
+    await fetch("/api/webhooks/test", { method: "DELETE", headers: { "x-user-id": "demo-user" } });
+    setUrl(""); setSaved(null); setStatus("idle"); setMsg("");
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <h2 className="font-semibold text-gray-800">Webhook thông báo</h2>
+        <p className="text-xs text-gray-500 mt-0.5">Nhận HTTP POST khi video hoàn thành hoặc đăng xong</p>
+      </CardHeader>
+      <CardBody className="space-y-3">
+        <div className="flex gap-2">
+          <input
+            type="url"
+            value={url}
+            onChange={(e) => { setUrl(e.target.value); setStatus("idle"); setMsg(""); }}
+            placeholder="https://your-server.com/webhook"
+            className="flex-1 text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500"
+          />
+          <Button size="sm" loading={status === "saving"} onClick={handleSave}>
+            {saved ? "Cập nhật" : "Lưu"}
+          </Button>
+          {saved && (
+            <Button size="sm" variant="outline" onClick={handleRemove}>Xoá</Button>
+          )}
+        </div>
+        {msg && (
+          <p className={`text-xs ${status === "error" ? "text-red-600" : "text-green-600"}`}>{msg}</p>
+        )}
+        <div className="text-xs text-gray-400 bg-gray-50 rounded-lg p-3 font-mono leading-relaxed">
+          {`POST <your-url>\n{"event":"project.completed","projectId":"...","status":"...","finalVideoUrl":"..."}`}
+        </div>
+      </CardBody>
+    </Card>
+  );
+}
+
 export default function SettingsPage() {
   const [accounts, setAccounts] = useState<SocialAccount[]>([]);
   const [loading, setLoading] = useState(true);
@@ -236,6 +307,12 @@ export default function SettingsPage() {
             ))}
           </div>
         )}
+      </div>
+
+      {/* Webhook settings */}
+      <div className="mb-8">
+        <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Webhook</h2>
+        <WebhookSettings />
       </div>
 
       {/* Environment status */}

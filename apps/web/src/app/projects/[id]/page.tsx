@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useJobProgress } from "@/hooks/use-job-progress";
+import { useNotesHistory } from "@/hooks/use-notes-history";
 import { usePageVisibilityRefresh } from "@/hooks/use-page-visibility-refresh";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -549,7 +550,9 @@ function InlineTitle({
 function NotesEditor({ projectId, initialNotes }: { projectId: string; initialNotes: string }) {
   const [notes, setNotes] = useState(initialNotes);
   const [status, setStatus] = useState<"idle" | "saving" | "saved">("idle");
+  const [showHistory, setShowHistory] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const { history, pushVersion } = useNotesHistory(projectId);
 
   function handleChange(value: string) {
     setNotes(value);
@@ -562,6 +565,7 @@ function NotesEditor({ projectId, initialNotes }: { projectId: string; initialNo
           headers: { "Content-Type": "application/json", "x-user-id": "demo-user" },
           body: JSON.stringify({ notes: value }),
         });
+        pushVersion(value);
         setStatus("saved");
         setTimeout(() => setStatus("idle"), 2000);
       } catch {
@@ -570,13 +574,29 @@ function NotesEditor({ projectId, initialNotes }: { projectId: string; initialNo
     }, 800);
   }
 
+  function restoreVersion(text: string) {
+    setNotes(text);
+    setShowHistory(false);
+    handleChange(text);
+  }
+
   return (
     <Card className="mt-4">
       <CardBody>
         <div className="flex items-center justify-between mb-2">
           <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Ghi chú</h3>
-          {status === "saving" && <span className="text-xs text-gray-400 animate-pulse">Đang lưu...</span>}
-          {status === "saved" && <span className="text-xs text-green-600">✓ Đã lưu</span>}
+          <div className="flex items-center gap-3">
+            {history.length > 0 && (
+              <button
+                onClick={() => setShowHistory(!showHistory)}
+                className="text-xs text-gray-400 hover:text-gray-600"
+              >
+                {showHistory ? "Ẩn lịch sử" : `Lịch sử (${history.length})`}
+              </button>
+            )}
+            {status === "saving" && <span className="text-xs text-gray-400 animate-pulse">Đang lưu...</span>}
+            {status === "saved" && <span className="text-xs text-green-600">✓ Đã lưu</span>}
+          </div>
         </div>
         <textarea
           value={notes}
@@ -585,6 +605,26 @@ function NotesEditor({ projectId, initialNotes }: { projectId: string; initialNo
           rows={3}
           className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500 resize-none"
         />
+        {showHistory && history.length > 0 && (
+          <div className="mt-3 border-t border-gray-100 pt-3 space-y-2 max-h-48 overflow-y-auto">
+            {history.map((v, i) => (
+              <div key={v.savedAt} className="flex items-start gap-2 group">
+                <span className="text-xs text-gray-400 flex-shrink-0 mt-0.5">
+                  {new Date(v.savedAt).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}
+                </span>
+                <p className="text-xs text-gray-600 flex-1 truncate">{v.text || <em className="text-gray-400">trống</em>}</p>
+                {i > 0 && (
+                  <button
+                    onClick={() => restoreVersion(v.text)}
+                    className="text-xs text-brand-600 hover:underline opacity-0 group-hover:opacity-100 flex-shrink-0"
+                  >
+                    Khôi phục
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </CardBody>
     </Card>
   );
