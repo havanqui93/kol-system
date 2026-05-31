@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import type { SubtitleProvider, SubtitleOptions, SubtitleResult, SubtitleSegment, WordTiming } from "../types.js";
+import { withRetry } from "../retry.js";
 
 const COST_PER_MINUTE = 0.006; // OpenAI Whisper pricing
 
@@ -11,41 +12,41 @@ export class WhisperSubtitleProvider implements SubtitleProvider {
   }
 
   async transcribe(audioUrl: string, options?: SubtitleOptions): Promise<SubtitleResult> {
-    // Fetch audio from URL
-    const audioResponse = await fetch(audioUrl);
-    const audioBlob = await audioResponse.blob();
-    const audioFile = new File([audioBlob], "audio.mp3", { type: "audio/mpeg" });
+    return withRetry(async () => {
+      const audioResponse = await fetch(audioUrl);
+      const audioBlob = await audioResponse.blob();
+      const audioFile = new File([audioBlob], "audio.mp3", { type: "audio/mpeg" });
 
-    const response = await this.client.audio.transcriptions.create({
-      file: audioFile,
-      model: "whisper-1",
-      language: options?.language === "vi" ? "vi" : undefined,
-      response_format: "verbose_json",
-      timestamp_granularities: options?.wordLevel ? ["word", "segment"] : ["segment"],
-    });
+      const response = await this.client.audio.transcriptions.create({
+        file: audioFile,
+        model: "whisper-1",
+        language: options?.language === "vi" ? "vi" : undefined,
+        response_format: "verbose_json",
+        timestamp_granularities: options?.wordLevel ? ["word", "segment"] : ["segment"],
+      });
 
-    const segments: SubtitleSegment[] = (response as any).segments?.map((s: any) => ({
-      startMs: Math.round(s.start * 1000),
-      endMs: Math.round(s.end * 1000),
-      text: s.text.trim(),
-      words: s.words?.map((w: any) => ({
-        word: w.word,
-        startMs: Math.round(w.start * 1000),
-        endMs: Math.round(w.end * 1000),
-      })),
-    })) ?? [];
+      const segments: SubtitleSegment[] = (response as any).segments?.map((s: any) => ({
+        startMs: Math.round(s.start * 1000),
+        endMs: Math.round(s.end * 1000),
+        text: s.text.trim(),
+        words: s.words?.map((w: any) => ({
+          word: w.word,
+          startMs: Math.round(w.start * 1000),
+          endMs: Math.round(w.end * 1000),
+        })),
+      })) ?? [];
 
-    const durationMinutes = (segments.at(-1)?.endMs ?? 0) / 60000;
-    return {
-      segments,
-      srtContent: this.toSRT(segments),
-      vttContent: this.toVTT(segments),
-      cost: { costUsd: durationMinutes * COST_PER_MINUTE, durationMs: (segments.at(-1)?.endMs ?? 0) },
-    };
+      const durationMinutes = (segments.at(-1)?.endMs ?? 0) / 60000;
+      return {
+        segments,
+        srtContent: this.toSRT(segments),
+        vttContent: this.toVTT(segments),
+        cost: { costUsd: durationMinutes * COST_PER_MINUTE, durationMs: (segments.at(-1)?.endMs ?? 0) },
+      };
+    }, { maxAttempts: 3, initialDelayMs: 2000 });
   }
 
   fromScript(script: string, wordTimings: WordTiming[]): SubtitleResult {
-    // Build segments from word timings — group into ~5-word chunks
     const chunkSize = 5;
     const segments: SubtitleSegment[] = [];
     for (let i = 0; i < wordTimings.length; i += chunkSize) {

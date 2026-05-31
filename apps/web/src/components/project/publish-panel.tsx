@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { suggestHashtags } from "@/lib/hashtags";
 
 interface SocialAccount {
   id: string;
@@ -40,16 +41,21 @@ const PUBLISH_STATUS_BADGE: Record<string, { variant: "yellow" | "green" | "red"
 interface PublishPanelProps {
   projectId: string;
   disabled: boolean;
+  platform?: string;
+  videoType?: string;
 }
 
-export function PublishPanel({ projectId, disabled }: PublishPanelProps) {
+export function PublishPanel({ projectId, disabled, platform = "tiktok", videoType = "product_review" }: PublishPanelProps) {
   const [accounts, setAccounts] = useState<SocialAccount[]>([]);
   const [publishJobs, setPublishJobs] = useState<PublishJob[]>([]);
   const [selectedAccount, setSelectedAccount] = useState<string>("");
   const [scheduledAt, setScheduledAt] = useState<string>("");
+  const [hashtags, setHashtags] = useState<string[]>([]);
   const [publishing, setPublishing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const suggestedTags = suggestHashtags({ platform, videoType, maxTags: 15 });
 
   async function loadData() {
     const [accountsRes, jobsRes] = await Promise.all([
@@ -84,6 +90,7 @@ export function PublishPanel({ projectId, disabled }: PublishPanelProps) {
           platform: account.platform,
           socialAccountId: selectedAccount,
           scheduledAt: scheduledAt || undefined,
+          hashtags: hashtags.length > 0 ? hashtags : undefined,
         }),
       });
       if (!res.ok) {
@@ -168,6 +175,37 @@ export function PublishPanel({ projectId, disabled }: PublishPanelProps) {
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
               />
               <p className="mt-1 text-xs text-gray-400">Để trống để đăng ngay</p>
+            </div>
+
+            {/* Hashtag suggestions */}
+            <div>
+              <p className="text-xs font-medium text-gray-600 mb-1.5">Hashtag gợi ý</p>
+              <div className="flex flex-wrap gap-1.5">
+                {suggestedTags.map((tag) => {
+                  const selected = hashtags.includes(tag);
+                  return (
+                    <button
+                      key={tag}
+                      type="button"
+                      onClick={() =>
+                        setHashtags((prev) =>
+                          selected ? prev.filter((t) => t !== tag) : [...prev, tag]
+                        )
+                      }
+                      className={`text-xs px-2 py-1 rounded-full border transition-colors ${
+                        selected
+                          ? "bg-brand-100 border-brand-300 text-brand-700"
+                          : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
+                      }`}
+                    >
+                      {tag}
+                    </button>
+                  );
+                })}
+              </div>
+              {hashtags.length > 0 && (
+                <p className="text-xs text-gray-400 mt-1">{hashtags.length} hashtag đã chọn</p>
+              )}
             </div>
 
             {error && (

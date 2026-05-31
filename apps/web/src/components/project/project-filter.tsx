@@ -21,6 +21,12 @@ const PLATFORM_OPTIONS = [
   { value: "youtube_shorts", label: "YouTube Shorts" },
 ];
 
+const SORT_OPTIONS = [
+  { value: "newest", label: "Mới nhất" },
+  { value: "oldest", label: "Cũ nhất" },
+  { value: "status", label: "Theo trạng thái" },
+];
+
 export function ProjectFilter() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -73,6 +79,19 @@ export function ProjectFilter() {
         className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white"
       >
         {PLATFORM_OPTIONS.map((o) => (
+          <option key={o.value} value={o.value}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+
+      {/* Sort */}
+      <select
+        value={searchParams.get("sort") ?? "newest"}
+        onChange={(e) => updateFilter("sort", e.target.value)}
+        className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white"
+      >
+        {SORT_OPTIONS.map((o) => (
           <option key={o.value} value={o.value}>
             {o.label}
           </option>

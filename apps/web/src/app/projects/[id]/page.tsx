@@ -363,6 +363,8 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
           <PublishPanel
             projectId={project.id}
             disabled={actionLoading !== null}
+            platform={project.platform}
+            videoType={project.videoType}
           />
         )}
       </div>

@@ -12,10 +12,19 @@ export const dynamic = "force-dynamic";
 
 const PAGE_SIZE = 20;
 
+type SortOrder = "newest" | "oldest" | "status";
+
+function buildOrderBy(sort: SortOrder) {
+  if (sort === "oldest") return { createdAt: "asc" as const };
+  if (sort === "status") return { status: "asc" as const };
+  return { createdAt: "desc" as const };
+}
+
 async function getProjects(
   q: string,
   status: string,
   platform: string,
+  sort: SortOrder,
   page: number
 ): Promise<{ projects: Project[]; total: number }> {
   const where = {
@@ -32,7 +41,7 @@ async function getProjects(
   const [projects, total] = await Promise.all([
     prisma.videoProject.findMany({
       where,
-      orderBy: { createdAt: "desc" },
+      orderBy: buildOrderBy(sort),
       skip: (page - 1) * PAGE_SIZE,
       take: PAGE_SIZE,
       include: {
@@ -62,17 +71,18 @@ async function getAllStats() {
 }
 
 interface PageProps {
-  searchParams: { q?: string; status?: string; platform?: string; page?: string };
+  searchParams: { q?: string; status?: string; platform?: string; page?: string; sort?: string };
 }
 
 export default async function DashboardPage({ searchParams }: PageProps) {
   const q = searchParams.q ?? "";
   const status = searchParams.status ?? "";
   const platform = searchParams.platform ?? "";
+  const sort = (searchParams.sort ?? "newest") as SortOrder;
   const page = Math.max(1, Number(searchParams.page ?? "1"));
 
   const [{ projects, total }, stats] = await Promise.all([
-    getProjects(q, status, platform, page),
+    getProjects(q, status, platform, sort, page),
     getAllStats(),
   ]);
 
