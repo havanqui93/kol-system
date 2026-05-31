@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useJobProgress } from "@/hooks/use-job-progress";
+import { usePageVisibilityRefresh } from "@/hooks/use-page-visibility-refresh";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useProject } from "@/hooks/use-project";
@@ -41,6 +42,7 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
   const [archiving, setArchiving] = useState(false);
   const isProcessing = ["script_generating", "audio_generating", "video_generating", "rendering", "publishing"].includes(status);
   const { overallProgress } = useJobProgress(params.id, isProcessing);
+  usePageVisibilityRefresh(refresh, 5000);
 
   async function doAction(key: string, fn: () => Promise<unknown>) {
     setActionLoading(key);
