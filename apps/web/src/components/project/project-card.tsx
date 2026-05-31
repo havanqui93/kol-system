@@ -146,15 +146,22 @@ export function ProjectCard({ project }: { project: Project }) {
 
             <div className="mt-2 flex items-center justify-between">
               <span className="text-xs text-gray-400">{timeAgo(project.createdAt)}</span>
-              {isProcessing && (
-                <span className="flex items-center gap-1 text-xs text-yellow-700">
-                  <span className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse" />
-                  Đang xử lý
-                </span>
-              )}
-              {project.finalVideoUrl && (
-                <span className="text-xs text-green-700 font-medium">✓ Video sẵn sàng</span>
-              )}
+              <div className="flex items-center gap-3">
+                {(project.costTracking as any)?.[0]?.totalCostUsd && (
+                  <span className="text-xs text-gray-400">
+                    ${parseFloat((project.costTracking as any)[0].totalCostUsd).toFixed(3)}
+                  </span>
+                )}
+                {isProcessing && (
+                  <span className="flex items-center gap-1 text-xs text-yellow-700">
+                    <span className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse" />
+                    Đang xử lý
+                  </span>
+                )}
+                {project.finalVideoUrl && (
+                  <span className="text-xs text-green-700 font-medium">✓ Video sẵn sàng</span>
+                )}
+              </div>
             </div>
           </div>
         </CardBody>

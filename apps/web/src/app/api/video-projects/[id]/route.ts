@@ -26,6 +26,7 @@ export async function GET(_request: Request, { params }: { params: { id: string 
 const PatchSchema = z.object({
   title: z.string().optional(),
   brandTone: z.string().optional(),
+  notes: z.string().max(2000).optional(),
   platform: z.enum(["tiktok", "facebook", "instagram", "youtube_shorts"]).optional(),
   durationSeconds: z.number().int().min(15).max(60).optional(),
 });

@@ -442,6 +442,54 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
           </Card>
         );
       })()}
+
+      {/* Notes editor */}
+      <NotesEditor projectId={project.id} initialNotes={(project as any).notes ?? ""} />
     </div>
+  );
+}
+
+function NotesEditor({ projectId, initialNotes }: { projectId: string; initialNotes: string }) {
+  const [notes, setNotes] = useState(initialNotes);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  async function save() {
+    setSaving(true);
+    setSaved(false);
+    try {
+      await fetch(`/api/video-projects/${projectId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", "x-user-id": "demo-user" },
+        body: JSON.stringify({ notes }),
+      });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Card className="mt-4">
+      <CardBody>
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Ghi chú</h3>
+          {saved && <span className="text-xs text-green-600">✓ Đã lưu</span>}
+        </div>
+        <textarea
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          placeholder="Thêm ghi chú cho project này..."
+          rows={3}
+          className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500 resize-none"
+        />
+        <div className="mt-2 flex justify-end">
+          <Button size="sm" variant="secondary" loading={saving} onClick={save}>
+            Lưu ghi chú
+          </Button>
+        </div>
+      </CardBody>
+    </Card>
   );
 }

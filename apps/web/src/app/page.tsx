@@ -47,6 +47,7 @@ async function getProjects(
       include: {
         product: { select: { name: true } },
         kolProfile: { select: { name: true } },
+        costTracking: { select: { totalCostUsd: true } },
       },
     }),
     prisma.videoProject.count({ where }),
