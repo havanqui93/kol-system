@@ -43,14 +43,20 @@ function CopyButton({ text }: { text: string }) {
   );
 }
 
+function wordCount(text: string) {
+  return text.trim().split(/\s+/).filter(Boolean).length;
+}
+
 function ScriptSection({ emoji, label, text }: { emoji: string; label: string; text: string | null }) {
   if (!text) return null;
+  const wc = wordCount(text);
   return (
     <div className="flex gap-3 group">
       <span className="text-xl flex-shrink-0 mt-0.5">{emoji}</span>
       <div className="flex-1">
-        <div className="flex items-center gap-1 mb-0.5">
+        <div className="flex items-center gap-2 mb-0.5">
           <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{label}</span>
+          <span className="text-xs text-gray-300">{wc} từ</span>
           <CopyButton text={text} />
         </div>
         <p className="text-sm text-gray-800 leading-relaxed">{text}</p>

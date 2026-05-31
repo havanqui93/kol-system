@@ -48,6 +48,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <Link href="/assets" className="text-gray-600 hover:text-gray-900 transition-colors">
                   Assets
                 </Link>
+                <Link href="/admin/queues" className="text-gray-600 hover:text-gray-900 transition-colors">
+                  Queues
+                </Link>
                 <Link href="/admin/costs" className="text-gray-600 hover:text-gray-900 transition-colors">
                   Chi phí
                 </Link>

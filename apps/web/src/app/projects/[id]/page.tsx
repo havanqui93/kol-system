@@ -15,6 +15,7 @@ import { PageSpinner } from "@/components/ui/spinner";
 import { ScriptViewer } from "@/components/project/script-viewer";
 import { PipelineStep } from "@/components/project/pipeline-step";
 import { PublishPanel } from "@/components/project/publish-panel";
+import { TagEditor } from "@/components/project/tag-editor";
 
 // Helper: which pipeline step is each status on
 function getStepStatus(projectStatus: string, stepStatuses: string[], activeStatuses: string[], doneStatuses: string[]) {
@@ -413,8 +414,19 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
         )}
       </div>
 
-      {/* Project meta */}
+      {/* Tags */}
       <Card className="mt-6">
+        <CardBody>
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Tags</h3>
+            <ShareButton projectId={project.id} />
+          </div>
+          <TagEditor projectId={project.id} />
+        </CardBody>
+      </Card>
+
+      {/* Project meta */}
+      <Card className="mt-4">
         <CardBody>
           <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Chi tiết dự án</h3>
           <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
@@ -627,5 +639,43 @@ function NotesEditor({ projectId, initialNotes }: { projectId: string; initialNo
         )}
       </CardBody>
     </Card>
+  );
+}
+
+function ShareButton({ projectId }: { projectId: string }) {
+  const [state, setState] = useState<"idle" | "loading" | "done">("idle");
+  const [shareUrl, setShareUrl] = useState("");
+
+  async function handleShare() {
+    setState("loading");
+    const res = await fetch(`/api/video-projects/${projectId}/share`, { method: "POST" });
+    const d = await res.json();
+    setShareUrl(d.shareUrl ?? "");
+    setState("done");
+  }
+
+  if (state === "done" && shareUrl) {
+    return (
+      <div className="flex items-center gap-2">
+        <input
+          readOnly
+          value={shareUrl}
+          className="text-xs border border-gray-200 rounded px-2 py-1 bg-gray-50 font-mono w-48 truncate"
+          onClick={(e) => { (e.target as HTMLInputElement).select(); navigator.clipboard.writeText(shareUrl); }}
+          title="Click để sao chép"
+        />
+        <button onClick={() => setState("idle")} className="text-xs text-gray-400 hover:text-gray-600">✕</button>
+      </div>
+    );
+  }
+
+  return (
+    <button
+      onClick={handleShare}
+      disabled={state === "loading"}
+      className="text-xs text-gray-400 hover:text-brand-600 transition-colors"
+    >
+      {state === "loading" ? "..." : "🔗 Chia sẻ"}
+    </button>
   );
 }

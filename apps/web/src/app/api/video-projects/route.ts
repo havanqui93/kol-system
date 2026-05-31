@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@kol/database";
 import { ensureUser, getRequestUserId } from "@/lib/user";
 import { zodErrorResponse } from "@/lib/zod-error";
+import { checkRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
 
 const VIDEO_TYPE_LABELS: Record<string, string> = {
   product_review: "Review",
@@ -57,6 +58,9 @@ const CreateProjectSchema = z.object({
 
 // POST /api/video-projects
 export async function POST(request: Request) {
+  const rateLimitResponse = await checkRateLimit(request, RATE_LIMITS.createProject);
+  if (rateLimitResponse) return rateLimitResponse;
+
   try {
     const body = await request.json();
     const validated = CreateProjectSchema.parse(body);
