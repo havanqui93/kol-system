@@ -17,6 +17,7 @@ import { PipelineStep } from "@/components/project/pipeline-step";
 import { PublishPanel } from "@/components/project/publish-panel";
 import { TagEditor } from "@/components/project/tag-editor";
 import { PlatformPreview } from "@/components/project/platform-preview";
+import { SceneGallery } from "@/components/project/scene-gallery";
 
 // Helper: which pipeline step is each status on
 function getStepStatus(projectStatus: string, stepStatuses: string[], activeStatuses: string[], doneStatuses: string[]) {
@@ -349,19 +350,21 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
             <p className="text-xs text-brand-700 animate-pulse">Đang tạo clip avatar/product bằng Kling...</p>
           )}
 
-          {project.scenes.length > 0 && (
+          {videoClipAssets.length > 0 ? (
             <div className="space-y-2">
               <p className="text-xs text-gray-500">
-                {videoClipAssets.length} clip đã tạo / {project.scenes.filter((s) => s.status !== "completed" || s.clipUrl).length || project.scenes.length} cảnh
+                {videoClipAssets.length} clip đã tạo / {project.scenes.length} cảnh
               </p>
-              <div className="grid grid-cols-2 gap-2">
-                {project.scenes.slice(0, 4).map((scene) => (
-                  <div key={scene.id} className="rounded-lg border border-gray-200 px-3 py-2 text-xs">
-                    <div className="font-medium text-gray-700">Scene {scene.sceneIndex}: {scene.visualType}</div>
-                    <div className={scene.status === "completed" ? "text-green-700" : "text-gray-500"}>{scene.status}</div>
-                  </div>
-                ))}
-              </div>
+              <SceneGallery clips={videoClipAssets as any} projectId={project.id} />
+            </div>
+          ) : project.scenes.length > 0 && (
+            <div className="grid grid-cols-2 gap-2">
+              {project.scenes.slice(0, 4).map((scene) => (
+                <div key={scene.id} className="rounded-lg border border-gray-200 px-3 py-2 text-xs">
+                  <div className="font-medium text-gray-700">Scene {scene.sceneIndex}: {scene.visualType}</div>
+                  <div className={scene.status === "completed" ? "text-green-700" : "text-gray-500"}>{scene.status}</div>
+                </div>
+              ))}
             </div>
           )}
         </PipelineStep>
