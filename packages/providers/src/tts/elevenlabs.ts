@@ -1,4 +1,5 @@
 import type { TTSProvider, TTSOptions, TTSResult, TTSGender, TTSVoiceStyle, TTSLanguage } from "../types.js";
+import { withRetry } from "../retry.js";
 
 const COST_PER_CHAR = 0.00003; // ElevenLabs Creator plan ~$22/1M chars
 
@@ -21,38 +22,39 @@ export class ElevenLabsTTSProvider implements TTSProvider {
   async synthesize(text: string, options?: TTSOptions): Promise<TTSResult> {
     const voiceId = options?.voiceId ?? this.resolveVoiceId(options?.gender, options?.style);
 
-    const response = await fetch(`${this.baseUrl}/text-to-speech/${voiceId}/with-timestamps`, {
-      method: "POST",
-      headers: { "xi-api-key": this.apiKey, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        text,
-        model_id: "eleven_turbo_v2_5",
-        voice_settings: { stability: 0.5, similarity_boost: 0.75 },
-        language_code: options?.language === "vi" ? "vi" : "en",
-      }),
-    });
+    return withRetry(async () => {
+      const response = await fetch(`${this.baseUrl}/text-to-speech/${voiceId}/with-timestamps`, {
+        method: "POST",
+        headers: { "xi-api-key": this.apiKey, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text,
+          model_id: "eleven_turbo_v2_5",
+          voice_settings: { stability: 0.5, similarity_boost: 0.75 },
+          language_code: options?.language === "vi" ? "vi" : "en",
+        }),
+      });
 
-    if (!response.ok) {
-      throw new Error(`ElevenLabs TTS failed: ${response.status} ${await response.text()}`);
-    }
+      if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`ElevenLabs TTS failed: ${response.status} ${errText}`);
+      }
 
-    const json = (await response.json()) as {
-      audio_base64: string;
-      alignment: { characters: string[]; character_start_times_seconds: number[]; character_end_times_seconds: number[] };
-    };
+      const json = (await response.json()) as {
+        audio_base64: string;
+        alignment: { characters: string[]; character_start_times_seconds: number[]; character_end_times_seconds: number[] };
+      };
 
-    // Upload audio to buffer (caller is responsible for storage)
-    const audioBuffer = Buffer.from(json.audio_base64, "base64");
-    const durationMs = (json.alignment.character_end_times_seconds.at(-1) ?? 0) * 1000;
+      const durationMs = (json.alignment.character_end_times_seconds.at(-1) ?? 0) * 1000;
 
-    return {
-      audioUrl: `data:audio/mpeg;base64,${json.audio_base64}`, // caller should upload to S3
-      durationMs,
-      cost: { costUsd: text.length * COST_PER_CHAR, durationMs },
-    };
+      return {
+        audioUrl: `data:audio/mpeg;base64,${json.audio_base64}`,
+        durationMs,
+        cost: { costUsd: text.length * COST_PER_CHAR, durationMs },
+      };
+    }, { maxAttempts: 3, initialDelayMs: 2000 });
   }
 
-  async listVoices(language?: TTSLanguage) {
+  async listVoices(_language?: TTSLanguage) {
     return [
       { id: VI_VOICES.female_energetic, name: "Sara (Energetic)", gender: "female" as TTSGender, style: "energetic" as TTSVoiceStyle },
       { id: VI_VOICES.female_professional, name: "Rachel (Professional)", gender: "female" as TTSGender, style: "professional" as TTSVoiceStyle },

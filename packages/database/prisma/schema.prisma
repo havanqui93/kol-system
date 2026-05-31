@@ -180,6 +180,7 @@ model VideoProject {
   errorMessage    String?
   thumbnailUrl    String?
   finalVideoUrl   String?
+  notes           String?            // Internal notes / user feedback
   createdAt       DateTime           @default(now())
   updatedAt       DateTime           @updatedAt
 

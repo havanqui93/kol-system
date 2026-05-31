@@ -4,6 +4,7 @@ import type {
   TextToVideoOptions,
   VideoJobResult,
 } from "../types.js";
+import { withRetry } from "../retry.js";
 
 // Kling via fal.ai — cost: ~$0.14/5s clip at standard quality
 const COST_PER_5S = 0.14;
@@ -13,7 +14,8 @@ export class KlingVideoProvider implements VideoProvider {
   private baseUrl = "https://fal.run";
 
   constructor(apiKey?: string) {
-    this.apiKey = apiKey ?? process.env.FAL_API_KEY ?? "";
+    // Support both FAL_KEY and FAL_API_KEY env var names
+    this.apiKey = apiKey ?? process.env.FAL_KEY ?? process.env.FAL_API_KEY ?? "";
   }
 
   async imageToVideo(options: ImageToVideoOptions): Promise<VideoJobResult> {
@@ -26,8 +28,10 @@ export class KlingVideoProvider implements VideoProvider {
       camera_movement: options.cameraMovement ?? "static",
     };
 
-    const response = await this.submitJob("fal-ai/kling-video/v1.6/standard/image-to-video", body);
-    return response;
+    return withRetry(
+      () => this.submitJob("fal-ai/kling-video/v1.6/standard/image-to-video", body),
+      { maxAttempts: 2, initialDelayMs: 5000 }
+    );
   }
 
   async textToVideo(options: TextToVideoOptions): Promise<VideoJobResult> {
@@ -38,30 +42,34 @@ export class KlingVideoProvider implements VideoProvider {
       aspect_ratio: options.aspectRatio ?? "9:16",
     };
 
-    const response = await this.submitJob("fal-ai/kling-video/v1.6/standard/text-to-video", body);
-    return response;
+    return withRetry(
+      () => this.submitJob("fal-ai/kling-video/v1.6/standard/text-to-video", body),
+      { maxAttempts: 2, initialDelayMs: 5000 }
+    );
   }
 
   async getJobStatus(jobId: string): Promise<VideoJobResult> {
-    const response = await fetch(`${this.baseUrl}/queue/requests/${jobId}`, {
-      headers: { Authorization: `Key ${this.apiKey}` },
-    });
+    return withRetry(async () => {
+      const response = await fetch(`${this.baseUrl}/queue/requests/${jobId}`, {
+        headers: { Authorization: `Key ${this.apiKey}` },
+      });
 
-    if (!response.ok) throw new Error(`Kling status check failed: ${response.status}`);
+      if (!response.ok) throw new Error(`Kling status check failed: ${response.status}`);
 
-    const json = (await response.json()) as {
-      status: string;
-      response?: { video?: { url: string } };
-    };
+      const json = (await response.json()) as {
+        status: string;
+        response?: { video?: { url: string } };
+      };
 
-    const status = this.mapStatus(json.status);
-    const durationS = 5; // approximate
-    return {
-      jobId,
-      status,
-      videoUrl: json.response?.video?.url,
-      cost: { costUsd: (durationS / 5) * COST_PER_5S },
-    };
+      const status = this.mapStatus(json.status);
+      const durationS = 5;
+      return {
+        jobId,
+        status,
+        videoUrl: json.response?.video?.url,
+        cost: { costUsd: (durationS / 5) * COST_PER_5S },
+      };
+    }, { maxAttempts: 3, initialDelayMs: 2000 });
   }
 
   private async submitJob(endpoint: string, body: object): Promise<VideoJobResult> {

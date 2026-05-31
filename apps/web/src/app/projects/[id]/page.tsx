@@ -36,6 +36,7 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
   const [voiceStyle, setVoiceStyle] = useState("energetic");
   const [musicFile, setMusicFile] = useState<File | null>(null);
   const [duplicating, setDuplicating] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
 
   async function doAction(key: string, fn: () => Promise<unknown>) {
     setActionLoading(key);
@@ -127,6 +128,28 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
           >
             Nhân bản
           </Button>
+          {["script_generating", "audio_generating", "video_generating", "rendering", "publishing"].includes(status) && (
+            <Button
+              variant="danger"
+              size="sm"
+              loading={cancelling}
+              onClick={async () => {
+                if (!confirm("Bạn có chắc muốn hủy quá trình xử lý?")) return;
+                setCancelling(true);
+                try {
+                  await fetch(`/api/video-projects/${project.id}/cancel`, {
+                    method: "POST",
+                    headers: { "x-user-id": "demo-user" },
+                  });
+                  await refresh();
+                } finally {
+                  setCancelling(false);
+                }
+              }}
+            >
+              Hủy
+            </Button>
+          )}
           <Button variant="ghost" size="sm" onClick={() => refresh()}>
             ↻ Làm mới
           </Button>
