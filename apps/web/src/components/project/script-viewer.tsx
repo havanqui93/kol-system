@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import type { Script } from "@/lib/api/client";
@@ -22,13 +22,34 @@ const SECTION_LABELS: { key: keyof Script; label: string; emoji: string }[] = [
   { key: "cta", label: "Kêu gọi hành động", emoji: "📣" },
 ];
 
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = useCallback(async () => {
+    await navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  }, [text]);
+  return (
+    <button
+      onClick={handleCopy}
+      className="opacity-0 group-hover:opacity-100 transition-opacity text-xs text-gray-400 hover:text-gray-600 px-1"
+      title="Sao chép"
+    >
+      {copied ? "✓" : "⎘"}
+    </button>
+  );
+}
+
 function ScriptSection({ emoji, label, text }: { emoji: string; label: string; text: string | null }) {
   if (!text) return null;
   return (
-    <div className="flex gap-3">
+    <div className="flex gap-3 group">
       <span className="text-xl flex-shrink-0 mt-0.5">{emoji}</span>
-      <div>
-        <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-0.5">{label}</div>
+      <div className="flex-1">
+        <div className="flex items-center gap-1 mb-0.5">
+          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{label}</span>
+          <CopyButton text={text} />
+        </div>
         <p className="text-sm text-gray-800 leading-relaxed">{text}</p>
       </div>
     </div>

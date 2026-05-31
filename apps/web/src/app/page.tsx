@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { prisma } from "@kol/database";
 import { ProjectCard } from "@/components/project/project-card";
 import { ProjectFilter } from "@/components/project/project-filter";
+import { StatusTabs } from "@/components/project/status-tabs";
 import { Button } from "@/components/ui/button";
 import { DashboardSkeleton } from "@/components/ui/skeleton";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
@@ -13,6 +14,15 @@ export const dynamic = "force-dynamic";
 const PAGE_SIZE = 20;
 
 type SortOrder = "newest" | "oldest" | "status";
+type TabFilter = "" | "processing" | "done" | "failed";
+
+const PROCESSING_STATUS_LIST = [
+  "script_generating",
+  "audio_generating",
+  "video_generating",
+  "rendering",
+  "publishing",
+];
 
 function buildOrderBy(sort: SortOrder) {
   if (sort === "oldest") return { createdAt: "asc" as const };
@@ -20,16 +30,25 @@ function buildOrderBy(sort: SortOrder) {
   return { createdAt: "desc" as const };
 }
 
+function buildTabFilter(tab: TabFilter) {
+  if (tab === "processing") return { status: { in: PROCESSING_STATUS_LIST as any[] } };
+  if (tab === "done") return { finalVideoUrl: { not: null } };
+  if (tab === "failed") return { status: "failed" as any };
+  return {};
+}
+
 async function getProjects(
   q: string,
   status: string,
   platform: string,
   sort: SortOrder,
-  page: number
+  page: number,
+  tab: TabFilter
 ): Promise<{ projects: Project[]; total: number }> {
   const where = {
     userId: "demo-user",
     archivedAt: null, // hide archived projects by default
+    ...buildTabFilter(tab),
     ...(status ? { status: status as any } : {}),
     ...(platform ? { platform: platform as any } : {}),
     ...(q
@@ -73,7 +92,7 @@ async function getAllStats() {
 }
 
 interface PageProps {
-  searchParams: { q?: string; status?: string; platform?: string; page?: string; sort?: string };
+  searchParams: { q?: string; status?: string; platform?: string; page?: string; sort?: string; tab?: string };
 }
 
 export default async function DashboardPage({ searchParams }: PageProps) {
@@ -82,9 +101,10 @@ export default async function DashboardPage({ searchParams }: PageProps) {
   const platform = searchParams.platform ?? "";
   const sort = (searchParams.sort ?? "newest") as SortOrder;
   const page = Math.max(1, Number(searchParams.page ?? "1"));
+  const tab = (searchParams.tab ?? "") as TabFilter;
 
   const [{ projects, total }, stats] = await Promise.all([
-    getProjects(q, status, platform, sort, page),
+    getProjects(q, status, platform, sort, page, tab),
     getAllStats(),
   ]);
 
@@ -120,6 +140,15 @@ export default async function DashboardPage({ searchParams }: PageProps) {
               <div className="text-xs text-gray-500 mt-0.5">{stat.label}</div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Quick status tabs */}
+      {stats.total > 0 && (
+        <div className="mb-4">
+          <Suspense fallback={null}>
+            <StatusTabs stats={stats} />
+          </Suspense>
         </div>
       )}
 

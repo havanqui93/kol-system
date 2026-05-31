@@ -40,6 +40,45 @@ const QUALITY_OPTIONS = [
   { value: "premium", label: "Premium - 3 Kling clips" },
 ];
 
+// Rough cost estimates per quality preset (USD)
+const COST_ESTIMATES: Record<string, { llm: number; tts: number; kling: number }> = {
+  cheap:    { llm: 0.01, tts: 0.03, kling: 0.14 },
+  balanced: { llm: 0.015, tts: 0.05, kling: 0.28 },
+  premium:  { llm: 0.02, tts: 0.07, kling: 0.42 },
+};
+
+function CostEstimate({ qualityPreset, durationSeconds }: { qualityPreset: string; durationSeconds: string }) {
+  const est = COST_ESTIMATES[qualityPreset] ?? COST_ESTIMATES.balanced;
+  const dur = Number(durationSeconds) || 30;
+  // TTS scales with duration
+  const tts = est.tts * (dur / 30);
+  const total = est.llm + tts + est.kling;
+
+  return (
+    <div className="bg-blue-50 border border-blue-100 rounded-xl px-5 py-4 text-sm">
+      <div className="flex items-center justify-between mb-2">
+        <span className="font-semibold text-blue-800">Ước tính chi phí</span>
+        <span className="font-bold text-blue-900 text-base">${total.toFixed(3)}</span>
+      </div>
+      <div className="grid grid-cols-3 gap-2 text-xs text-blue-700">
+        <div>
+          <div className="font-medium">Claude AI</div>
+          <div className="text-blue-500">${est.llm.toFixed(3)}</div>
+        </div>
+        <div>
+          <div className="font-medium">ElevenLabs TTS</div>
+          <div className="text-blue-500">~${tts.toFixed(3)}</div>
+        </div>
+        <div>
+          <div className="font-medium">Kling video</div>
+          <div className="text-blue-500">${est.kling.toFixed(3)}</div>
+        </div>
+      </div>
+      <p className="text-xs text-blue-400 mt-2">* Ước tính, chi phí thực tế có thể thay đổi ±30%</p>
+    </div>
+  );
+}
+
 interface FormState {
   title: string;
   videoType: string;
@@ -397,6 +436,9 @@ export default function NewProjectPage() {
             </FormField>
           </CardBody>
         </Card>
+
+        {/* Estimated cost calculator */}
+        <CostEstimate qualityPreset={form.qualityPreset} durationSeconds={form.durationSeconds} />
 
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-sm text-red-700">

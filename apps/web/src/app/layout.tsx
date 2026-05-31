@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ToastProvider } from "@/components/ui/toast";
+import { KeyboardShortcutsProvider } from "@/components/ui/keyboard-shortcuts-provider";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -13,6 +14,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="vi">
       <body>
         <ToastProvider>
+        <KeyboardShortcutsProvider>
         <div className="min-h-screen flex flex-col">
           <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
             <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
@@ -45,6 +47,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             KOL System · Powered by Claude + Kling + ElevenLabs
           </footer>
         </div>
+        </KeyboardShortcutsProvider>
         </ToastProvider>
       </body>
     </html>

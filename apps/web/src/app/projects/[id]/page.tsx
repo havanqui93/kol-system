@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useProject } from "@/hooks/use-project";
@@ -194,6 +194,7 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
               <video
                 src={finalVideo}
                 controls
+                preload="metadata"
                 className="w-36 rounded-lg bg-black"
                 style={{ aspectRatio: "9/16" }}
               />
@@ -474,23 +475,26 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
 
 function NotesEditor({ projectId, initialNotes }: { projectId: string; initialNotes: string }) {
   const [notes, setNotes] = useState(initialNotes);
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const [status, setStatus] = useState<"idle" | "saving" | "saved">("idle");
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  async function save() {
-    setSaving(true);
-    setSaved(false);
-    try {
-      await fetch(`/api/video-projects/${projectId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json", "x-user-id": "demo-user" },
-        body: JSON.stringify({ notes }),
-      });
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
-    } finally {
-      setSaving(false);
-    }
+  function handleChange(value: string) {
+    setNotes(value);
+    setStatus("saving");
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(async () => {
+      try {
+        await fetch(`/api/video-projects/${projectId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json", "x-user-id": "demo-user" },
+          body: JSON.stringify({ notes: value }),
+        });
+        setStatus("saved");
+        setTimeout(() => setStatus("idle"), 2000);
+      } catch {
+        setStatus("idle");
+      }
+    }, 800);
   }
 
   return (
@@ -498,20 +502,16 @@ function NotesEditor({ projectId, initialNotes }: { projectId: string; initialNo
       <CardBody>
         <div className="flex items-center justify-between mb-2">
           <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Ghi chú</h3>
-          {saved && <span className="text-xs text-green-600">✓ Đã lưu</span>}
+          {status === "saving" && <span className="text-xs text-gray-400 animate-pulse">Đang lưu...</span>}
+          {status === "saved" && <span className="text-xs text-green-600">✓ Đã lưu</span>}
         </div>
         <textarea
           value={notes}
-          onChange={(e) => setNotes(e.target.value)}
+          onChange={(e) => handleChange(e.target.value)}
           placeholder="Thêm ghi chú cho project này..."
           rows={3}
           className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500 resize-none"
         />
-        <div className="mt-2 flex justify-end">
-          <Button size="sm" variant="secondary" loading={saving} onClick={save}>
-            Lưu ghi chú
-          </Button>
-        </div>
       </CardBody>
     </Card>
   );
