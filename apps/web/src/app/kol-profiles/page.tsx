@@ -76,12 +76,17 @@ export default async function KolProfilesPage() {
                 <span className="text-xs text-gray-500">
                   {profile._count.videoProjects} video
                 </span>
-                <Link
-                  href={`/?kolProfileId=${profile.id}`}
-                  className="text-xs text-brand-600 hover:underline"
-                >
-                  Xem video →
-                </Link>
+                <div className="flex items-center gap-3">
+                  <Link href={`/kol-profiles/${profile.id}`} className="text-xs text-gray-500 hover:text-gray-700">
+                    Sửa
+                  </Link>
+                  <Link
+                    href={`/?kolProfileId=${profile.id}`}
+                    className="text-xs text-brand-600 hover:underline"
+                  >
+                    Xem video →
+                  </Link>
+                </div>
               </div>
             </div>
           ))}

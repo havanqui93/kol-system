@@ -118,12 +118,17 @@ export default async function ProductsPage({ searchParams }: PageProps) {
 
                 <div className="mt-3 flex items-center justify-between">
                   <span className="text-xs text-gray-400">{product._count.videoProjects} video</span>
-                  <Link
-                    href={`/?productId=${product.id}`}
-                    className="text-xs text-brand-600 hover:underline"
-                  >
-                    Xem video →
-                  </Link>
+                  <div className="flex items-center gap-3">
+                    <Link href={`/products/${product.id}`} className="text-xs text-gray-500 hover:text-gray-700">
+                      Sửa
+                    </Link>
+                    <Link
+                      href={`/?productId=${product.id}`}
+                      className="text-xs text-brand-600 hover:underline"
+                    >
+                      Xem video →
+                    </Link>
+                  </div>
                 </div>
               </div>
             </div>
