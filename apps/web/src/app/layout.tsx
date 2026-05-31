@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Suspense } from "react";
 import { ToastProvider } from "@/components/ui/toast";
 import { KeyboardShortcutsProvider } from "@/components/ui/keyboard-shortcuts-provider";
 import { ScrollToTop } from "@/components/ui/scroll-to-top";
 import { ProcessingBadge } from "@/components/ui/processing-badge";
+import { RouteProgress } from "@/components/ui/route-progress";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -17,6 +19,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <ToastProvider>
         <KeyboardShortcutsProvider>
+        <Suspense fallback={null}><RouteProgress /></Suspense>
         <div className="min-h-screen flex flex-col">
           <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
             <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
@@ -29,8 +32,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   Dashboard
                   <ProcessingBadge />
                 </Link>
+                <Link href="/products" className="text-gray-600 hover:text-gray-900 transition-colors">
+                  Sản phẩm
+                </Link>
                 <Link href="/kol-profiles" className="text-gray-600 hover:text-gray-900 transition-colors">
                   KOL Profiles
+                </Link>
+                <Link href="/schedule" className="text-gray-600 hover:text-gray-900 transition-colors">
+                  Lịch đăng
                 </Link>
                 <Link href="/admin/costs" className="text-gray-600 hover:text-gray-900 transition-colors">
                   Chi phí

@@ -24,6 +24,14 @@ function buildAutoTitle(productName: string, videoType: string, platform: string
   return `${typeLabel} - ${productName} (${platformLabel})`;
 }
 
+// Platform-specific max duration limits (seconds)
+const PLATFORM_MAX_DURATION: Record<string, number> = {
+  tiktok: 60,
+  facebook: 60,
+  instagram: 60,
+  youtube_shorts: 60,
+};
+
 const CreateProjectSchema = z.object({
   title: z.string().optional(),
   videoType: z.enum(["product_review", "affiliate", "used_car", "virtual_kol", "b_roll"]).default("product_review"),
@@ -35,7 +43,16 @@ const CreateProjectSchema = z.object({
   kolProfileId: z.string().optional(),
   productId: z.string().optional(),
   budgetLimitUsd: z.number().positive().optional(),
-});
+}).refine(
+  (data) => {
+    const maxDur = PLATFORM_MAX_DURATION[data.platform] ?? 60;
+    return data.durationSeconds <= maxDur;
+  },
+  (data) => ({
+    message: `Nền tảng ${data.platform} chỉ hỗ trợ tối đa ${PLATFORM_MAX_DURATION[data.platform] ?? 60}s`,
+    path: ["durationSeconds"],
+  })
+);
 
 // POST /api/video-projects
 export async function POST(request: Request) {

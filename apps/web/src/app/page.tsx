@@ -121,9 +121,17 @@ export default async function DashboardPage({ searchParams }: PageProps) {
             {stats.total} video project{stats.total !== 1 ? "s" : ""}
           </p>
         </div>
-        <Link href="/projects/new">
-          <Button size="lg">+ Tạo video mới</Button>
-        </Link>
+        <div className="flex items-center gap-2">
+          <a
+            href="/api/video-projects/export-csv"
+            className="text-sm text-gray-500 hover:text-gray-700 px-3 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+          >
+            ⬇ CSV
+          </a>
+          <Link href="/projects/new">
+            <Button size="lg">+ Tạo video mới</Button>
+          </Link>
+        </div>
       </div>
 
       {/* Stats row */}

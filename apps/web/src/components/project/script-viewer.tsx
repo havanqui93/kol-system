@@ -102,9 +102,27 @@ export function ScriptViewer({ scripts, onApprove, onRegenerate, disabled }: Scr
         <div className="flex items-center justify-between">
           <div>
             <h3 className="font-semibold text-gray-800">Kịch bản</h3>
-            <p className="text-xs text-gray-500 mt-0.5">
-              ~{script.wordCount ?? "?"} từ · ~{script.estimatedDurationSeconds ?? "?"}s
-            </p>
+            <div className="flex items-center gap-2 mt-0.5">
+              <p className="text-xs text-gray-500">
+                ~{script.wordCount ?? "?"} từ · ~{script.estimatedDurationSeconds ?? "?"}s
+              </p>
+              {script.estimatedDurationSeconds != null && script.estimatedDurationSeconds > 0 && (
+                <div className="flex-1 max-w-24">
+                  <div className="w-full bg-gray-200 rounded-full h-1">
+                    <div
+                      className={`h-1 rounded-full transition-all ${
+                        script.estimatedDurationSeconds > 60
+                          ? "bg-red-400"
+                          : script.estimatedDurationSeconds > 45
+                          ? "bg-yellow-400"
+                          : "bg-green-400"
+                      }`}
+                      style={{ width: `${Math.min(100, (script.estimatedDurationSeconds / 60) * 100)}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
           <div className="flex items-center gap-2">
             {scripts.length > 1 && (
