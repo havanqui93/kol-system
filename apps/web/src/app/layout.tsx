@@ -8,6 +8,7 @@ import { ProcessingBadge } from "@/components/ui/processing-badge";
 import { RouteProgress } from "@/components/ui/route-progress";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { MobileNav } from "@/components/ui/mobile-nav";
+import { NotificationBell } from "@/components/ui/notification-bell";
 import { DemoBanner } from "@/components/ui/demo-banner";
 import "./globals.css";
 
@@ -66,6 +67,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 >
                   + Tạo video mới
                 </Link>
+                <NotificationBell />
                 <ThemeToggle />
               </nav>
               <MobileNav />

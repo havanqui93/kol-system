@@ -44,6 +44,24 @@ export function ProjectListWithSelect({ projects }: ProjectListWithSelectProps) 
     }
   }
 
+  async function bulkDelete() {
+    if (!selected.size) return;
+    if (!confirm(`Xoá vĩnh viễn ${selected.size} project? Hành động này không thể hoàn tác.`)) return;
+    setWorking(true);
+    try {
+      await fetch("/api/video-projects/bulk-delete", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ ids: Array.from(selected) }),
+      });
+      setSelected(new Set());
+      setSelectMode(false);
+      router.refresh();
+    } finally {
+      setWorking(false);
+    }
+  }
+
   return (
     <div>
       {/* Mode toggle + toolbar */}
@@ -70,6 +88,14 @@ export function ProjectListWithSelect({ projects }: ProjectListWithSelectProps) 
               onClick={bulkArchive}
             >
               Lưu trữ ({selected.size})
+            </Button>
+            <Button
+              size="sm"
+              variant="danger"
+              disabled={!selected.size || working}
+              onClick={bulkDelete}
+            >
+              Xoá
             </Button>
             <Button size="sm" variant="outline" onClick={() => { setSelectMode(false); clearAll(); }}>
               Hủy

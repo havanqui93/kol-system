@@ -16,6 +16,7 @@ import { ScriptViewer } from "@/components/project/script-viewer";
 import { PipelineStep } from "@/components/project/pipeline-step";
 import { PublishPanel } from "@/components/project/publish-panel";
 import { TagEditor } from "@/components/project/tag-editor";
+import { PlatformPreview } from "@/components/project/platform-preview";
 
 // Helper: which pipeline step is each status on
 function getStepStatus(projectStatus: string, stepStatuses: string[], activeStatuses: string[], doneStatuses: string[]) {
@@ -111,6 +112,12 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
           </div>
         </div>
         <div className="flex gap-2">
+          <Link
+            href={`/projects/${project.id}/activity`}
+            className="inline-flex items-center justify-center gap-2 font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 text-xs px-3 py-1.5 bg-transparent text-gray-700 border border-gray-300 hover:bg-gray-50 focus:ring-gray-400"
+          >
+            📋 Lịch sử
+          </Link>
           <a
             href={`/api/video-projects/${project.id}/export`}
             download
@@ -211,20 +218,21 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
       {finalVideo && (
         <Card className="mb-6 border-green-200">
           <CardBody>
-            <div className="flex items-start gap-4">
-              <video
-                src={finalVideo}
-                controls
-                preload="metadata"
-                className="w-36 rounded-lg bg-black"
-                style={{ aspectRatio: "9/16" }}
-              />
+            <div className="flex items-start gap-6">
+              <PlatformPreview videoUrl={finalVideo} platform={project.platform} title={project.title ?? undefined} />
               <div className="flex-1">
                 <div className="text-green-700 font-semibold text-sm mb-1">✓ Video đã sẵn sàng!</div>
                 <p className="text-xs text-gray-500 mb-3">Video của bạn đã được render thành công.</p>
-                <a href={finalVideo} download>
-                  <Button size="sm">⬇ Tải xuống MP4</Button>
-                </a>
+                <div className="flex flex-wrap gap-2">
+                  <a href={finalVideo} download>
+                    <Button size="sm">⬇ Tải xuống MP4</Button>
+                  </a>
+                  {approvedScript && (
+                    <a href={`/api/video-projects/${project.id}/export-script`} download>
+                      <Button size="sm" variant="outline">📄 Export kịch bản</Button>
+                    </a>
+                  )}
+                </div>
               </div>
             </div>
           </CardBody>
