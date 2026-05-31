@@ -8,6 +8,7 @@ import type { Script } from "@/lib/api/client";
 interface ScriptViewerProps {
   scripts: Script[];
   onApprove: (scriptId: string) => Promise<void>;
+  onRegenerate?: (feedback?: string) => Promise<void>;
   disabled?: boolean;
 }
 
@@ -34,9 +35,12 @@ function ScriptSection({ emoji, label, text }: { emoji: string; label: string; t
   );
 }
 
-export function ScriptViewer({ scripts, onApprove, disabled }: ScriptViewerProps) {
+export function ScriptViewer({ scripts, onApprove, onRegenerate, disabled }: ScriptViewerProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [approving, setApproving] = useState(false);
+  const [regenerating, setRegenerating] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [feedback, setFeedback] = useState("");
 
   const script = scripts[selectedIndex];
   if (!script) return null;
@@ -51,6 +55,18 @@ export function ScriptViewer({ scripts, onApprove, disabled }: ScriptViewerProps
     }
   }
 
+  async function handleRegenerate() {
+    if (!onRegenerate) return;
+    setRegenerating(true);
+    setShowFeedback(false);
+    try {
+      await onRegenerate(feedback.trim() || undefined);
+      setFeedback("");
+    } finally {
+      setRegenerating(false);
+    }
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -61,20 +77,62 @@ export function ScriptViewer({ scripts, onApprove, disabled }: ScriptViewerProps
               ~{script.wordCount ?? "?"} từ · ~{script.estimatedDurationSeconds ?? "?"}s
             </p>
           </div>
-          {scripts.length > 1 && (
-            <div className="flex gap-1">
-              {scripts.map((s, i) => (
-                <button
-                  key={s.id}
-                  onClick={() => setSelectedIndex(i)}
-                  className={`text-xs px-2 py-1 rounded ${i === selectedIndex ? "bg-brand-100 text-brand-700 font-medium" : "text-gray-500 hover:bg-gray-100"}`}
-                >
-                  v{s.version}
-                </button>
-              ))}
-            </div>
-          )}
+          <div className="flex items-center gap-2">
+            {scripts.length > 1 && (
+              <div className="flex gap-1">
+                {scripts.map((s, i) => (
+                  <button
+                    key={s.id}
+                    onClick={() => setSelectedIndex(i)}
+                    className={`text-xs px-2 py-1 rounded ${i === selectedIndex ? "bg-brand-100 text-brand-700 font-medium" : "text-gray-500 hover:bg-gray-100"}`}
+                  >
+                    v{s.version}
+                  </button>
+                ))}
+              </div>
+            )}
+            {onRegenerate && !script.isApproved && (
+              <button
+                onClick={() => setShowFeedback((v) => !v)}
+                disabled={disabled || regenerating}
+                className="text-xs text-gray-500 hover:text-gray-700 px-2 py-1 rounded hover:bg-gray-100 transition-colors"
+              >
+                ↺ Viết lại
+              </button>
+            )}
+          </div>
         </div>
+
+        {/* Feedback input for regeneration */}
+        {showFeedback && onRegenerate && (
+          <div className="mt-3 space-y-2">
+            <textarea
+              value={feedback}
+              onChange={(e) => setFeedback(e.target.value)}
+              placeholder="Nhập phản hồi để AI cải thiện kịch bản (tùy chọn)..."
+              rows={2}
+              className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500 resize-none"
+            />
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                loading={regenerating}
+                onClick={handleRegenerate}
+                disabled={disabled || regenerating}
+              >
+                Viết lại kịch bản
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setShowFeedback(false)}
+                disabled={regenerating}
+              >
+                Hủy
+              </Button>
+            </div>
+          </div>
+        )}
       </CardHeader>
 
       <CardBody className="space-y-4">

@@ -186,6 +186,11 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
               onApprove={(scriptId) =>
                 doAction("approve", () => api.script.approve(project.id, scriptId))
               }
+              onRegenerate={
+                !approvedScript
+                  ? (feedback) => doAction("script", () => api.script.regenerate(project.id, feedback))
+                  : undefined
+              }
             />
           )}
 

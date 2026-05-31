@@ -152,7 +152,7 @@ export const api = {
   },
 
   kolProfiles: {
-    list: () => apiFetch<{ profiles: KolProfile[] }>("/api/kol-profiles"),
+    list: () => apiFetch<{ kolProfiles: KolProfile[] }>("/api/kol-profiles"),
     create: (data: {
       name: string;
       description?: string;
@@ -176,6 +176,11 @@ export const api = {
   script: {
     generate: (projectId: string) =>
       apiFetch<{ jobId: string }>(`/api/video-projects/${projectId}/generate-script`, { method: "POST", body: "{}" }),
+    regenerate: (projectId: string, feedback?: string) =>
+      apiFetch<{ jobId: string }>(`/api/video-projects/${projectId}/regenerate-script`, {
+        method: "POST",
+        body: JSON.stringify({ feedback }),
+      }),
     approve: (projectId: string, scriptId: string) =>
       apiFetch(`/api/video-projects/${projectId}/approve-script`, {
         method: "POST",
