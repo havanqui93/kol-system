@@ -16,6 +16,22 @@ export async function assertBudget(projectId: string): Promise<void> {
 
   const spent = Number(tracking.totalCostUsd);
   const limit = Number(tracking.budgetLimitUsd);
+  const pct = limit > 0 ? (spent / limit) * 100 : 0;
+
+  if (pct >= 80 && pct < 100) {
+    // Structured warning log — can be picked up by log aggregator / alerting
+    console.warn(
+      JSON.stringify({
+        level: "warn",
+        event: "budget_alert",
+        projectId,
+        spentUsd: spent,
+        limitUsd: limit,
+        percentUsed: Math.round(pct),
+        ts: new Date().toISOString(),
+      })
+    );
+  }
 
   if (spent >= limit) {
     throw new BudgetExceededError(spent, limit);

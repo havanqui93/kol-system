@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [main, develop]
 
+env:
+  DATABASE_URL: postgresql://postgres:password@localhost:5432/kol_system
+
 jobs:
   typecheck:
     name: Type Check
@@ -22,15 +25,14 @@ jobs:
           node-version: "20"
           cache: "pnpm"
 
-      - run: pnpm install --frozen-lockfile
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Generate Prisma client
         run: pnpm --filter @kol/database exec prisma generate
-        env:
-          DATABASE_URL: postgresql://postgres:password@localhost:5432/kol_system
 
-      - name: Build packages
-        run: pnpm turbo build --filter=!@kol/web --filter=!@kol/worker
+      - name: Build packages (excluding apps)
+        run: pnpm turbo build --filter=!./apps/*
 
       - name: Type check
         run: pnpm typecheck
@@ -50,9 +52,10 @@ jobs:
           node-version: "20"
           cache: "pnpm"
 
-      - run: pnpm install --frozen-lockfile
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
-      - name: Run tests
+      - name: Run provider unit tests
         run: pnpm --filter @kol/providers test
 
   lint:
@@ -70,8 +73,30 @@ jobs:
           node-version: "20"
           cache: "pnpm"
 
-      - run: pnpm install --frozen-lockfile
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Lint
         run: pnpm lint
         continue-on-error: true
+
+  schema-check:
+    name: Prisma Schema
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Validate Prisma schema
+        run: pnpm --filter @kol/database exec prisma validate

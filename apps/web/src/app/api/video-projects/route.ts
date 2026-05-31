@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@kol/database";
 import { ensureUser, getRequestUserId } from "@/lib/user";
+import { zodErrorResponse } from "@/lib/zod-error";
 
 const VIDEO_TYPE_LABELS: Record<string, string> = {
   product_review: "Review",
@@ -91,7 +92,7 @@ export async function POST(request: Request) {
     return NextResponse.json(project, { status: 201 });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: "Validation error", details: error.issues }, { status: 400 });
+      return zodErrorResponse(error);
     }
     console.error("POST /api/video-projects", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

@@ -4,14 +4,30 @@ import { Button } from "@/components/ui/button";
 
 export const dynamic = "force-dynamic";
 
-export default async function ProductsPage() {
-  const products = await prisma.product.findMany({
-    where: { userId: "demo-user" },
-    include: {
-      _count: { select: { videoProjects: true } },
-    },
-    orderBy: { createdAt: "desc" },
-  });
+interface PageProps {
+  searchParams: { category?: string };
+}
+
+export default async function ProductsPage({ searchParams }: PageProps) {
+  const category = searchParams.category ?? "";
+
+  const [products, categories] = await Promise.all([
+    prisma.product.findMany({
+      where: {
+        userId: "demo-user",
+        ...(category ? { category } : {}),
+      },
+      include: {
+        _count: { select: { videoProjects: true } },
+      },
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.product.findMany({
+      where: { userId: "demo-user", category: { not: null } },
+      select: { category: true },
+      distinct: ["category"],
+    }),
+  ]);
 
   return (
     <div>
@@ -24,6 +40,27 @@ export default async function ProductsPage() {
           <Button>+ Thêm sản phẩm mới</Button>
         </Link>
       </div>
+
+      {/* Category filter */}
+      {categories.length > 0 && (
+        <div className="flex flex-wrap gap-2 mb-6">
+          <Link
+            href="/products"
+            className={`text-sm px-3 py-1.5 rounded-lg border transition-colors ${!category ? "bg-brand-600 text-white border-brand-600" : "border-gray-200 text-gray-600 hover:bg-gray-50"}`}
+          >
+            Tất cả
+          </Link>
+          {categories.map((c) => c.category && (
+            <Link
+              key={c.category}
+              href={`/products?category=${encodeURIComponent(c.category)}`}
+              className={`text-sm px-3 py-1.5 rounded-lg border transition-colors ${category === c.category ? "bg-brand-600 text-white border-brand-600" : "border-gray-200 text-gray-600 hover:bg-gray-50"}`}
+            >
+              {c.category}
+            </Link>
+          ))}
+        </div>
+      )}
 
       {products.length === 0 ? (
         <div className="text-center py-24">
