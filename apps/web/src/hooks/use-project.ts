@@ -2,10 +2,11 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { api, type Project, type Script, type Scene, type Asset } from "@/lib/api/client";
+import { useProjectStatus } from "./use-project-status";
 
 type FullProject = Project & { scripts: Script[]; scenes: Scene[]; assets: Asset[] };
 
-const POLLING_STATUSES = new Set([
+const PROCESSING_STATUSES = new Set([
   "script_generating",
   "audio_generating",
   "video_generating",
@@ -35,14 +36,27 @@ export function useProject(projectId: string) {
     refresh();
   }, [refresh]);
 
-  // Auto-poll while project is in a processing state
-  useEffect(() => {
-    if (!project) return;
-    if (!POLLING_STATUSES.has(project.status)) return;
+  // Use SSE for real-time updates while processing; fall back to polling otherwise
+  const isProcessing = project ? PROCESSING_STATUSES.has(project.status) : false;
 
-    const interval = setInterval(refresh, 4000);
-    return () => clearInterval(interval);
-  }, [project?.status, refresh]);
+  useProjectStatus({
+    projectId,
+    enabled: isProcessing,
+    onStatusChange: (event) => {
+      setProject((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          status: event.status,
+          errorMessage: event.errorMessage ?? prev.errorMessage,
+          finalVideoUrl: event.finalVideoUrl ?? prev.finalVideoUrl,
+        };
+      });
+
+      // Refresh full data when status changes to pick up new scripts/assets
+      refresh();
+    },
+  });
 
   return { project, loading, error, refresh };
 }

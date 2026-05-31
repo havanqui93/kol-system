@@ -4,6 +4,8 @@ import { prisma } from "@kol/database";
 import { ProjectCard } from "@/components/project/project-card";
 import { ProjectFilter } from "@/components/project/project-filter";
 import { Button } from "@/components/ui/button";
+import { DashboardSkeleton } from "@/components/ui/skeleton";
+import { ErrorBoundary } from "@/components/ui/error-boundary";
 import type { Project } from "@/lib/api/client";
 
 export const dynamic = "force-dynamic";
@@ -143,11 +145,15 @@ export default async function DashboardPage({ searchParams }: PageProps) {
         </div>
       ) : (
         <>
-          <div className="grid gap-3">
-            {projects.map((project) => (
-              <ProjectCard key={project.id} project={project} />
-            ))}
-          </div>
+          <ErrorBoundary>
+            <Suspense fallback={<DashboardSkeleton />}>
+              <div className="grid gap-3">
+                {projects.map((project) => (
+                  <ProjectCard key={project.id} project={project} />
+                ))}
+              </div>
+            </Suspense>
+          </ErrorBoundary>
 
           {/* Pagination */}
           {totalPages > 1 && (

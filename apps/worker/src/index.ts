@@ -62,9 +62,28 @@ logger.info("KOL Worker started", {
   nodeVersion: process.version,
 });
 
-// Graceful shutdown
+// Graceful shutdown — wait for active jobs to drain before closing
 const shutdown = async (signal: string) => {
-  logger.info("Shutting down workers", { signal });
+  logger.info("Graceful shutdown initiated", { signal });
+
+  // Stop accepting new jobs
+  await Promise.all(workers.map((w) => w.pause()));
+
+  // Wait up to 120s for active jobs to finish
+  const drainTimeout = 120_000;
+  const drainStart = Date.now();
+
+  const drainAll = async () => {
+    while (Date.now() - drainStart < drainTimeout) {
+      const active = await Promise.all(workers.map((w) => w.getActiveCount()));
+      const totalActive = active.reduce((a, b) => a + b, 0);
+      if (totalActive === 0) break;
+      logger.info("Waiting for active jobs to finish", { totalActive });
+      await new Promise((r) => setTimeout(r, 2000));
+    }
+  };
+
+  await drainAll();
   await Promise.all(workers.map((w) => w.close()));
   await connection.quit();
   logger.info("Workers shut down cleanly");

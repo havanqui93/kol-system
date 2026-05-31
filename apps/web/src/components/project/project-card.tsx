@@ -6,6 +6,7 @@ import Link from "next/link";
 import { StatusBadge } from "@/components/ui/badge";
 import { Card, CardBody } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/toast";
 import type { Project } from "@/lib/api/client";
 
 const PLATFORM_ICONS: Record<string, string> = {
@@ -34,6 +35,7 @@ function timeAgo(dateStr: string) {
 
 export function ProjectCard({ project }: { project: Project }) {
   const router = useRouter();
+  const { success, error: toastError } = useToast();
   const [deleting, setDeleting] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
@@ -58,9 +60,12 @@ export function ProjectCard({ project }: { project: Project }) {
     setDeleting(true);
     try {
       await fetch(`/api/video-projects/${project.id}`, { method: "DELETE" });
+      success("Đã xoá project thành công");
       router.refresh();
     } catch {
+      toastError("Xoá project thất bại, thử lại sau");
       setDeleting(false);
+      setShowConfirm(false);
     }
   };
 
