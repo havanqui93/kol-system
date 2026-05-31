@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
+import { useToast } from "@/components/ui/toast";
 import type { Script } from "@/lib/api/client";
 
 interface ScriptViewerProps {
@@ -24,11 +25,13 @@ const SECTION_LABELS: { key: keyof Script; label: string; emoji: string }[] = [
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
+  const { success } = useToast();
   const handleCopy = useCallback(async () => {
     await navigator.clipboard.writeText(text);
     setCopied(true);
+    success("Đã sao chép vào clipboard");
     setTimeout(() => setCopied(false), 1500);
-  }, [text]);
+  }, [text, success]);
   return (
     <button
       onClick={handleCopy}

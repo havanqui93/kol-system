@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { useJobProgress } from "@/hooks/use-job-progress";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useProject } from "@/hooks/use-project";
@@ -38,6 +39,8 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
   const [duplicating, setDuplicating] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [archiving, setArchiving] = useState(false);
+  const isProcessing = ["script_generating", "audio_generating", "video_generating", "rendering", "publishing"].includes(status);
+  const { overallProgress } = useJobProgress(params.id, isProcessing);
 
   async function doAction(key: string, fn: () => Promise<unknown>) {
     setActionLoading(key);
@@ -99,9 +102,7 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
             <span className="text-gray-700 truncate max-w-xs">{project.title ?? `Video ${params.id.slice(-6)}`}</span>
           </div>
           <div className="flex items-center gap-3">
-            <h1 className="text-xl font-bold text-gray-900">
-              {project.title ?? `Video ${params.id.slice(-6)}`}
-            </h1>
+            <InlineTitle projectId={project.id} title={project.title ?? `Video ${params.id.slice(-6)}`} onSaved={refresh} />
             <StatusBadge status={status} />
           </div>
         </div>
@@ -178,6 +179,22 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
           </Button>
         </div>
       </div>
+
+      {/* Progress bar when processing */}
+      {isProcessing && overallProgress > 0 && (
+        <div className="mb-4">
+          <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
+            <span>Đang xử lý...</span>
+            <span>{overallProgress}%</span>
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-1.5">
+            <div
+              className="h-1.5 rounded-full bg-brand-500 transition-all duration-500"
+              style={{ width: `${overallProgress}%` }}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Error banner */}
       {(project.errorMessage || actionError) && (
@@ -470,6 +487,60 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
       {/* Notes editor */}
       <NotesEditor projectId={project.id} initialNotes={(project as any).notes ?? ""} />
     </div>
+  );
+}
+
+function InlineTitle({
+  projectId,
+  title,
+  onSaved,
+}: {
+  projectId: string;
+  title: string;
+  onSaved: () => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState(title);
+  const [saving, setSaving] = useState(false);
+
+  async function save() {
+    if (!value.trim() || value === title) { setEditing(false); return; }
+    setSaving(true);
+    try {
+      await fetch(`/api/video-projects/${projectId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", "x-user-id": "demo-user" },
+        body: JSON.stringify({ title: value.trim() }),
+      });
+      onSaved();
+    } finally {
+      setSaving(false);
+      setEditing(false);
+    }
+  }
+
+  if (editing) {
+    return (
+      <input
+        autoFocus
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        onBlur={save}
+        onKeyDown={(e) => { if (e.key === "Enter") save(); if (e.key === "Escape") setEditing(false); }}
+        disabled={saving}
+        className="text-xl font-bold text-gray-900 border-b-2 border-brand-400 outline-none bg-transparent w-64"
+      />
+    );
+  }
+
+  return (
+    <h1
+      className="text-xl font-bold text-gray-900 cursor-pointer hover:underline decoration-dashed decoration-gray-300"
+      title="Click để sửa tiêu đề"
+      onClick={() => setEditing(true)}
+    >
+      {title}
+    </h1>
   );
 }
 

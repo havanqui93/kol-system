@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ToastProvider } from "@/components/ui/toast";
 import { KeyboardShortcutsProvider } from "@/components/ui/keyboard-shortcuts-provider";
+import { ScrollToTop } from "@/components/ui/scroll-to-top";
+import { ProcessingBadge } from "@/components/ui/processing-badge";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -23,8 +25,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 KOL System
               </Link>
               <nav className="flex items-center gap-6 text-sm">
-                <Link href="/" className="text-gray-600 hover:text-gray-900 transition-colors">
+                <Link href="/" className="text-gray-600 hover:text-gray-900 transition-colors flex items-center">
                   Dashboard
+                  <ProcessingBadge />
+                </Link>
+                <Link href="/kol-profiles" className="text-gray-600 hover:text-gray-900 transition-colors">
+                  KOL Profiles
+                </Link>
+                <Link href="/admin/costs" className="text-gray-600 hover:text-gray-900 transition-colors">
+                  Chi phí
                 </Link>
                 <Link href="/settings" className="text-gray-600 hover:text-gray-900 transition-colors">
                   Cài đặt
@@ -46,6 +55,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <footer className="border-t border-gray-200 text-center text-xs text-gray-400 py-4">
             KOL System · Powered by Claude + Kling + ElevenLabs
           </footer>
+          <ScrollToTop />
         </div>
         </KeyboardShortcutsProvider>
         </ToastProvider>
