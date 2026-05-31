@@ -41,9 +41,14 @@ export function ScriptViewer({ scripts, onApprove, onRegenerate, disabled }: Scr
   const [regenerating, setRegenerating] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedback, setFeedback] = useState("");
+  const [compareMode, setCompareMode] = useState(false);
 
   const script = scripts[selectedIndex];
   if (!script) return null;
+
+  const compareScript = compareMode && scripts.length >= 2
+    ? scripts[selectedIndex === 0 ? 1 : 0]
+    : null;
 
   async function handleApprove() {
     if (!script) return;
@@ -83,12 +88,19 @@ export function ScriptViewer({ scripts, onApprove, onRegenerate, disabled }: Scr
                 {scripts.map((s, i) => (
                   <button
                     key={s.id}
-                    onClick={() => setSelectedIndex(i)}
+                    onClick={() => { setSelectedIndex(i); setCompareMode(false); }}
                     className={`text-xs px-2 py-1 rounded ${i === selectedIndex ? "bg-brand-100 text-brand-700 font-medium" : "text-gray-500 hover:bg-gray-100"}`}
                   >
                     v{s.version}
                   </button>
                 ))}
+                <button
+                  onClick={() => setCompareMode((v) => !v)}
+                  className={`text-xs px-2 py-1 rounded transition-colors ${compareMode ? "bg-purple-100 text-purple-700 font-medium" : "text-gray-500 hover:bg-gray-100"}`}
+                  title="So sánh 2 phiên bản"
+                >
+                  ⇆ So sánh
+                </button>
               </div>
             )}
             {onRegenerate && !script.isApproved && (
@@ -136,14 +148,46 @@ export function ScriptViewer({ scripts, onApprove, onRegenerate, disabled }: Scr
       </CardHeader>
 
       <CardBody className="space-y-4">
-        {SECTION_LABELS.map(({ key, label, emoji }) => (
-          <ScriptSection
-            key={key}
-            emoji={emoji}
-            label={label}
-            text={script[key] as string | null}
-          />
-        ))}
+        {compareScript ? (
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <div className="text-xs font-semibold text-brand-700 mb-3 uppercase tracking-wide">
+                Phiên bản v{script.version} (đang chọn)
+              </div>
+              <div className="space-y-4">
+                {SECTION_LABELS.map(({ key, label, emoji }) => (
+                  <ScriptSection key={key} emoji={emoji} label={label} text={script[key] as string | null} />
+                ))}
+              </div>
+            </div>
+            <div className="border-l border-gray-100 pl-4">
+              <div className="text-xs font-semibold text-gray-500 mb-3 uppercase tracking-wide">
+                Phiên bản v{compareScript.version}
+              </div>
+              <div className="space-y-4">
+                {SECTION_LABELS.map(({ key, label, emoji }) => {
+                  const aText = script[key] as string | null;
+                  const bText = compareScript[key] as string | null;
+                  const changed = aText !== bText;
+                  return (
+                    <div key={key} className={changed ? "bg-yellow-50 -mx-1 px-1 rounded" : ""}>
+                      <ScriptSection emoji={emoji} label={label} text={bText} />
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        ) : (
+          SECTION_LABELS.map(({ key, label, emoji }) => (
+            <ScriptSection
+              key={key}
+              emoji={emoji}
+              label={label}
+              text={script[key] as string | null}
+            />
+          ))
+        )}
       </CardBody>
 
       <div className="px-6 pb-4 border-t border-gray-100 pt-4">

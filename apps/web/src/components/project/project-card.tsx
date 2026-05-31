@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { StatusBadge } from "@/components/ui/badge";
@@ -39,6 +39,10 @@ export function ProjectCard({ project }: { project: Project }) {
   const [deleting, setDeleting] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
+  const handleMouseEnter = useCallback(() => {
+    router.prefetch(`/projects/${project.id}`);
+  }, [router, project.id]);
+
   const isProcessing = [
     "script_generating",
     "audio_generating",
@@ -76,7 +80,7 @@ export function ProjectCard({ project }: { project: Project }) {
   };
 
   return (
-    <Link href={`/projects/${project.id}`}>
+    <Link href={`/projects/${project.id}`} onMouseEnter={handleMouseEnter}>
       <Card className="hover:border-brand-300 hover:shadow-md transition-all cursor-pointer group">
         <CardBody className="flex items-start gap-4">
           {/* Thumbnail / placeholder */}

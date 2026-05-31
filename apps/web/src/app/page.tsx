@@ -29,6 +29,7 @@ async function getProjects(
 ): Promise<{ projects: Project[]; total: number }> {
   const where = {
     userId: "demo-user",
+    archivedAt: null, // hide archived projects by default
     ...(status ? { status: status as any } : {}),
     ...(platform ? { platform: platform as any } : {}),
     ...(q
@@ -58,7 +59,7 @@ async function getProjects(
 
 async function getAllStats() {
   const all = await prisma.videoProject.findMany({
-    where: { userId: "demo-user" },
+    where: { userId: "demo-user", archivedAt: null },
     select: { status: true, finalVideoUrl: true },
   });
   return {

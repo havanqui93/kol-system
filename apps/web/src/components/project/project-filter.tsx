@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useTransition } from "react";
+import { useCallback, useRef, useTransition } from "react";
 
 const STATUS_OPTIONS = [
   { value: "", label: "Tất cả" },
@@ -31,6 +31,7 @@ export function ProjectFilter() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
+  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const updateFilter = useCallback(
     (key: string, value: string) => {
@@ -48,6 +49,14 @@ export function ProjectFilter() {
     [router, searchParams]
   );
 
+  const handleSearchChange = useCallback(
+    (value: string) => {
+      if (searchTimer.current) clearTimeout(searchTimer.current);
+      searchTimer.current = setTimeout(() => updateFilter("q", value), 400);
+    },
+    [updateFilter]
+  );
+
   return (
     <div className={`flex flex-wrap gap-3 items-center ${isPending ? "opacity-60" : ""}`}>
       {/* Search input */}
@@ -55,7 +64,7 @@ export function ProjectFilter() {
         type="search"
         placeholder="Tìm kiếm video..."
         defaultValue={searchParams.get("q") ?? ""}
-        onChange={(e) => updateFilter("q", e.target.value)}
+        onChange={(e) => handleSearchChange(e.target.value)}
         className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent w-52"
       />
 

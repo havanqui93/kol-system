@@ -12,6 +12,7 @@ interface SocialAccount {
   platform: string;
   accountName: string;
   pageName: string | null;
+  tokenExpiresAt: string | null;
 }
 
 interface PublishJob {
@@ -139,6 +140,12 @@ export function PublishPanel({ projectId, disabled, platform = "tiktok", videoTy
               {accounts.map((account) => {
                 const meta = PLATFORM_META[account.platform] ?? { icon: "📱", name: account.platform };
                 const isSelected = selectedAccount === account.id;
+                const expiresAt = account.tokenExpiresAt ? new Date(account.tokenExpiresAt) : null;
+                const daysUntilExpiry = expiresAt
+                  ? Math.ceil((expiresAt.getTime() - Date.now()) / 86_400_000)
+                  : null;
+                const isExpiringSoon = daysUntilExpiry !== null && daysUntilExpiry <= 7;
+                const isExpired = daysUntilExpiry !== null && daysUntilExpiry <= 0;
                 return (
                   <button
                     key={account.id}
@@ -150,13 +157,23 @@ export function PublishPanel({ projectId, disabled, platform = "tiktok", videoTy
                     }`}
                   >
                     <span className="text-xl">{meta.icon}</span>
-                    <div>
+                    <div className="flex-1 min-w-0">
                       <div className="text-sm font-medium text-gray-900">{meta.name}</div>
                       <div className="text-xs text-gray-500">
                         {account.pageName ?? account.accountName}
                       </div>
+                      {isExpired && (
+                        <div className="text-xs text-red-600 font-medium mt-0.5">
+                          Token đã hết hạn — cần kết nối lại
+                        </div>
+                      )}
+                      {isExpiringSoon && !isExpired && (
+                        <div className="text-xs text-yellow-600 mt-0.5">
+                          Token hết hạn sau {daysUntilExpiry} ngày
+                        </div>
+                      )}
                     </div>
-                    {isSelected && <span className="ml-auto text-brand-600 text-lg">✓</span>}
+                    {isSelected && <span className="text-brand-600 text-lg">✓</span>}
                   </button>
                 );
               })}
@@ -240,6 +257,20 @@ export function PublishPanel({ projectId, disabled, platform = "tiktok", videoTy
                       <span className="text-xs text-gray-400">
                         {new Date(job.publishedAt).toLocaleDateString("vi-VN")}
                       </span>
+                    )}
+                    {job.status === "failed" && (
+                      <button
+                        onClick={async () => {
+                          await fetch(`/api/video-projects/${projectId}/publish/${job.id}/retry`, {
+                            method: "POST",
+                            headers: { "x-user-id": "demo-user" },
+                          });
+                          await loadData();
+                        }}
+                        className="text-xs text-brand-600 hover:underline"
+                      >
+                        Thử lại
+                      </button>
                     )}
                   </div>
                 );

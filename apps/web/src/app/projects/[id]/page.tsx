@@ -37,6 +37,7 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
   const [musicFile, setMusicFile] = useState<File | null>(null);
   const [duplicating, setDuplicating] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [archiving, setArchiving] = useState(false);
 
   async function doAction(key: string, fn: () => Promise<unknown>) {
     setActionLoading(key);
@@ -150,6 +151,28 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
               Hủy
             </Button>
           )}
+          <Button
+            variant="ghost"
+            size="sm"
+            loading={archiving}
+            onClick={async () => {
+              const isArchived = !!(project as any).archivedAt;
+              if (!isArchived && !confirm("Lưu trữ project này? Nó sẽ không hiện trên Dashboard nữa.")) return;
+              setArchiving(true);
+              try {
+                await fetch(`/api/video-projects/${project.id}/archive`, {
+                  method: isArchived ? "DELETE" : "POST",
+                  headers: { "x-user-id": "demo-user" },
+                });
+                if (!isArchived) router.push("/");
+                else await refresh();
+              } finally {
+                setArchiving(false);
+              }
+            }}
+          >
+            {(project as any).archivedAt ? "Khôi phục" : "Lưu trữ"}
+          </Button>
           <Button variant="ghost" size="sm" onClick={() => refresh()}>
             ↻ Làm mới
           </Button>

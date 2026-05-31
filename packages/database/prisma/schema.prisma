@@ -181,6 +181,7 @@ model VideoProject {
   thumbnailUrl    String?
   finalVideoUrl   String?
   notes           String?            // Internal notes / user feedback
+  archivedAt      DateTime?          // Set when project is soft-archived
   createdAt       DateTime           @default(now())
   updatedAt       DateTime           @updatedAt
 
