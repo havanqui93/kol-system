@@ -49,6 +49,46 @@ const PLATFORMS = [
   },
 ] as const;
 
+const ENV_VARS = [
+  { key: "ANTHROPIC_API_KEY", label: "Claude AI (Anthropic)", required: true },
+  { key: "ELEVENLABS_API_KEY", label: "ElevenLabs TTS", required: true },
+  { key: "FAL_KEY", label: "Kling Video (fal.ai)", required: true },
+  { key: "R2_ACCESS_KEY_ID", label: "Cloudflare R2", required: true },
+  { key: "DATABASE_URL", label: "PostgreSQL DB", required: true },
+  { key: "REDIS_URL", label: "Redis", required: true },
+  { key: "OPENAI_API_KEY", label: "OpenAI (fallback LLM)", required: false },
+];
+
+function EnvStatus() {
+  const statuses = ENV_VARS.map((v) => ({
+    ...v,
+    configured: typeof (process.env as any)[v.key] === "string" && (process.env as any)[v.key] !== "",
+  }));
+
+  return (
+    <Card>
+      <CardHeader>
+        <h2 className="font-semibold text-gray-800">Trạng thái môi trường</h2>
+      </CardHeader>
+      <CardBody>
+        <div className="space-y-2">
+          {statuses.map((v) => (
+            <div key={v.key} className="flex items-center justify-between text-sm">
+              <div>
+                <span className="font-medium text-gray-700">{v.label}</span>
+                <code className="ml-2 text-xs text-gray-400">{v.key}</code>
+              </div>
+              <span className={`text-xs font-medium ${v.configured ? "text-green-600" : v.required ? "text-red-600" : "text-gray-400"}`}>
+                {v.configured ? "✓ Đã cấu hình" : v.required ? "✗ Chưa cấu hình" : "— Tùy chọn"}
+              </span>
+            </div>
+          ))}
+        </div>
+      </CardBody>
+    </Card>
+  );
+}
+
 function StatusMessages() {
   const params = useSearchParams();
   const connected = params.get("connected");
@@ -197,6 +237,9 @@ export default function SettingsPage() {
           </div>
         )}
       </div>
+
+      {/* Environment status */}
+      <EnvStatus />
 
       {/* Setup guide */}
       <Card>

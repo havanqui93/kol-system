@@ -78,6 +78,29 @@ logger.info("KOL Worker started", {
   nodeVersion: process.version,
 });
 
+// Heartbeat — register this worker instance as alive every 30s
+const WORKER_ID = `worker-${process.pid}-${Date.now()}`;
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+
+async function sendHeartbeat() {
+  try {
+    await fetch(`${APP_URL}/api/workers/heartbeat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        workerId: WORKER_ID,
+        workerType: "bullmq",
+        version: process.version,
+      }),
+    });
+  } catch {
+    // Non-critical — worker continues even if heartbeat fails
+  }
+}
+
+sendHeartbeat();
+const heartbeatInterval = setInterval(sendHeartbeat, 30_000);
+
 // Graceful shutdown — wait for active jobs to drain before closing
 const shutdown = async (signal: string) => {
   logger.info("Graceful shutdown initiated", { signal });
@@ -99,6 +122,7 @@ const shutdown = async (signal: string) => {
     }
   };
 
+  clearInterval(heartbeatInterval);
   await drainAll();
   await Promise.all(workers.map((w) => w.close()));
   await connection.quit();

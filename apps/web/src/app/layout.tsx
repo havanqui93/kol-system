@@ -6,6 +6,9 @@ import { KeyboardShortcutsProvider } from "@/components/ui/keyboard-shortcuts-pr
 import { ScrollToTop } from "@/components/ui/scroll-to-top";
 import { ProcessingBadge } from "@/components/ui/processing-badge";
 import { RouteProgress } from "@/components/ui/route-progress";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { MobileNav } from "@/components/ui/mobile-nav";
+import { DemoBanner } from "@/components/ui/demo-banner";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -21,13 +24,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <KeyboardShortcutsProvider>
         <Suspense fallback={null}><RouteProgress /></Suspense>
         <div className="min-h-screen flex flex-col">
+          <DemoBanner />
           <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
             <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
               <Link href="/" className="flex items-center gap-2 font-bold text-lg text-brand-600">
                 <span className="text-2xl">🎬</span>
                 KOL System
               </Link>
-              <nav className="flex items-center gap-6 text-sm">
+              <nav className="hidden sm:flex items-center gap-6 text-sm">
                 <Link href="/" className="text-gray-600 hover:text-gray-900 transition-colors flex items-center">
                   Dashboard
                   <ProcessingBadge />
@@ -53,7 +57,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 >
                   + Tạo video mới
                 </Link>
+                <ThemeToggle />
               </nav>
+              <MobileNav />
             </div>
           </header>
 
