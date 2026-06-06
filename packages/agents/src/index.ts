@@ -13,6 +13,6 @@ export { PublisherAgent } from "./agents/publisher.agent.js";
 export type { IntakeInput, IntakeOutput } from "./prompts/intake.js";
 export type { ResearchOutput } from "./prompts/research.js";
 export type { ScriptOutput } from "./prompts/script.js";
-export type { VisualPlanOutput, VisualScene, VisualType } from "./prompts/visual-plan.js";
+export type { VisualPlanOutput, VisualScene, VisualType, SceneMotionBrush } from "./prompts/visual-plan.js";
 export type { QACheckInput, QAOutput } from "./prompts/qa.js";
 export type { PublisherMetaInput, PublisherMetaOutput } from "./prompts/publisher.js";

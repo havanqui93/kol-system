@@ -1,4 +1,5 @@
 import Redis from "ioredis";
+import type { Worker } from "bullmq";
 import { validateWorkerEnv } from "./env.js";
 import { logger } from "./logger.js";
 import { prisma } from "@kol/database";
@@ -21,7 +22,7 @@ const connection = new Redis(REDIS_URL, {
 connection.on("connect", () => logger.info("Redis connected", { url: REDIS_URL }));
 connection.on("error", (err) => logger.error("Redis error", { error: err.message }));
 
-const workers = [
+const workers: Worker[] = [
   createGenerateScriptWorker(connection),
   createGenerateAudioWorker(connection),
   createGenerateKlingWorker(connection),
@@ -108,23 +109,21 @@ const shutdown = async (signal: string) => {
   // Stop accepting new jobs
   await Promise.all(workers.map((w) => w.pause()));
 
-  // Wait up to 120s for active jobs to finish
-  const drainTimeout = 120_000;
-  const drainStart = Date.now();
-
-  const drainAll = async () => {
-    while (Date.now() - drainStart < drainTimeout) {
-      const active = await Promise.all(workers.map((w) => w.getActiveCount()));
-      const totalActive = active.reduce((a, b) => a + b, 0);
-      if (totalActive === 0) break;
-      logger.info("Waiting for active jobs to finish", { totalActive });
-      await new Promise((r) => setTimeout(r, 2000));
-    }
-  };
-
   clearInterval(heartbeatInterval);
-  await drainAll();
-  await Promise.all(workers.map((w) => w.close()));
+
+  // worker.close() resolves once in-flight jobs finish; cap the wait at 120s
+  // so a stuck job can't block shutdown indefinitely.
+  const drainTimeout = 120_000;
+  const graceful = Promise.all(workers.map((w) => w.close()));
+  const timedOut = await Promise.race([
+    graceful.then(() => false),
+    new Promise<boolean>((r) => setTimeout(() => r(true), drainTimeout)),
+  ]);
+  if (timedOut) {
+    logger.info("Drain timeout reached, forcing worker close", { drainTimeout });
+    await Promise.all(workers.map((w) => w.close(true)));
+  }
+
   await connection.quit();
   logger.info("Workers shut down cleanly");
   process.exit(0);

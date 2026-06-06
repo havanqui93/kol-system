@@ -10,6 +10,11 @@ export type VisualType =
   | "price_highlight"
   | "cta_screen";
 
+export interface SceneMotionBrush {
+  maskUrl: string;
+  trajectory: Array<{ x: number; y: number }>;
+}
+
 export interface VisualScene {
   sceneIndex: number;
   label: string;
@@ -21,6 +26,9 @@ export interface VisualScene {
   remotionTemplate?: string;
   audioSegment: string;
   cameraMovement?: string;
+  // Optional motion control: brushed regions follow explicit trajectories.
+  motionBrushes?: SceneMotionBrush[];
+  staticMaskUrl?: string;
   notes?: string;
 }
 

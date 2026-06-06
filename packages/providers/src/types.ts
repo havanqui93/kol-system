@@ -85,6 +85,41 @@ export interface TextToVideoOptions {
   cameraMovement?: CameraMovement;
 }
 
+// ─── Motion Control ─────────────────────────────────────────────────────────
+// Direct *which* regions of the source image move and *where* they travel,
+// instead of letting the model invent random motion. Maps to Kling's
+// dynamic_masks (brushed region + trajectory) and static_mask (areas held still).
+
+export interface MotionPoint {
+  x: number; // normalized 0..1 relative to image width
+  y: number; // normalized 0..1 relative to image height
+}
+
+export interface MotionBrush {
+  // PNG mask (white = the moving region) hosted at an accessible URL
+  maskUrl: string;
+  // ordered path the brushed region should follow across the clip
+  trajectory: MotionPoint[];
+}
+
+export interface MotionControlOptions extends ImageToVideoOptions {
+  // regions that should move, each with its own trajectory
+  motionBrushes: MotionBrush[];
+  // optional mask of regions that must stay still (white = frozen)
+  staticMaskUrl?: string;
+}
+
+// ─── Face Swap ──────────────────────────────────────────────────────────────
+// Replace the face in a generated/source video with a reference face — the
+// foundation of a reusable Virtual KOL identity across every video.
+
+export interface FaceSwapOptions {
+  // the video whose face(s) will be replaced
+  targetVideoUrl: string;
+  // the reference face to swap in
+  faceImageUrl: string;
+}
+
 export interface VideoJobResult {
   jobId: string;
   status: "pending" | "processing" | "completed" | "failed";
@@ -96,6 +131,9 @@ export interface VideoProvider {
   imageToVideo(options: ImageToVideoOptions): Promise<VideoJobResult>;
   textToVideo(options: TextToVideoOptions): Promise<VideoJobResult>;
   getJobStatus(jobId: string): Promise<VideoJobResult>;
+  // Optional advanced capabilities — not every provider supports these.
+  imageToVideoWithMotion?(options: MotionControlOptions): Promise<VideoJobResult>;
+  faceSwap?(options: FaceSwapOptions): Promise<VideoJobResult>;
 }
 
 // ─── Subtitle Provider ────────────────────────────────────────────────────────

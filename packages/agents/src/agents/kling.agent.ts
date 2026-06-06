@@ -35,14 +35,31 @@ export class KlingAgent {
       model: "claude-haiku-4-5-20251001",
     });
 
-    const job = await this.video.imageToVideo({
-      imageUrl: productImageUrl,
-      prompt: scene.klingPrompt ?? promptData.prompt,
-      negativePrompt: promptData.negativePrompt,
-      durationSeconds: Math.min(scene.durationSeconds, 10) as 5 | 10,
-      aspectRatio: "9:16",
-      cameraMovement: scene.cameraMovement as any,
-    });
+    // When the scene carries motion brushes and the provider supports it,
+    // use motion control so the product moves along a directed path instead
+    // of with random model-invented motion.
+    const useMotion =
+      scene.motionBrushes && scene.motionBrushes.length > 0 && typeof this.video.imageToVideoWithMotion === "function";
+
+    const job = useMotion
+      ? await this.video.imageToVideoWithMotion!({
+          imageUrl: productImageUrl,
+          prompt: scene.klingPrompt ?? promptData.prompt,
+          negativePrompt: promptData.negativePrompt,
+          durationSeconds: Math.min(scene.durationSeconds, 10) as 5 | 10,
+          aspectRatio: "9:16",
+          cameraMovement: scene.cameraMovement as any,
+          motionBrushes: scene.motionBrushes!,
+          staticMaskUrl: scene.staticMaskUrl,
+        })
+      : await this.video.imageToVideo({
+          imageUrl: productImageUrl,
+          prompt: scene.klingPrompt ?? promptData.prompt,
+          negativePrompt: promptData.negativePrompt,
+          durationSeconds: Math.min(scene.durationSeconds, 10) as 5 | 10,
+          aspectRatio: "9:16",
+          cameraMovement: scene.cameraMovement as any,
+        });
 
     return {
       sceneIndex: scene.sceneIndex,
@@ -80,6 +97,30 @@ export class KlingAgent {
 
     return {
       sceneIndex: scene.sceneIndex,
+      jobId: job.jobId,
+      status: job.status,
+      clipUrl: job.videoUrl,
+      costUsd: job.cost.costUsd,
+    };
+  }
+
+  // Swap the face in a finished clip with a KOL profile's reference face,
+  // giving every video the same consistent Virtual KOL identity.
+  // Returns null if the provider does not support face swapping.
+  async swapFace(
+    sceneIndex: number,
+    clipUrl: string,
+    referenceFaceUrl: string
+  ): Promise<KlingClipResult | null> {
+    if (typeof this.video.faceSwap !== "function") return null;
+
+    const job = await this.video.faceSwap({
+      targetVideoUrl: clipUrl,
+      faceImageUrl: referenceFaceUrl,
+    });
+
+    return {
+      sceneIndex,
       jobId: job.jobId,
       status: job.status,
       clipUrl: job.videoUrl,

@@ -156,10 +156,16 @@ importers:
       '@aws-sdk/s3-request-presigner':
         specifier: ^3.600.0
         version: 3.1048.0
+      '@kol/database':
+        specifier: workspace:*
+        version: link:../database
       openai:
         specifier: ^4.47.0
         version: 4.104.0(zod@3.25.76)
     devDependencies:
+      tsx:
+        specifier: ^4.16.0
+        version: 4.22.1
       typescript:
         specifier: ^5.4.0
         version: 5.9.3
