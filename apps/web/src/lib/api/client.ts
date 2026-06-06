@@ -46,7 +46,7 @@ export interface Project {
   thumbnailUrl: string | null;
   createdAt: string;
   updatedAt: string;
-  product?: { name: string } | null;
+  product?: { name: string; imageUrls?: string[] } | null;
   kolProfile?: { name: string } | null;
   costTracking?: CostTracking[] | null;
 }
@@ -76,6 +76,16 @@ export interface Asset {
   createdAt: string;
 }
 
+export interface MotionPoint {
+  x: number;
+  y: number;
+}
+
+export interface MotionBrush {
+  maskUrl: string;
+  trajectory: MotionPoint[];
+}
+
 export interface Scene {
   id: string;
   sceneIndex: number;
@@ -83,6 +93,8 @@ export interface Scene {
   durationSeconds: number;
   status: string;
   clipUrl: string | null;
+  motionBrushes: MotionBrush[] | null;
+  staticMaskUrl: string | null;
 }
 
 export interface Product {
@@ -202,6 +214,19 @@ export const api = {
       apiFetch<{ jobIds: string[]; sceneCount: number; klingJobCount: number }>(
         `/api/video-projects/${projectId}/generate-kling-clips`,
         { method: "POST", body: "{}" }
+      ),
+  },
+
+  scenes: {
+    // Attach motion-control data to a scene and (by default) re-queue its clip
+    updateMotion: (
+      projectId: string,
+      sceneId: string,
+      payload: { motionBrushes?: MotionBrush[]; staticMaskUrl?: string; regenerate?: boolean }
+    ) =>
+      apiFetch<{ scene: { id: string; status: string }; regenerated: boolean; jobId?: string }>(
+        `/api/video-projects/${projectId}/scenes/${sceneId}`,
+        { method: "PATCH", body: JSON.stringify(payload) }
       ),
   },
 
