@@ -16,12 +16,14 @@
     "test": "node --import tsx/esm --test src/__tests__/*.test.ts"
   },
   "dependencies": {
+    "@kol/database": "workspace:*",
     "@anthropic-ai/sdk": "^0.24.0",
     "openai": "^4.47.0",
     "@aws-sdk/client-s3": "^3.600.0",
     "@aws-sdk/s3-request-presigner": "^3.600.0"
   },
   "devDependencies": {
+    "tsx": "^4.16.0",
     "typescript": "^5.4.0"
   }
 }

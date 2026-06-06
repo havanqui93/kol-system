@@ -82,9 +82,32 @@ export function createGenerateKlingWorker(connection: Redis) {
         throw new Error(`Kling clip generation failed for scene ${sceneIndex}`);
       }
 
+      let finalClipUrl = finalResult.clipUrl;
+      let faceSwapCostUsd = 0;
+
+      // Face swap: give talking-head clips the KOL's consistent reference face.
+      if (scene.visualType === "talking_head" && project.kolProfile?.referenceFaceUrl) {
+        const swapJob = await klingAgent.swapFace(
+          sceneIndex,
+          finalClipUrl,
+          project.kolProfile.referenceFaceUrl
+        );
+        if (swapJob) {
+          await job.updateProgress(70);
+          const swapped = await klingAgent.pollUntilDone(swapJob.jobId);
+          if (swapped.status === "completed" && swapped.clipUrl) {
+            finalClipUrl = swapped.clipUrl;
+            faceSwapCostUsd = swapJob.costUsd;
+          }
+          // On swap failure we keep the original clip rather than failing the scene.
+        }
+      }
+
       // Mirror clip to our R2 storage
       const clipKey = `projects/${projectId}/clips/scene-${sceneIndex}.mp4`;
-      const storedUrl = await storage.uploadFromUrl(clipKey, finalResult.clipUrl);
+      const storedUrl = await storage.uploadFromUrl(clipKey, finalClipUrl);
+
+      const totalClipCost = finalResult.costUsd + faceSwapCostUsd;
 
       await prisma.$transaction([
         prisma.videoScene.update({
@@ -97,8 +120,8 @@ export function createGenerateKlingWorker(connection: Redis) {
         prisma.costTracking.update({
           where: { projectId },
           data: {
-            videoCostUsd: { increment: finalResult.costUsd },
-            totalCostUsd: { increment: finalResult.costUsd },
+            videoCostUsd: { increment: totalClipCost },
+            totalCostUsd: { increment: totalClipCost },
           },
         }),
       ]);
@@ -113,7 +136,7 @@ export function createGenerateKlingWorker(connection: Redis) {
       }
 
       await job.updateProgress(100);
-      return { clipUrl: storedUrl, costUsd: finalResult.costUsd };
+      return { clipUrl: storedUrl, costUsd: totalClipCost };
     },
     {
       connection,

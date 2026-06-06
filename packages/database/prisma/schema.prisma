@@ -126,6 +126,7 @@ model KolProfile {
   name          String
   description   String?
   avatarImageUrl String
+  referenceFaceUrl String?   // reference face for face-swap — consistent Virtual KOL identity
   voiceGender   VoiceGender @default(female)
   voiceStyle    VoiceStyle  @default(energetic)
   voiceId       String?     // ElevenLabs / TTS provider voice ID
