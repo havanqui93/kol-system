@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma, type VideoScript } from "@kol/database";
+import { prisma, Prisma, type VideoScript } from "@kol/database";
 import { AnthropicLLMProvider } from "@kol/providers";
 import { VisualPlanAgent, type VisualScene } from "@kol/agents";
 import type { ScriptOutput } from "@kol/agents";
@@ -151,6 +151,10 @@ export async function POST(request: Request, { params }: { params: { id: string 
           durationSeconds: Math.min(10, Math.max(3, scene.durationSeconds)),
           klingPrompt: scene.klingPrompt ?? null,
           negativePrompt: scene.negativePrompt ?? null,
+          motionBrushes: scene.motionBrushes
+            ? (scene.motionBrushes as unknown as Prisma.InputJsonValue)
+            : undefined,
+          staticMaskUrl: scene.staticMaskUrl ?? null,
           audioSegment: scene.audioSegment,
           startTimeMs: null,
           endTimeMs: null,

@@ -2,7 +2,7 @@ import { Worker } from "bullmq";
 import type { Redis } from "ioredis";
 import { prisma } from "@kol/database";
 import { AnthropicLLMProvider, KlingVideoProvider, R2StorageProvider } from "@kol/providers";
-import { KlingAgent, type VisualScene } from "@kol/agents";
+import { KlingAgent, type VisualScene, type SceneMotionBrush } from "@kol/agents";
 import type { GenerateKlingVideoJobPayload } from "@kol/queue";
 import { QUEUE_NAMES } from "@kol/queue";
 
@@ -31,6 +31,10 @@ export function createGenerateKlingWorker(connection: Redis) {
 
       await job.updateProgress(10);
 
+      // Motion control data is stored as JSON on the scene; when present it
+      // directs Kling's image-to-video instead of using random motion.
+      const motionBrushes = (scene.motionBrushes as SceneMotionBrush[] | null) ?? undefined;
+
       const visualScene: VisualScene = {
         sceneIndex,
         label: `Scene ${sceneIndex}`,
@@ -39,6 +43,8 @@ export function createGenerateKlingWorker(connection: Redis) {
         tool: "kling",
         klingPrompt: scene.klingPrompt ?? klingPrompt,
         negativePrompt: scene.negativePrompt ?? negativePrompt ?? undefined,
+        motionBrushes: motionBrushes && motionBrushes.length > 0 ? motionBrushes : undefined,
+        staticMaskUrl: scene.staticMaskUrl ?? undefined,
         audioSegment: scene.audioSegment ?? "",
       };
 

@@ -235,6 +235,8 @@ model VideoScene {
   durationSeconds Float
   klingPrompt   String?
   negativePrompt String?
+  motionBrushes Json?    // motion control: [{ maskUrl, trajectory: [{x,y}] }] — directs which regions move
+  staticMaskUrl String?  // motion control: region held still during generation
   audioSegment  String?  // text spoken during this scene
   startTimeMs   Int?
   endTimeMs     Int?
