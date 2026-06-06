@@ -20,6 +20,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@anthropic-ai/sdk':
+        specifier: ^0.24.0
+        version: 0.24.3
       '@kol/agents':
         specifier: workspace:*
         version: link:../../packages/agents
@@ -35,6 +38,9 @@ importers:
       '@kol/queue':
         specifier: workspace:*
         version: link:../../packages/queue
+      bullmq:
+        specifier: ^5.12.0
+        version: 5.76.10
       clsx:
         specifier: ^2.1.1
         version: 2.1.1

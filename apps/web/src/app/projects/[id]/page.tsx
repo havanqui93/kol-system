@@ -44,7 +44,7 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
   const [duplicating, setDuplicating] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [archiving, setArchiving] = useState(false);
-  const isProcessing = ["script_generating", "audio_generating", "video_generating", "rendering", "publishing"].includes(status);
+  const isProcessing = !!project && ["script_generating", "audio_generating", "video_generating", "rendering", "publishing"].includes(project.status);
   const { overallProgress } = useJobProgress(params.id, isProcessing);
   usePageVisibilityRefresh(refresh, 5000);
 
