@@ -7,6 +7,7 @@ const CreateKolProfileSchema = z.object({
   name: z.string().min(1),
   description: z.string().optional(),
   avatarImageUrl: z.string().url(),
+  referenceFaceUrl: z.string().url().optional(),
   voiceGender: z.enum(["male", "female"]).default("female"),
   voiceStyle: z.enum(["energetic", "professional", "funny", "calm", "authoritative"]).default("energetic"),
   language: z.string().default("vi"),

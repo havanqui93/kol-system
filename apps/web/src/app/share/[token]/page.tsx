@@ -24,14 +24,12 @@ export default async function SharePage({ params }: Props) {
       createdAt: true,
       scripts: {
         where: { isApproved: true },
-        select: {
-          hook: true,
-          scenes: {
-            select: { order: true, voiceText: true, visualPrompt: true },
-            orderBy: { order: "asc" },
-          },
-        },
+        select: { hook: true },
         take: 1,
+      },
+      scenes: {
+        select: { sceneIndex: true, audioSegment: true, klingPrompt: true },
+        orderBy: { sceneIndex: "asc" },
       },
     },
   });
@@ -80,14 +78,14 @@ export default async function SharePage({ params }: Props) {
             <p className="text-gray-800 font-medium">{script.hook}</p>
           </div>
 
-          {script.scenes.map((scene, i) => (
-            <div key={i} className="bg-white rounded-xl border border-gray-200 p-5">
+          {project.scenes.map((scene) => (
+            <div key={scene.sceneIndex} className="bg-white rounded-xl border border-gray-200 p-5">
               <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
-                Cảnh {scene.order}
+                Cảnh {scene.sceneIndex}
               </div>
-              <p className="text-gray-800 mb-3">{scene.voiceText}</p>
-              {scene.visualPrompt && (
-                <p className="text-xs text-gray-400 italic">{scene.visualPrompt}</p>
+              {scene.audioSegment && <p className="text-gray-800 mb-3">{scene.audioSegment}</p>}
+              {scene.klingPrompt && (
+                <p className="text-xs text-gray-400 italic">{scene.klingPrompt}</p>
               )}
             </div>
           ))}

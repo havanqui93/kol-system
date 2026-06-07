@@ -16,6 +16,9 @@ const PatchSchema = z.object({
   voiceStyle: z.enum(["energetic", "professional", "funny", "calm", "authoritative"]).optional(),
   voiceId: z.string().optional(),
   stylePrompt: z.string().max(1000).optional(),
+  // Reference face for face-swap — applied to talking-head clips for a
+  // consistent Virtual KOL identity. Empty string clears it.
+  referenceFaceUrl: z.union([z.string().url(), z.literal("")]).optional(),
 });
 
 // PATCH /api/kol-profiles/:id
@@ -27,7 +30,9 @@ export async function PATCH(request: Request, { params }: { params: { id: string
   const profile = await prisma.kolProfile.findFirst({ where: { id: params.id, userId } });
   if (!profile) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  const updated = await prisma.kolProfile.update({ where: { id: params.id }, data });
+  // Empty string clears the reference face.
+  const normalized = { ...data, ...(data.referenceFaceUrl === "" ? { referenceFaceUrl: null } : {}) };
+  const updated = await prisma.kolProfile.update({ where: { id: params.id }, data: normalized });
   return NextResponse.json(updated);
 }
 

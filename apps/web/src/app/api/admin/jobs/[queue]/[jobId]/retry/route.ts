@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getQueue } from "@kol/queue";
+import { getQueue } from "@/lib/queues";
 
 const VALID_QUEUES = ["script", "audio", "kling", "render", "publish"] as const;
 type ValidQueue = (typeof VALID_QUEUES)[number];

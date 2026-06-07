@@ -119,6 +119,7 @@ pnpm dev
 | `POST` | `/api/video-projects/:id/generate-audio` | Queue voiceover + subtitles |
 | `POST` | `/api/video-projects/:id/generate-kling-clips` | Queue Kling video clips per scene |
 | `POST` | `/api/video-projects/:id/render` | Queue FFmpeg render `{ backgroundMusicUrl? }` |
+| `PATCH` | `/api/video-projects/:id/scenes/:sceneId` | Attach **motion control** to a scene `{ motionBrushes?, staticMaskUrl?, regenerate? }` and re-queue its Kling clip |
 | `POST` | `/api/video-projects/:id/cancel` | Cancel waiting jobs + mark as failed |
 
 ### Publishing
@@ -151,7 +152,8 @@ pnpm dev
 | `GET` | `/api/products` | List products |
 | `POST` | `/api/products` | Create product |
 | `GET` | `/api/kol-profiles` | List KOL profiles |
-| `POST` | `/api/kol-profiles` | Create KOL profile |
+| `POST` | `/api/kol-profiles` | Create KOL profile (accepts `referenceFaceUrl` for face swap) |
+| `PATCH` | `/api/kol-profiles/:id` | Update KOL profile, incl. `referenceFaceUrl` (empty string clears it) |
 
 ## Admin
 
@@ -187,6 +189,8 @@ draft → script_generating → script_ready → script_approved
 
 ## Features
 
+- **Motion control**: per-scene Kling motion brushes (masked region + trajectory) so product motion follows a directed path instead of random motion — set via `PATCH /scenes/:sceneId`, which re-queues the clip
+- **Face swap (Virtual KOL)**: set `referenceFaceUrl` on a KOL profile to swap a consistent face onto every talking-head clip; the Kling worker applies it after generation and falls back to the original clip on failure
 - **Real-time status**: SSE stream (`/stream`) + React hook (`useProjectStatus`) for live updates
 - **Script A/B comparison**: Side-by-side view of two script versions with change highlights
 - **Budget guard**: Per-project `budgetLimitUsd` enforced at API + worker level

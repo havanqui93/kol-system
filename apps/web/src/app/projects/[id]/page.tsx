@@ -7,7 +7,8 @@ import { usePageVisibilityRefresh } from "@/hooks/use-page-visibility-refresh";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useProject } from "@/hooks/use-project";
-import { api } from "@/lib/api/client";
+import { api, type Scene } from "@/lib/api/client";
+import { MotionControlEditor } from "@/components/project/motion-control-editor";
 import { StatusBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody } from "@/components/ui/card";
@@ -44,7 +45,8 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
   const [duplicating, setDuplicating] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [archiving, setArchiving] = useState(false);
-  const isProcessing = ["script_generating", "audio_generating", "video_generating", "rendering", "publishing"].includes(status);
+  const [motionScene, setMotionScene] = useState<Scene | null>(null);
+  const isProcessing = !!project && ["script_generating", "audio_generating", "video_generating", "rendering", "publishing"].includes(project.status);
   const { overallProgress } = useJobProgress(params.id, isProcessing);
   usePageVisibilityRefresh(refresh, 5000);
 
@@ -72,6 +74,8 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
   }
 
   const status = project.status;
+  const productImageUrl = project.product?.imageUrls?.[0];
+  const motionScenes = project.scenes.filter((s) => s.visualType.includes("product"));
   const approvedScript = project.scripts.find((s) => s.isApproved);
   const audioAsset = project.assets.find((a) => a.assetType === "audio");
   const videoClipAssets = project.assets.filter((a) => a.assetType === "video_clip");
@@ -367,6 +371,28 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
               ))}
             </div>
           )}
+
+          {productImageUrl && motionScenes.length > 0 && (
+            <div className="mt-3 space-y-2">
+              <p className="text-xs font-medium text-gray-600">🎛️ Motion control (cảnh sản phẩm)</p>
+              {motionScenes.map((scene) => (
+                <div
+                  key={scene.id}
+                  className="flex items-center justify-between rounded-lg border border-gray-200 px-3 py-2 text-xs"
+                >
+                  <span className="text-gray-700">
+                    Cảnh {scene.sceneIndex} · {scene.visualType}
+                    {scene.motionBrushes && scene.motionBrushes.length > 0 && (
+                      <span className="ml-1 text-green-700">· ✅ đã đặt</span>
+                    )}
+                  </span>
+                  <button onClick={() => setMotionScene(scene)} className="text-brand-600 hover:underline">
+                    Chỉnh chuyển động
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </PipelineStep>
 
         {/* Step 4: Render */}
@@ -512,6 +538,19 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
 
       {/* Notes editor */}
       <NotesEditor projectId={project.id} initialNotes={(project as any).notes ?? ""} />
+
+      {motionScene && productImageUrl && (
+        <MotionControlEditor
+          projectId={project.id}
+          scene={motionScene}
+          sourceImageUrl={productImageUrl}
+          onClose={() => setMotionScene(null)}
+          onSaved={() => {
+            setMotionScene(null);
+            refresh();
+          }}
+        />
+      )}
     </div>
   );
 }

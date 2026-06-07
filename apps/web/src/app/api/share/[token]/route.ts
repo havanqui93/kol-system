@@ -21,8 +21,12 @@ export async function GET(_req: Request, { params }: { params: { token: string }
       createdAt: true,
       scripts: {
         where: { isApproved: true },
-        select: { hook: true, scenes: { select: { order: true, voiceText: true, visualPrompt: true } } },
+        select: { hook: true },
         take: 1,
+      },
+      scenes: {
+        select: { sceneIndex: true, audioSegment: true, klingPrompt: true },
+        orderBy: { sceneIndex: "asc" },
       },
     },
   });

@@ -15,8 +15,23 @@ export async function POST(request: Request, { params }: { params: { id: string 
     return NextResponse.json({ error: "Product has no images to analyze" }, { status: 400 });
   }
 
-  // Use the first image URL for vision analysis
+  // Use the first image URL for vision analysis. The pinned SDK expects
+  // base64 image data, so fetch the image and inline it.
   const imageUrl = product.imageUrls[0];
+  const imageRes = await fetch(imageUrl);
+  if (!imageRes.ok) {
+    return NextResponse.json({ error: "Could not fetch product image" }, { status: 400 });
+  }
+  const imageBase64 = Buffer.from(await imageRes.arrayBuffer()).toString("base64");
+  const contentType = imageRes.headers.get("content-type") ?? "";
+  const mediaType: "image/jpeg" | "image/png" | "image/gif" | "image/webp" =
+    contentType.includes("png")
+      ? "image/png"
+      : contentType.includes("gif")
+        ? "image/gif"
+        : contentType.includes("webp")
+          ? "image/webp"
+          : "image/jpeg";
 
   const response = await client.messages.create({
     model: "claude-haiku-4-5-20251001",
@@ -27,7 +42,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
         content: [
           {
             type: "image",
-            source: { type: "url", url: imageUrl },
+            source: { type: "base64", media_type: mediaType, data: imageBase64 },
           },
           {
             type: "text",

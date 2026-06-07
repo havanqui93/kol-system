@@ -21,12 +21,12 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
           cta: true,
           wordCount: true,
           estimatedDurationSeconds: true,
-          scenes: {
-            select: { order: true, voiceText: true, visualPrompt: true, durationSeconds: true },
-            orderBy: { order: "asc" },
-          },
         },
         take: 1,
+      },
+      scenes: {
+        select: { sceneIndex: true, audioSegment: true, klingPrompt: true, durationSeconds: true },
+        orderBy: { sceneIndex: "asc" },
       },
     },
   });
@@ -64,13 +64,13 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
     }
   }
 
-  if (script.scenes.length > 0) {
+  if (project.scenes.length > 0) {
     lines.push("## PHÂN CẢNH");
     lines.push("");
-    for (const scene of script.scenes) {
-      lines.push(`### Cảnh ${scene.order}${scene.durationSeconds ? ` (${scene.durationSeconds}s)` : ""}`);
-      lines.push(`Lời thoại: ${scene.voiceText}`);
-      if (scene.visualPrompt) lines.push(`Visual: ${scene.visualPrompt}`);
+    for (const scene of project.scenes) {
+      lines.push(`### Cảnh ${scene.sceneIndex}${scene.durationSeconds ? ` (${scene.durationSeconds}s)` : ""}`);
+      if (scene.audioSegment) lines.push(`Lời thoại: ${scene.audioSegment}`);
+      if (scene.klingPrompt) lines.push(`Visual: ${scene.klingPrompt}`);
       lines.push("");
     }
   }

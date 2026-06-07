@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { getQueue } from "@kol/queue";
+import type { Job } from "bullmq";
+import { getQueue } from "@/lib/queues";
 
 const QUEUE_NAMES = ["script", "audio", "kling", "render", "publish"] as const;
 
@@ -12,7 +13,7 @@ export async function GET(request: Request) {
     QUEUE_NAMES.map(async (name) => {
       const queue = getQueue(name);
       const failed = await queue.getFailed(0, limit - 1);
-      return failed.map((job) => ({
+      return failed.map((job: Job) => ({
         queue: name,
         jobId: job.id,
         name: job.name,

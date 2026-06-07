@@ -18,6 +18,7 @@ interface KolProfile {
   voiceId: string | null;
   language: string;
   stylePrompt: string | null;
+  referenceFaceUrl: string | null;
 }
 
 const VOICE_STYLE_OPTIONS = [
@@ -34,7 +35,7 @@ export default function KolProfileEditPage({ params }: { params: { id: string } 
   const [profile, setProfile] = useState<KolProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({ name: "", description: "", voiceStyle: "energetic", stylePrompt: "" });
+  const [form, setForm] = useState({ name: "", description: "", voiceStyle: "energetic", stylePrompt: "", referenceFaceUrl: "" });
 
   useEffect(() => {
     fetch(`/api/kol-profiles/${params.id}`, { headers: { "x-user-id": "demo-user" } })
@@ -46,6 +47,7 @@ export default function KolProfileEditPage({ params }: { params: { id: string } 
           description: data.description ?? "",
           voiceStyle: data.voiceStyle ?? "energetic",
           stylePrompt: data.stylePrompt ?? "",
+          referenceFaceUrl: data.referenceFaceUrl ?? "",
         });
         setLoading(false);
       })
@@ -135,6 +137,25 @@ export default function KolProfileEditPage({ params }: { params: { id: string } 
                 value={form.stylePrompt}
                 onChange={(e) => setForm((p) => ({ ...p, stylePrompt: e.target.value }))}
               />
+            </FormField>
+
+            <FormField label="Ảnh khuôn mặt tham chiếu (Face Swap)" htmlFor="referenceFaceUrl">
+              <div className="flex items-center gap-3">
+                {form.referenceFaceUrl && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={form.referenceFaceUrl} alt="Reference face" className="w-12 h-12 rounded-lg object-cover border border-gray-200" />
+                )}
+                <Input
+                  id="referenceFaceUrl"
+                  type="url"
+                  placeholder="https://... (URL ảnh khuôn mặt)"
+                  value={form.referenceFaceUrl}
+                  onChange={(e) => setForm((p) => ({ ...p, referenceFaceUrl: e.target.value }))}
+                />
+              </div>
+              <p className="mt-1 text-xs text-gray-500">
+                Khi đặt, hệ thống sẽ hoán đổi khuôn mặt này vào các cảnh talking-head để giữ một danh tính KOL ảo nhất quán. Để trống để tắt.
+              </p>
             </FormField>
           </CardBody>
         </Card>

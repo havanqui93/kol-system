@@ -14,7 +14,7 @@ interface State {
 }
 
 export class ErrorBoundary extends Component<Props, State> {
-  state: State = { hasError: false, error: null };
+  override state: State = { hasError: false, error: null };
 
   static getDerivedStateFromError(error: Error): State {
     return { hasError: true, error };
@@ -22,7 +22,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
   reset = () => this.setState({ hasError: false, error: null });
 
-  render() {
+  override render() {
     if (this.state.hasError) {
       if (this.props.fallback) return this.props.fallback;
 

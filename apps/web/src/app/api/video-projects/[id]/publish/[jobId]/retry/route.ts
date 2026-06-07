@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@kol/database";
-import { getQueue } from "@kol/queue";
+import { getQueue } from "@/lib/queues";
 
 // POST /api/video-projects/:id/publish/:jobId/retry
 export async function POST(
